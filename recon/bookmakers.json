@@ -1,0 +1,54 @@
+{
+  "requested": [
+    {
+      "requested": "TAB",
+      "available": true,
+      "feed_key": "tab",
+      "feed_title": "TAB"
+    },
+    {
+      "requested": "Betfair",
+      "available": true,
+      "feed_key": "betfair_ex_au",
+      "feed_title": "Betfair"
+    },
+    {
+      "requested": "Sportsbet",
+      "available": true,
+      "feed_key": "sportsbet",
+      "feed_title": "SportsBet"
+    },
+    {
+      "requested": "Ladbrokes",
+      "available": true,
+      "feed_key": "ladbrokes_au",
+      "feed_title": "Ladbrokes"
+    },
+    {
+      "requested": "TABtouch",
+      "available": true,
+      "feed_key": "tabtouch",
+      "feed_title": "TABtouch"
+    },
+    {
+      "requested": "PointsBet",
+      "available": true,
+      "feed_key": "pointsbetau",
+      "feed_title": "PointsBet (AU)"
+    },
+    {
+      "requested": "Pickle Bet",
+      "available": false,
+      "feed_key": null,
+      "feed_title": null
+    }
+  ],
+  "also_in_feed": [
+    "Bet Right",
+    "Betr",
+    "Dabble AU",
+    "Neds",
+    "PlayUp",
+    "Unibet"
+  ]
+}

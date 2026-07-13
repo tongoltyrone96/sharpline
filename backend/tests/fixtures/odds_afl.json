@@ -1,0 +1,3673 @@
+[
+  {
+    "id": "5965b2f60e8d07c7b2b501fdbb9ff7c2",
+    "sport_key": "aussierules_afl",
+    "sport_title": "AFL",
+    "commence_time": "2026-07-16T09:30:00Z",
+    "home_team": "Geelong Cats",
+    "away_team": "St Kilda Saints",
+    "bookmakers": [
+      {
+        "key": "unibet",
+        "title": "Unibet",
+        "last_update": "2026-07-13T09:37:04Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:04Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.48
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tab",
+        "title": "TAB",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.5
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.6
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.9,
+                "point": -12.5
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 1.9,
+                "point": 12.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.9,
+                "point": 182.5
+              },
+              {
+                "name": "Under",
+                "price": 1.9,
+                "point": 182.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betfair_ex_au",
+        "title": "Betfair",
+        "last_update": "2026-07-13T09:37:48Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.52
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.86
+              }
+            ]
+          },
+          {
+            "key": "h2h_lay",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.54
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.92
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "neds",
+        "title": "Neds",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.53
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betr_au",
+        "title": "Betr",
+        "last_update": "2026-07-13T09:37:02Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.45
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.75
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.9,
+                "point": -13.5
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 1.9,
+                "point": 13.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ladbrokes_au",
+        "title": "Ladbrokes",
+        "last_update": "2026-07-13T09:37:43Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:43Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.53
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tabtouch",
+        "title": "TABtouch",
+        "last_update": "2026-07-13T09:37:05Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.48
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.65
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.88,
+                "point": -13.5
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 1.92,
+                "point": 13.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 181.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 181.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "playup",
+        "title": "PlayUp",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.48
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.6
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.88,
+                "point": -12.5
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 1.88,
+                "point": 12.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "sportsbet",
+        "title": "SportsBet",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.54
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.49
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.9,
+                "point": -12.5
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 1.9,
+                "point": 12.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 182.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 182.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "pointsbetau",
+        "title": "PointsBet (AU)",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.52
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.88,
+                "point": -12.5
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 1.88,
+                "point": 12.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 182.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 182.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betright",
+        "title": "Bet Right",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.53
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 2.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Geelong Cats",
+                "price": 1.9,
+                "point": -12.5
+              },
+              {
+                "name": "St Kilda Saints",
+                "price": 1.9,
+                "point": 12.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "23d8c1d1d8d6932a1fd826ac626141f6",
+    "sport_key": "aussierules_afl",
+    "sport_title": "AFL",
+    "commence_time": "2026-07-17T09:40:00Z",
+    "home_team": "Sydney Swans",
+    "away_team": "Adelaide Crows",
+    "bookmakers": [
+      {
+        "key": "unibet",
+        "title": "Unibet",
+        "last_update": "2026-07-13T09:37:04Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:04Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.43
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.53
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betfair_ex_au",
+        "title": "Betfair",
+        "last_update": "2026-07-13T09:37:48Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.78
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.54
+              }
+            ]
+          },
+          {
+            "key": "h2h_lay",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.84
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.56
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betr_au",
+        "title": "Betr",
+        "last_update": "2026-07-13T09:37:02Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.6
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 1.9,
+                "point": 12.5
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.9,
+                "point": -12.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "neds",
+        "title": "Neds",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.55
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.52
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ladbrokes_au",
+        "title": "Ladbrokes",
+        "last_update": "2026-07-13T09:37:43Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:43Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.55
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.52
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tabtouch",
+        "title": "TABtouch",
+        "last_update": "2026-07-13T09:37:05Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.5
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.54
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 1.89,
+                "point": 11.5
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.89,
+                "point": -11.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 177.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 177.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tab",
+        "title": "TAB",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.6
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 1.9,
+                "point": 12.5
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.9,
+                "point": -12.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.9,
+                "point": 179.5
+              },
+              {
+                "name": "Under",
+                "price": 1.9,
+                "point": 179.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "playup",
+        "title": "PlayUp",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.55
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 1.88,
+                "point": 11.5
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.88,
+                "point": -11.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "sportsbet",
+        "title": "SportsBet",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.59
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 1.9,
+                "point": 12.5
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.9,
+                "point": -12.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.86,
+                "point": 179.5
+              },
+              {
+                "name": "Under",
+                "price": 1.9,
+                "point": 179.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "pointsbetau",
+        "title": "PointsBet (AU)",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.6
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 1.88,
+                "point": 12.5
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.88,
+                "point": -12.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 179.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 179.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betright",
+        "title": "Bet Right",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 2.6
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Adelaide Crows",
+                "price": 1.9,
+                "point": 12.5
+              },
+              {
+                "name": "Sydney Swans",
+                "price": 1.9,
+                "point": -12.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "8c4510d90a64277cb42017c36010cb09",
+    "sport_key": "aussierules_afl",
+    "sport_title": "AFL",
+    "commence_time": "2026-07-18T03:15:00Z",
+    "home_team": "Port Adelaide Power",
+    "away_team": "Fremantle Dockers",
+    "bookmakers": [
+      {
+        "key": "unibet",
+        "title": "Unibet",
+        "last_update": "2026-07-13T09:37:04Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:04Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.07
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 7.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tabtouch",
+        "title": "TABtouch",
+        "last_update": "2026-07-13T09:37:05Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.07
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 8.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.88,
+                "point": -46.5
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 1.92,
+                "point": 46.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 168.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 168.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "pointsbetau",
+        "title": "PointsBet (AU)",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.06
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 9.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.88,
+                "point": -46.5
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 1.88,
+                "point": 46.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 169.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 169.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betfair_ex_au",
+        "title": "Betfair",
+        "last_update": "2026-07-13T09:37:48Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.07
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 12.0
+              }
+            ]
+          },
+          {
+            "key": "h2h_lay",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.09
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 15.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tab",
+        "title": "TAB",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.06
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 9.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.9,
+                "point": -47.5
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 1.9,
+                "point": 47.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.9,
+                "point": 169.5
+              },
+              {
+                "name": "Under",
+                "price": 1.9,
+                "point": 169.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "neds",
+        "title": "Neds",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.07
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 8.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ladbrokes_au",
+        "title": "Ladbrokes",
+        "last_update": "2026-07-13T09:37:43Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:43Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.07
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 8.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "playup",
+        "title": "PlayUp",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.07
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 8.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.88,
+                "point": -42.5
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 1.88,
+                "point": 42.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "sportsbet",
+        "title": "SportsBet",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.06
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 9.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.91,
+                "point": -45.5
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 1.89,
+                "point": 45.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 170.5
+              },
+              {
+                "name": "Under",
+                "price": 1.89,
+                "point": 170.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betr_au",
+        "title": "Betr",
+        "last_update": "2026-07-13T09:37:02Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.06
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 9.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.9,
+                "point": -47.5
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 1.9,
+                "point": 47.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betright",
+        "title": "Bet Right",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.06
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 9.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Fremantle Dockers",
+                "price": 1.93,
+                "point": -47.5
+              },
+              {
+                "name": "Port Adelaide Power",
+                "price": 1.87,
+                "point": 47.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "084ae8d6d0d000e014b32ebc6876de6c",
+    "sport_key": "aussierules_afl",
+    "sport_title": "AFL",
+    "commence_time": "2026-07-18T06:15:03Z",
+    "home_team": "North Melbourne Kangaroos",
+    "away_team": "Melbourne Demons",
+    "bookmakers": [
+      {
+        "key": "sportsbet",
+        "title": "SportsBet",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.45
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 2.79
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.89,
+                "point": -14.5
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 1.91,
+                "point": 14.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.89,
+                "point": 178.5
+              },
+              {
+                "name": "Under",
+                "price": 1.87,
+                "point": 178.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betfair_ex_au",
+        "title": "Betfair",
+        "last_update": "2026-07-13T09:37:48Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.48
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 2.84
+              }
+            ]
+          },
+          {
+            "key": "h2h_lay",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.54
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 3.1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tab",
+        "title": "TAB",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.44
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 2.8
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.9,
+                "point": -14.5
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 1.9,
+                "point": 14.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.9,
+                "point": 178.5
+              },
+              {
+                "name": "Under",
+                "price": 1.9,
+                "point": 178.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "neds",
+        "title": "Neds",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.44
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 2.8
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ladbrokes_au",
+        "title": "Ladbrokes",
+        "last_update": "2026-07-13T09:37:43Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:43Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.44
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 2.8
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tabtouch",
+        "title": "TABtouch",
+        "last_update": "2026-07-13T09:37:05Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.44
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 2.75
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.89,
+                "point": -15.5
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 1.89,
+                "point": 15.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 179.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 179.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "unibet",
+        "title": "Unibet",
+        "last_update": "2026-07-13T09:37:04Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:04Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.44
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 2.7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betr_au",
+        "title": "Betr",
+        "last_update": "2026-07-13T09:37:02Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.43
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 2.75
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.9,
+                "point": -14.5
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 1.9,
+                "point": 14.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "pointsbetau",
+        "title": "PointsBet (AU)",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.44
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 2.8
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.88,
+                "point": -14.5
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 1.88,
+                "point": 14.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 178.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 178.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "playup",
+        "title": "PlayUp",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.44
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 2.75
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.88,
+                "point": -14.5
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 1.88,
+                "point": 14.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betright",
+        "title": "Bet Right",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.44
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 2.8
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Melbourne Demons",
+                "price": 1.9,
+                "point": -14.5
+              },
+              {
+                "name": "North Melbourne Kangaroos",
+                "price": 1.9,
+                "point": 14.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "e98bbce4f8fecc2b4f69334e7845a4f9",
+    "sport_key": "aussierules_afl",
+    "sport_title": "AFL",
+    "commence_time": "2026-07-18T09:35:00Z",
+    "home_team": "Collingwood Magpies",
+    "away_team": "Carlton Blues",
+    "bookmakers": [
+      {
+        "key": "unibet",
+        "title": "Unibet",
+        "last_update": "2026-07-13T09:37:04Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:04Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.17
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.66
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betfair_ex_au",
+        "title": "Betfair",
+        "last_update": "2026-07-13T09:37:48Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.38
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.7
+              }
+            ]
+          },
+          {
+            "key": "h2h_lay",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.42
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.72
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tab",
+        "title": "TAB",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.25
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.65
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 1.9,
+                "point": 6.5
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.9,
+                "point": -6.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.9,
+                "point": 170.5
+              },
+              {
+                "name": "Under",
+                "price": 1.9,
+                "point": 170.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ladbrokes_au",
+        "title": "Ladbrokes",
+        "last_update": "2026-07-13T09:37:43Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:43Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.2
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.67
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "neds",
+        "title": "Neds",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.2
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.67
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betright",
+        "title": "Bet Right",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.22
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.66
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 1.9,
+                "point": 6.5
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.9,
+                "point": -6.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betr_au",
+        "title": "Betr",
+        "last_update": "2026-07-13T09:37:02Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.25
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.65
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 1.9,
+                "point": 6.5
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.9,
+                "point": -6.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tabtouch",
+        "title": "TABtouch",
+        "last_update": "2026-07-13T09:37:05Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.2
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.67
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 1.88,
+                "point": 6.5
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.91,
+                "point": -6.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "playup",
+        "title": "PlayUp",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.2
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.65
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 1.88,
+                "point": 6.5
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.88,
+                "point": -6.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "sportsbet",
+        "title": "SportsBet",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.23
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.66
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 1.9,
+                "point": 6.5
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.9,
+                "point": -6.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.87,
+                "point": 170.5
+              },
+              {
+                "name": "Under",
+                "price": 1.89,
+                "point": 170.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "pointsbetau",
+        "title": "PointsBet (AU)",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 2.2
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.66
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Carlton Blues",
+                "price": 1.88,
+                "point": 6.5
+              },
+              {
+                "name": "Collingwood Magpies",
+                "price": 1.88,
+                "point": -6.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 170.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 170.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "01bc6d63ad92ac98728f0549d2a5505c",
+    "sport_key": "aussierules_afl",
+    "sport_title": "AFL",
+    "commence_time": "2026-07-18T10:10:56Z",
+    "home_team": "West Coast Eagles",
+    "away_team": "Brisbane Lions",
+    "bookmakers": [
+      {
+        "key": "sportsbet",
+        "title": "SportsBet",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.06
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 9.3
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.9,
+                "point": -44.5
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 1.9,
+                "point": 44.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.89,
+                "point": 169.5
+              },
+              {
+                "name": "Under",
+                "price": 1.87,
+                "point": 169.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betfair_ex_au",
+        "title": "Betfair",
+        "last_update": "2026-07-13T09:37:48Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.08
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 9.2
+              }
+            ]
+          },
+          {
+            "key": "h2h_lay",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.12
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 15.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tab",
+        "title": "TAB",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.06
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 9.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.9,
+                "point": -44.5
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 1.9,
+                "point": 44.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.9,
+                "point": 169.5
+              },
+              {
+                "name": "Under",
+                "price": 1.9,
+                "point": 169.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betright",
+        "title": "Bet Right",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.06
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 9.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.9,
+                "point": -44.5
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 1.9,
+                "point": 44.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betr_au",
+        "title": "Betr",
+        "last_update": "2026-07-13T09:37:02Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.08
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 8.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.9,
+                "point": -45.5
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 1.9,
+                "point": 45.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "pointsbetau",
+        "title": "PointsBet (AU)",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.06
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 9.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.88,
+                "point": -44.5
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 1.88,
+                "point": 44.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 169.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 169.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tabtouch",
+        "title": "TABtouch",
+        "last_update": "2026-07-13T09:37:05Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.09
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 7.5
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.89,
+                "point": -45.5
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 1.89,
+                "point": 45.5
+              }
+            ]
+          },
+          {
+            "key": "totals",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Over",
+                "price": 1.88,
+                "point": 170.5
+              },
+              {
+                "name": "Under",
+                "price": 1.88,
+                "point": 170.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "unibet",
+        "title": "Unibet",
+        "last_update": "2026-07-13T09:37:04Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:04Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.09
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 6.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "playup",
+        "title": "PlayUp",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.07
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 8.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.88,
+                "point": -44.5
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 1.88,
+                "point": 44.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ladbrokes_au",
+        "title": "Ladbrokes",
+        "last_update": "2026-07-13T09:37:43Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:43Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.08
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 8.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "neds",
+        "title": "Neds",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Brisbane Lions",
+                "price": 1.08
+              },
+              {
+                "name": "West Coast Eagles",
+                "price": 8.0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "08fce59c25dc27b5a81232584ecb0ded",
+    "sport_key": "aussierules_afl",
+    "sport_title": "AFL",
+    "commence_time": "2026-07-19T03:10:46Z",
+    "home_team": "Richmond Tigers",
+    "away_team": "Hawthorn Hawks",
+    "bookmakers": [
+      {
+        "key": "sportsbet",
+        "title": "SportsBet",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.04
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 11.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.9,
+                "point": -50.5
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 1.9,
+                "point": 50.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betfair_ex_au",
+        "title": "Betfair",
+        "last_update": "2026-07-13T09:37:48Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.07
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 13.5
+              }
+            ]
+          },
+          {
+            "key": "h2h_lay",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.08
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 15.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tab",
+        "title": "TAB",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.04
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 11.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.9,
+                "point": -50.5
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 1.9,
+                "point": 50.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "neds",
+        "title": "Neds",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.04
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 11.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ladbrokes_au",
+        "title": "Ladbrokes",
+        "last_update": "2026-07-13T09:37:43Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:43Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.04
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 11.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tabtouch",
+        "title": "TABtouch",
+        "last_update": "2026-07-13T09:37:05Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.05
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 9.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.89,
+                "point": -51.5
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 1.89,
+                "point": 51.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "unibet",
+        "title": "Unibet",
+        "last_update": "2026-07-13T09:37:04Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:04Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.05
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 9.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betr_au",
+        "title": "Betr",
+        "last_update": "2026-07-13T09:37:02Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.05
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 10.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.9,
+                "point": -51.5
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 1.9,
+                "point": 51.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "pointsbetau",
+        "title": "PointsBet (AU)",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.05
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 11.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.88,
+                "point": -51.5
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 1.88,
+                "point": 51.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "playup",
+        "title": "PlayUp",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.04
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 10.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.88,
+                "point": -51.5
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 1.88,
+                "point": 51.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betright",
+        "title": "Bet Right",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.04
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 11.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Hawthorn Hawks",
+                "price": 1.9,
+                "point": -50.5
+              },
+              {
+                "name": "Richmond Tigers",
+                "price": 1.9,
+                "point": 50.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "14043e760838ba3ed3ba493edc999c1a",
+    "sport_key": "aussierules_afl",
+    "sport_title": "AFL",
+    "commence_time": "2026-07-19T05:15:18Z",
+    "home_team": "Gold Coast Suns",
+    "away_team": "Western Bulldogs",
+    "bookmakers": [
+      {
+        "key": "sportsbet",
+        "title": "SportsBet",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.82
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 2.04
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.9,
+                "point": -2.5
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.9,
+                "point": 2.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betfair_ex_au",
+        "title": "Betfair",
+        "last_update": "2026-07-13T09:37:48Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.87
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 2.06
+              }
+            ]
+          },
+          {
+            "key": "h2h_lay",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.93
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 2.14
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tab",
+        "title": "TAB",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.85
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.95
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.9,
+                "point": -1.5
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.9,
+                "point": 1.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "neds",
+        "title": "Neds",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.87
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.95
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ladbrokes_au",
+        "title": "Ladbrokes",
+        "last_update": "2026-07-13T09:37:43Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:43Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.87
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.95
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tabtouch",
+        "title": "TABtouch",
+        "last_update": "2026-07-13T09:37:05Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.91
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.89
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.83,
+                "point": 1.5
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.95,
+                "point": -1.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "unibet",
+        "title": "Unibet",
+        "last_update": "2026-07-13T09:37:04Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:04Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.89
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.88
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betr_au",
+        "title": "Betr",
+        "last_update": "2026-07-13T09:37:02Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.85
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.95
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.9,
+                "point": -1.5
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.9,
+                "point": 1.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "pointsbetau",
+        "title": "PointsBet (AU)",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.92
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.88
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.88,
+                "point": 0.5
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.88,
+                "point": -0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "playup",
+        "title": "PlayUp",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.85
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.92
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.88,
+                "point": -1.5
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.88,
+                "point": 1.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betright",
+        "title": "Bet Right",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.82
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 2.0
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Gold Coast Suns",
+                "price": 1.9,
+                "point": -1.5
+              },
+              {
+                "name": "Western Bulldogs",
+                "price": 1.9,
+                "point": 1.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "8d30866fd3597dc7c6cf02411d9c99e0",
+    "sport_key": "aussierules_afl",
+    "sport_title": "AFL",
+    "commence_time": "2026-07-19T06:40:02Z",
+    "home_team": "Essendon Bombers",
+    "away_team": "Greater Western Sydney Giants",
+    "bookmakers": [
+      {
+        "key": "sportsbet",
+        "title": "SportsBet",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 6.7
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.11
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 1.9,
+                "point": 39.5
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.9,
+                "point": -39.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betfair_ex_au",
+        "title": "Betfair",
+        "last_update": "2026-07-13T09:37:48Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 7.6
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.1
+              }
+            ]
+          },
+          {
+            "key": "h2h_lay",
+            "last_update": "2026-07-13T09:37:48Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 11.0
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.15
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "unibet",
+        "title": "Unibet",
+        "last_update": "2026-07-13T09:37:04Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:04Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 5.75
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.12
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tabtouch",
+        "title": "TABtouch",
+        "last_update": "2026-07-13T09:37:05Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 6.25
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.12
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:05Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 1.89,
+                "point": 40.5
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.89,
+                "point": -40.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "tab",
+        "title": "TAB",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 7.0
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.1
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 1.9,
+                "point": 39.5
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.9,
+                "point": -39.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "pointsbetau",
+        "title": "PointsBet (AU)",
+        "last_update": "2026-07-13T09:37:03Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 6.5
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.11
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:03Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 1.88,
+                "point": 39.5
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.88,
+                "point": -39.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betr_au",
+        "title": "Betr",
+        "last_update": "2026-07-13T09:37:02Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 6.5
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.11
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:02Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 1.9,
+                "point": 39.5
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.9,
+                "point": -39.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "playup",
+        "title": "PlayUp",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 7.0
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.09
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 1.88,
+                "point": 39.5
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.88,
+                "point": -39.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "ladbrokes_au",
+        "title": "Ladbrokes",
+        "last_update": "2026-07-13T09:37:43Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:43Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 6.5
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.11
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "neds",
+        "title": "Neds",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 6.5
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.11
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "betright",
+        "title": "Bet Right",
+        "last_update": "2026-07-13T09:37:44Z",
+        "markets": [
+          {
+            "key": "h2h",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 6.75
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.11
+              }
+            ]
+          },
+          {
+            "key": "spreads",
+            "last_update": "2026-07-13T09:37:44Z",
+            "outcomes": [
+              {
+                "name": "Essendon Bombers",
+                "price": 1.9,
+                "point": 39.5
+              },
+              {
+                "name": "Greater Western Sydney Giants",
+                "price": 1.9,
+                "point": -39.5
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
