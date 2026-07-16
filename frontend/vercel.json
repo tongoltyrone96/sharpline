@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/:path*",   "destination": "https://sharpline-api.fly.dev/api/:path*" },
+    { "source": "/admin/:path*", "destination": "https://sharpline-api.fly.dev/admin/:path*" }
+  ]
+}

@@ -53,3 +53,22 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# ── Claude Code internal ──────────────────────────────────────────────────────
+.claude/
+
+# ── Runtime logs ──────────────────────────────────────────────────────────────
+*.log
+uvicorn*.log
+vite_*.log
+
+# ── Development screenshots / recon ───────────────────────────────────────────
+mobile_shots/
+shots_final/
+screenshot_col
+screenshot*.png
+take_shots.mjs
+screenshot_compare.mjs
+frontend/take_shots.mjs
+frontend/test-results/
+recon/

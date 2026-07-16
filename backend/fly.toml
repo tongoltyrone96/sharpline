@@ -1,0 +1,50 @@
+# Fly.io configuration for Sharpline backend.
+# Deploy from the backend/ directory:
+#   fly launch --no-deploy --name sharpline-api --region syd
+#   fly deploy
+#   fly scale count worker=1 beat=1
+#
+# After first deploy, run once:
+#   fly ssh console -C "alembic upgrade head"
+#   fly ssh console -C "python scripts/seed.py"
+#   fly ssh console -C "python scripts/live_poll_once.py"
+
+app = "sharpline-api"
+primary_region = "syd"
+
+[build]
+
+# Three process groups share the same image.
+# web:    FastAPI via uvicorn — handles HTTP + WebSocket
+# worker: Celery prefork — executes poll_odds, poll_weather, poll_lineups tasks
+# beat:   Celery beat — fires the beat_schedule; run exactly one instance
+[processes]
+  web    = "uvicorn app.main:app --host 0.0.0.0 --port 8000"
+  worker = "celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2"
+  beat   = "celery -A app.tasks.celery_app beat --loglevel=info"
+
+# Runs in a temporary VM before each deploy; idempotent so safe on every push.
+[deploy]
+  release_command = "alembic upgrade head && python scripts/seed.py"
+
+# HTTP/WebSocket service — only the web process handles public traffic.
+[http_service]
+  internal_port       = 8000
+  force_https         = true
+  auto_stop_machines  = "off"   # beat and worker must never sleep
+  auto_start_machines = true
+  min_machines_running = 1
+  processes           = ["web"]
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval     = "15s"
+    method       = "GET"
+    timeout      = "5s"
+    path         = "/health"
+
+# Default VM size for all process groups.
+# Free tier: 3 × shared-cpu-1x@256mb included.
+[[vm]]
+  size   = "shared-cpu-1x"
+  memory = "256mb"
