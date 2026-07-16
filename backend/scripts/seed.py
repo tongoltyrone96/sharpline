@@ -162,8 +162,10 @@ def _upsert_param(db, data: dict) -> ModelParam:
         obj = ModelParam(**data)
         db.add(obj)
     else:
+        # Preserve admin-set value; only update description/sport_key metadata
         for k, v in data.items():
-            setattr(obj, k, v)
+            if k != "value":
+                setattr(obj, k, v)
     return obj
 
 
