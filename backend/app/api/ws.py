@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import ssl
 from typing import TYPE_CHECKING
 
 import redis.asyncio as aioredis
@@ -84,13 +83,7 @@ async def redis_listener(app: "FastAPI") -> None:  # noqa: ARG001
     while True:
         client = None
         try:
-            ssl_ctx = None
-            if settings.REDIS_URL.startswith("rediss://"):
-                ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-                ssl_ctx.check_hostname = False
-                ssl_ctx.verify_mode = ssl.CERT_NONE
-
-            client = await aioredis.from_url(settings.REDIS_URL, ssl=ssl_ctx)
+            client = await aioredis.from_url(settings.REDIS_URL)
             pubsub = client.pubsub()
             await pubsub.subscribe(CHANNEL)
             log.info("Redis listener subscribed to %s", CHANNEL)
