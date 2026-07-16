@@ -52,20 +52,6 @@ export default function TopBar({ lastUpdated }: TopBarProps) {
         Updated {lastUpdated}
       </span>
 
-      {/* User avatar — always visible; name/plan hidden on phones */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', flexShrink: 0 }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-          background: 'linear-gradient(135deg,#4F7DF3,#8B5CF6)',
-          display: 'grid', placeItems: 'center',
-          fontWeight: 700, fontSize: 11, color: '#fff',
-        }}>AR</div>
-        <div className="topbar-user-label">
-          <div style={{ fontSize: 11.5, fontWeight: 600, lineHeight: 1.25 }}>Alex R.</div>
-          <div style={{ fontSize: 10, color: 'var(--text-3)' }}>Pro Plan</div>
-        </div>
-        <span className="topbar-user-label" style={{ color: 'var(--text-3)', fontSize: 9 }}>▾</span>
-      </div>
     </div>
   )
 }

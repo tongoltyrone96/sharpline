@@ -100,7 +100,6 @@ export default function WhyThisIsValue({ model, spreadMarkets, totalMarkets, hom
       <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 'var(--r)' }}>
         <div style={{ display: 'flex', alignItems: 'center', padding: '13px 14px 11px' }}>
           <span style={{ fontSize: 13.5, fontWeight: 600 }}>Why this is value</span>
-          <span style={{ marginLeft: 'auto', fontSize: 10.5, color: 'var(--text-2)', fontWeight: 500, background: 'var(--raise)', border: '1px solid var(--line)', borderRadius: 6, padding: '4px 9px', cursor: 'pointer' }}>Explain</span>
         </div>
         <div style={{ padding: '2px 14px 13px', fontSize: 12, color: 'var(--text-3)' }}>No data — select a fixture to see value analysis</div>
       </div>

@@ -16,11 +16,6 @@ export default function AIInsightsPanel() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', padding: '13px 14px 11px' }}>
         <span style={{ fontSize: 13.5, fontWeight: 600 }}>AI Insights</span>
-        {!loading && scanned > 0 && (
-          <span style={{ marginLeft: 8, fontSize: 10, color: 'var(--text-3)', fontWeight: 400 }}>
-            {scanned} bets scanned
-          </span>
-        )}
         {allRows.length > 6 && (
           <span
             onClick={() => setShowAll(s => !s)}
@@ -81,18 +76,6 @@ export default function AIInsightsPanel() {
         </div>
       )}
 
-      {/* Divider */}
-      <div style={{ height: 1, background: 'var(--line)', margin: '11px 0 0' }} />
-
-      {/* Market movers — placeholder until line movement tracking is wired */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '13px 14px 4px' }}>
-        <span style={{ fontSize: 12.5, fontWeight: 600 }}>Market movers</span>
-        <span style={{ marginLeft: 8, fontSize: 10, color: 'var(--text-3)', fontWeight: 400 }}>Line movement tracking</span>
-      </div>
-
-      <div style={{ padding: '8px 14px 14px', fontSize: 11, color: 'var(--text-3)', lineHeight: 1.5 }}>
-        Line movement alerts will appear here as odds shift. Currently monitoring {scanned > 0 ? `${scanned} markets` : 'all markets'}.
-      </div>
     </div>
   )
 }
