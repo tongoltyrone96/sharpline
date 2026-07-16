@@ -14,7 +14,18 @@ interface WeatherPanelProps {
 }
 
 export default function WeatherPanel({ weather }: WeatherPanelProps) {
-  if (!weather) return null
+  if (!weather) {
+    return (
+      <div style={{
+        background: 'var(--panel-2)', border: '1px solid var(--line)',
+        borderRadius: 8, padding: '10px 12px', fontSize: 11.5,
+        color: 'var(--text-3)',
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-2)', marginBottom: 4 }}>Weather</div>
+        Weather data not yet available
+      </div>
+    )
+  }
 
   if (weather.is_indoor) {
     return (

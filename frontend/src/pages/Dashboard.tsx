@@ -216,11 +216,11 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Weather + Lineup info (if event detail available) */}
-          {(weather || lineups.length > 0) && (
-            <div style={{ marginBottom: 12 }}>
-              {weather && <WeatherPanel weather={weather} />}
-              {lineups.length > 0 && <LineupPanel lineups={lineups} />}
+          {/* Weather + Lineup — always shown when an event is selected */}
+          {detail && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <WeatherPanel weather={weather} />
+              <LineupPanel lineups={lineups} />
             </div>
           )}
 

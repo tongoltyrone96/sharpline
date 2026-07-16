@@ -49,7 +49,17 @@ function ConfirmedBadge({ confirmed }: { confirmed: boolean }) {
 }
 
 export default function LineupPanel({ lineups }: LineupPanelProps) {
-  if (!lineups || lineups.length === 0) return null
+  if (!lineups || lineups.length === 0) {
+    return (
+      <div style={{
+        background: 'var(--panel-2)', border: '1px solid var(--line)',
+        borderRadius: 8, padding: '10px 12px',
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-2)', marginBottom: 4 }}>Lineup News</div>
+        <span style={{ fontSize: 11.5, color: 'var(--text-3)' }}>Lineups not yet announced</span>
+      </div>
+    )
+  }
 
   // Sort: out + doubtful first, then in
   const sorted = [...lineups].sort((a, b) => {
