@@ -171,7 +171,7 @@ export default function Dashboard() {
 
       {/* Main content */}
       <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <TopBar />
+        <TopBar lastUpdated={lastUpdated || '–'} />
 
         <div className="content-pad" style={{ padding: '14px 20px 26px', flex: 1 }}>
           {/* Filter bar */}

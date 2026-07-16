@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 
-export default function TopBar() {
-  const [seconds, setSeconds] = useState(2)
+interface TopBarProps {
+  lastUpdated: string
+}
 
-  useEffect(() => {
-    const id = setInterval(() => setSeconds(s => s >= 9 ? 2 : s + 1), 1000)
-    return () => clearInterval(id)
-  }, [])
+export default function TopBar({ lastUpdated }: TopBarProps) {
 
   return (
     <div style={{
@@ -51,28 +49,8 @@ export default function TopBar() {
 
       {/* Updated text — hidden on phones */}
       <span className="topbar-updated" style={{ fontSize: 11.5, color: 'var(--text-3)', flexShrink: 0 }}>
-        Updated <span>{seconds}</span>s ago
+        Updated {lastUpdated}
       </span>
-
-      {/* Bell icon */}
-      <div style={{
-        position: 'relative', width: 34, height: 34, borderRadius: 8, flexShrink: 0,
-        background: 'var(--panel)', border: '1px solid var(--line)',
-        display: 'grid', placeItems: 'center',
-        color: 'var(--text-2)', cursor: 'pointer',
-      }}>
-        <svg width={15} height={15} viewBox="0 0 24 24" fill="none">
-          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <span style={{
-          position: 'absolute', top: -4, right: -4,
-          background: 'var(--blue)', color: '#fff',
-          fontSize: 8.5, fontWeight: 700,
-          minWidth: 15, height: 15, borderRadius: 8,
-          display: 'grid', placeItems: 'center',
-          border: '2px solid var(--bg)',
-        }}>9</span>
-      </div>
 
       {/* User avatar — always visible; name/plan hidden on phones */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', flexShrink: 0 }}>
