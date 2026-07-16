@@ -80,19 +80,21 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
     sport_key = event.sport.key if event.sport else None
 
     def _get_param(key: str, default: float) -> float:
-        row = None
+        # Keys are stored with sport prefix, e.g. "aussierules_afl.sigma_margin"
         if sport_key:
             row = (
                 db.query(ModelParam)
-                .filter(ModelParam.key == key, ModelParam.sport_key == sport_key)
+                .filter(ModelParam.key == f"{sport_key}.{key}")
                 .first()
             )
-        if row is None:
-            row = (
-                db.query(ModelParam)
-                .filter(ModelParam.key == key, ModelParam.sport_key == None)  # noqa: E711
-                .first()
-            )
+            if row is not None:
+                return row.value
+        # Fall back to global key (no sport prefix)
+        row = (
+            db.query(ModelParam)
+            .filter(ModelParam.key == key, ModelParam.sport_key == None)  # noqa: E711
+            .first()
+        )
         return row.value if row else default
 
     sigma_margin = _get_param("sigma_margin", _DEFAULT_SIGMA_MARGIN)
