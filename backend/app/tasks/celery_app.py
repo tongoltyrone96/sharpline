@@ -7,7 +7,17 @@ from app.config import settings
 _broker = settings.REDIS_URL
 _backend = settings.REDIS_URL
 
-celery_app = Celery("sharpline", broker=_broker, backend=_backend)
+celery_app = Celery(
+    "sharpline",
+    broker=_broker,
+    backend=_backend,
+    include=[
+        "app.tasks.poll_odds",
+        "app.tasks.poll_weather",
+        "app.tasks.poll_lineups",
+        "app.tasks.recompute",
+    ],
+)
 
 _conf: dict = {
     "task_serializer": "json",
