@@ -9,6 +9,7 @@ interface Props {
   onSelect: (id: string) => void
   onOpenGame?: (id: string) => void
   searchQuery?: string
+  valueOnly?: boolean
 }
 
 function confColor(pct: number): string {
@@ -22,7 +23,7 @@ function fmtEdge(v: number | null): string {
   return (v >= 0 ? '+' : '') + v.toFixed(1) + '%'
 }
 
-function fmtFair(price: number | null): string {
+function fmtPrice(price: number | null | undefined): string {
   if (price == null) return '–'
   return price.toFixed(2)
 }
@@ -34,7 +35,7 @@ const SPORT_FILTERS = ['ALL', 'AFL', 'NRL', 'NBA', 'NFL', 'MLB']
 const MAX_PLAUSIBLE_EDGE = 20.0
 
 export default function LiveBoard({
-  events, loading, selectedId, onSelect, onOpenGame, searchQuery = '',
+  events, loading, selectedId, onSelect, onOpenGame, searchQuery = '', valueOnly = false,
 }: Props) {
   const [filter, setFilter] = useState<string>('ALL')
 
@@ -59,6 +60,7 @@ export default function LiveBoard({
       }
       return e
     })
+    .filter(e => !valueOnly || (e.best_edge_pct != null && e.best_edge_pct > 0))
 
   return (
     <div style={{
@@ -96,10 +98,10 @@ export default function LiveBoard({
       </div>
 
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
           <thead>
             <tr>
-              {['Match', 'Fair', 'Edge', 'Confidence'].map((h, i) => (
+              {['Match', 'Home', 'Away', 'Edge', 'Confidence'].map((h, i) => (
                 <th key={h} style={{
                   fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--text-3)',
                   textTransform: 'uppercase', letterSpacing: '.06em',
@@ -112,21 +114,23 @@ export default function LiveBoard({
           </thead>
           <tbody>
             {loading && filtered.length === 0 && (
-              <tr><td colSpan={4} style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 11 }}>Loading fixtures…</td></tr>
+              <tr><td colSpan={5} style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 11 }}>Loading fixtures…</td></tr>
             )}
             {!loading && filtered.length === 0 && (
-              <tr><td colSpan={4} style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 11 }}>
-                {q ? `No matches for "${searchQuery}"` : 'No fixtures in feed'}
+              <tr><td colSpan={5} style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 11 }}>
+                {q
+                  ? `No matches for "${searchQuery}"`
+                  : valueOnly
+                    ? 'No positive-edge fixtures right now'
+                    : 'No fixtures in feed'}
               </td></tr>
             )}
             {filtered.map(e => {
               const sportAbbr = getSportAbbr(e.sport_key)
               const sportColor = getSportColor(e.sport_key)
-              // Fair price = the model's fair price for the favourite
-              const homeFav = (e.home_win_prob ?? 0) >= (e.away_win_prob ?? 0)
-              const fair = homeFav
-                ? (e.home_win_prob ? 1 / e.home_win_prob : null)
-                : (e.away_win_prob ? 1 / e.away_win_prob : null)
+              // Per-side fair prices from the model's win probabilities
+              const homeFair = e.home_win_prob ? 1 / e.home_win_prob : null
+              const awayFair = e.away_win_prob ? 1 / e.away_win_prob : null
               const edge = e.best_edge_pct
               const conf = e.confidence != null ? Math.round(e.confidence * 100) : null
               const isSelected = e.id === selectedId
@@ -156,11 +160,8 @@ export default function LiveBoard({
                       </div>
                     </div>
                   </td>
-                  <td style={{
-                    padding: '11px 12px', textAlign: 'right',
-                    borderBottom: '1px solid var(--line)',
-                    fontFamily: 'var(--mono)', fontSize: 12.5,
-                  }}>{fmtFair(fair)}</td>
+                  <PriceCell price={e.home_h2h_price} fair={homeFair} />
+                  <PriceCell price={e.away_h2h_price} fair={awayFair} />
                   <td style={{
                     padding: '11px 12px', textAlign: 'right',
                     borderBottom: '1px solid var(--line)',
@@ -198,5 +199,30 @@ export default function LiveBoard({
         </table>
       </div>
     </div>
+  )
+}
+
+/** Cell showing the best bookmaker H2H price on top and the model's
+ * fair price on a small subtitle beneath. Cyan = book price is above
+ * fair (value), red = below fair, muted = no signal. */
+function PriceCell({ price, fair }: { price: number | null | undefined; fair: number | null | undefined }) {
+  const priceColor = price != null && fair != null
+    ? price > fair ? 'var(--pos)' : price < fair ? 'var(--neg)' : 'var(--text)'
+    : 'var(--text)'
+  return (
+    <td style={{
+      padding: '11px 12px', textAlign: 'right',
+      borderBottom: '1px solid var(--line)',
+      fontFamily: 'var(--mono)',
+    }}>
+      <div style={{ fontSize: 12.5, fontWeight: 600, color: priceColor }}>
+        {fmtPrice(price)}
+      </div>
+      {fair != null && (
+        <div style={{ fontSize: 9.5, color: 'var(--text-3)', marginTop: 1 }}>
+          fair {fmtPrice(fair)}
+        </div>
+      )}
+    </td>
   )
 }

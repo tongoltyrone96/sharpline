@@ -57,6 +57,7 @@ export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState('–')
   const [lastFetchedAt, setLastFetchedAt] = useState<Date | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [valueOnly, setValueOnly] = useState(false)
 
   const { events, loading } = useDashboard()
 
@@ -123,6 +124,8 @@ export default function Dashboard() {
             lastUpdated={lastUpdated}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            valueOnly={valueOnly}
+            onValueOnlyChange={setValueOnly}
           />
 
           <div style={{ padding: '16px 20px 40px' }}>
@@ -137,6 +140,7 @@ export default function Dashboard() {
                   onSelect={setSelectedId}
                   onOpenGame={openGame}
                   searchQuery={searchQuery}
+                  valueOnly={valueOnly}
                 />
                 <LineMovementChart
                   eventId={selectedId}
