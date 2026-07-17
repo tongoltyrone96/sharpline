@@ -154,6 +154,9 @@ def get_dashboard(
             projected_total=summary.projected_total if summary else None,
             home_h2h_price=home_h2h_map.get(event.id),
             away_h2h_price=away_h2h_map.get(event.id),
+            home_win_prob=summary.home_win_prob if summary else None,
+            away_win_prob=summary.away_win_prob if summary else None,
+            confidence=summary.confidence if summary else None,
             has_weather=event.id in weather_event_ids,
             has_lineups=event.id in lineup_event_ids,
         ))

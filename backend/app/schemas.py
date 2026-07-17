@@ -118,6 +118,9 @@ class DashboardEvent(BaseModel):
     projected_total: float | None = None
     home_h2h_price: float | None = None
     away_h2h_price: float | None = None
+    home_win_prob: float | None = None
+    away_win_prob: float | None = None
+    confidence: float | None = None
     has_weather: bool = False
     has_lineups: bool = False
 
