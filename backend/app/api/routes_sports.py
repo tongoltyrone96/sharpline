@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models import Sport
+from app.models import ModelParam, Sport
 from app.schemas import SportOut
 
 router = APIRouter(prefix="/api/v1", tags=["sports"])
@@ -33,3 +33,17 @@ def list_sports(db: Session = Depends(get_db)) -> list[SportOut]:
         )
         for s in sports
     ]
+
+
+@router.get("/params")
+def list_public_params(db: Session = Depends(get_db)) -> dict[str, float]:
+    """
+    Public read-only view of model parameters (sigma, tuning constants).
+
+    Returns a flat {key: value} map so the frontend can read the same values
+    the model uses — e.g. to render a distribution curve with the actual σ
+    the admin has set for a given sport. Admin write access still requires
+    the /admin routes with password auth.
+    """
+    rows = db.query(ModelParam.key, ModelParam.value).all()
+    return {k: v for k, v in rows}

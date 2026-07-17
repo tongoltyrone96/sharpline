@@ -1,13 +1,18 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 
-type NavKey = 'overview' | 'live' | 'models' | 'charts' | 'settings'
+type NavKey = 'overview' | 'settings'
 
 interface Props {
   active: NavKey
   onNavigate?: (key: NavKey) => void
 }
 
+/**
+ * Rail contains only routes that actually exist. Live/Models/Charts/Alerts
+ * icons were removed because they had no destination — a button that looks
+ * clickable but goes nowhere is worse than no button.
+ */
 const ITEMS: { key: NavKey; title: string; icon: React.ReactNode; path: string }[] = [
   {
     key: 'overview', title: 'Overview', path: '/',
@@ -20,31 +25,6 @@ const ITEMS: { key: NavKey; title: string; icon: React.ReactNode; path: string }
       </svg>
     ),
   },
-  {
-    key: 'live', title: 'Live', path: '/live',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M3 12h4l3 8 4-16 3 8h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-  },
-  {
-    key: 'models', title: 'Models', path: '/models',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M12 3a6 6 0 0 0-3.5 10.9V17h7v-3.1A6 6 0 0 0 12 3zM9.5 20h5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-  },
-  {
-    key: 'charts', title: 'Charts', path: '/charts',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M4 19V5M4 19h16M8 15l3-4 3 2 4-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-  },
-  // Admin (gear) sits where the bell used to be — no bottom-anchored item.
   {
     key: 'settings', title: 'Admin', path: '/admin',
     icon: (

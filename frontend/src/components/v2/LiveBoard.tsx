@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import Sparkline from './Sparkline'
 import { DashboardEvent } from '../../hooks/useDashboard'
 import { getSportAbbr, getSportColor } from '../../lib/colors'
 
@@ -9,6 +8,7 @@ interface Props {
   selectedId: string | null
   onSelect: (id: string) => void
   onOpenGame?: (id: string) => void
+  searchQuery?: string
 }
 
 function confColor(pct: number): string {
@@ -27,48 +27,38 @@ function fmtFair(price: number | null): string {
   return price.toFixed(2)
 }
 
-/**
- * Deterministic trend spark — seeded by event id so it's stable across
- * re-renders but different per row. Ends on the sign of the row's edge.
- * NOTE: this is a visual placeholder for line movement; the real
- * per-outcome history lives in /api/v1/events/{id}/history and is
- * rendered in the LineMovementChart on Phase C's game page.
- */
-function trendPoints(id: string, up: boolean): number[] {
-  let s = 0
-  for (let i = 0; i < id.length; i++) s = (s * 31 + id.charCodeAt(i)) & 0x7fffffff
-  const r = () => ((s = (s * 16807) % 2147483647) / 2147483647)
-  const N = 10
-  const arr: number[] = []
-  let v = 0.5
-  for (let i = 0; i < N; i++) {
-    v += (r() - 0.5) * 0.4
-    v = Math.max(0.15, Math.min(0.85, v))
-    arr.push(v)
-  }
-  arr[N - 1] = up ? Math.max(...arr) : Math.min(...arr)
-  return arr
-}
-
 const SPORT_FILTERS = ['ALL', 'AFL', 'NRL', 'NBA', 'NFL', 'MLB']
 
 /** Match backend opportunities cap: rows above this are almost always
  * de-vig or feed anomalies, not real value. */
 const MAX_PLAUSIBLE_EDGE = 20.0
 
-export default function LiveBoard({ events, loading, selectedId, onSelect, onOpenGame }: Props) {
+export default function LiveBoard({
+  events, loading, selectedId, onSelect, onOpenGame, searchQuery = '',
+}: Props) {
   const [filter, setFilter] = useState<string>('ALL')
 
-  const filtered = (filter === 'ALL'
-    ? events
-    : events.filter(e => getSportAbbr(e.sport_key) === filter)
-  ).map(e => {
-    // Suppress outlier edges (> 20%) — they're de-vig anomalies, not real value
-    if (e.best_edge_pct != null && e.best_edge_pct > MAX_PLAUSIBLE_EDGE) {
-      return { ...e, best_edge_pct: null }
-    }
-    return e
-  })
+  const q = searchQuery.trim().toLowerCase()
+
+  const filtered = events
+    .filter(e => filter === 'ALL' || getSportAbbr(e.sport_key) === filter)
+    .filter(e => {
+      if (!q) return true
+      return (
+        e.home_team.toLowerCase().includes(q)
+        || e.away_team.toLowerCase().includes(q)
+        || e.home_abbr.toLowerCase().includes(q)
+        || e.away_abbr.toLowerCase().includes(q)
+        || e.sport_title.toLowerCase().includes(q)
+      )
+    })
+    .map(e => {
+      // Suppress outlier edges (> 20%) — they're de-vig anomalies, not real value
+      if (e.best_edge_pct != null && e.best_edge_pct > MAX_PLAUSIBLE_EDGE) {
+        return { ...e, best_edge_pct: null }
+      }
+      return e
+    })
 
   return (
     <div style={{
@@ -106,10 +96,10 @@ export default function LiveBoard({ events, loading, selectedId, onSelect, onOpe
       </div>
 
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 620 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
           <thead>
             <tr>
-              {['Match', 'Fair', 'Edge', 'Confidence', 'Trend'].map((h, i) => (
+              {['Match', 'Fair', 'Edge', 'Confidence'].map((h, i) => (
                 <th key={h} style={{
                   fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--text-3)',
                   textTransform: 'uppercase', letterSpacing: '.06em',
@@ -122,10 +112,12 @@ export default function LiveBoard({ events, loading, selectedId, onSelect, onOpe
           </thead>
           <tbody>
             {loading && filtered.length === 0 && (
-              <tr><td colSpan={5} style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 11 }}>Loading fixtures…</td></tr>
+              <tr><td colSpan={4} style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 11 }}>Loading fixtures…</td></tr>
             )}
             {!loading && filtered.length === 0 && (
-              <tr><td colSpan={5} style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 11 }}>No fixtures in feed</td></tr>
+              <tr><td colSpan={4} style={{ padding: 24, textAlign: 'center', color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 11 }}>
+                {q ? `No matches for "${searchQuery}"` : 'No fixtures in feed'}
+              </td></tr>
             )}
             {filtered.map(e => {
               const sportAbbr = getSportAbbr(e.sport_key)
@@ -138,7 +130,6 @@ export default function LiveBoard({ events, loading, selectedId, onSelect, onOpe
               const edge = e.best_edge_pct
               const conf = e.confidence != null ? Math.round(e.confidence * 100) : null
               const isSelected = e.id === selectedId
-              const trend = trendPoints(e.id, (edge ?? 0) >= 0)
               return (
                 <tr
                   key={e.id}
@@ -199,19 +190,6 @@ export default function LiveBoard({ events, loading, selectedId, onSelect, onOpe
                         <span style={{ fontFamily: 'var(--mono)', fontSize: 11.5, fontWeight: 600, width: 32, textAlign: 'right' }}>{conf}%</span>
                       </span>
                     ) : <span style={{ color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 11.5 }}>–</span>}
-                  </td>
-                  <td style={{
-                    padding: '11px 12px', textAlign: 'right',
-                    borderBottom: '1px solid var(--line)',
-                    width: 68,
-                  }}>
-                    <div style={{ display: 'inline-block', verticalAlign: 'middle' }}>
-                      <Sparkline
-                        values={trend}
-                        color={(edge ?? 0) >= 0 ? '#34D399' : '#F26D6D'}
-                        width={60} height={22} strokeWidth={1.3}
-                      />
-                    </div>
                   </td>
                 </tr>
               )

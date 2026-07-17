@@ -56,6 +56,7 @@ export default function Dashboard() {
   const [wsState, setWsState] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
   const [lastUpdated, setLastUpdated] = useState('–')
   const [lastFetchedAt, setLastFetchedAt] = useState<Date | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const { events, loading } = useDashboard()
 
@@ -120,6 +121,8 @@ export default function Dashboard() {
             modelOnline={modelOnline}
             edgesFound={edgesFound}
             lastUpdated={lastUpdated}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
           />
 
           <div style={{ padding: '16px 20px 40px' }}>
@@ -133,6 +136,7 @@ export default function Dashboard() {
                   selectedId={selectedId}
                   onSelect={setSelectedId}
                   onOpenGame={openGame}
+                  searchQuery={searchQuery}
                 />
                 <LineMovementChart
                   eventId={selectedId}

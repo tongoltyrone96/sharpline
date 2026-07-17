@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { getParams } from '../../lib/api'
 
 interface MarketRow {
   bookmaker: string
@@ -19,8 +20,10 @@ interface Props {
 
 /**
  * MarginDistribution — normal curve N(μ=projected_margin, σ=sport sigma).
- * Sigma is fetched from /api/v1/params (the admin-tunable value). If the
- * fetch fails we fall back to conservative defaults per sport.
+ *
+ * σ comes from /api/v1/params — the same value the backend model uses,
+ * which the admin can tune per sport in the admin panel. If the request
+ * fails (unlikely) we use conservative sport-level defaults.
  *
  * Shaded region = P(home covers best-book line) — computed from the
  * spread the market is offering, so the visual maps to a real bet.
@@ -35,10 +38,25 @@ const SIGMA_FALLBACK: Record<string, number> = {
 
 export default function MarginDistribution({ projectedMargin, sportKey, spreads, homeName }: Props) {
   const [sigma, setSigma] = useState<number>(SIGMA_FALLBACK[sportKey] ?? 14.0)
+  const [sigmaSource, setSigmaSource] = useState<'api' | 'fallback'>('fallback')
 
   useEffect(() => {
-    // Public read-only endpoint doesn't exist for params; fall back to defaults.
-    setSigma(SIGMA_FALLBACK[sportKey] ?? 14.0)
+    let cancelled = false
+    const fallback = SIGMA_FALLBACK[sportKey] ?? 14.0
+    setSigma(fallback)
+    setSigmaSource('fallback')
+    if (!sportKey) return
+    getParams()
+      .then(params => {
+        if (cancelled) return
+        const key = `${sportKey}.sigma_margin`
+        if (typeof params[key] === 'number' && params[key] > 0) {
+          setSigma(params[key])
+          setSigmaSource('api')
+        }
+      })
+      .catch(() => { /* keep fallback */ })
+    return () => { cancelled = true }
   }, [sportKey])
 
   // Best home spread — the line that the shaded area maps to
@@ -56,10 +74,20 @@ export default function MarginDistribution({ projectedMargin, sportKey, spreads,
         padding: '12px 14px', borderBottom: '1px solid var(--line)',
       }}>
         <span style={{ fontSize: 13, fontWeight: 600 }}>Margin Distribution</span>
-        <span style={{
-          fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)',
-          textTransform: 'uppercase', letterSpacing: '.07em',
-        }}>// μ={projectedMargin != null ? projectedMargin.toFixed(2) : '–'}, σ={sigma.toFixed(1)}</span>
+        <span
+          title={
+            `μ (projected margin) is the model's point estimate for this game.\n`
+            + `σ (${sigma.toFixed(1)}) is a sport-level estimate of margin volatility, `
+            + (sigmaSource === 'api'
+              ? 'read from /api/v1/params — the admin-tunable value the model uses.'
+              : 'a static fallback; live value could not be fetched.')
+          }
+          style={{
+            fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)',
+            textTransform: 'uppercase', letterSpacing: '.07em',
+            cursor: 'help',
+          }}
+        >// μ={projectedMargin != null ? projectedMargin.toFixed(2) : '–'}, σ={sigma.toFixed(1)}</span>
       </div>
 
       <div style={{ padding: 14 }}>

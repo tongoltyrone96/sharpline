@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 
 interface Props {
   title: string
@@ -6,9 +6,13 @@ interface Props {
   modelOnline: boolean
   edgesFound: number
   lastUpdated: string
+  searchQuery: string
+  onSearchChange: (q: string) => void
 }
 
-export default function Header({ title, subtitle, modelOnline, edgesFound, lastUpdated }: Props) {
+export default function Header({
+  title, subtitle, modelOnline, edgesFound, lastUpdated, searchQuery, onSearchChange,
+}: Props) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 14,
@@ -24,19 +28,40 @@ export default function Header({ title, subtitle, modelOnline, edgesFound, lastU
       <Stat label="EDGES FOUND" value={String(edgesFound)} />
       <Stat label="SYNC" value={lastUpdated} />
 
-      <div className="topbar-search" style={{
+      <label className="topbar-search" style={{
         marginLeft: 'auto',
         display: 'flex', alignItems: 'center', gap: 8,
         background: 'var(--panel)', border: '1px solid var(--line)',
         borderRadius: 8, padding: '8px 12px', minWidth: 200,
         color: 'var(--text-3)', fontSize: 12,
+        cursor: 'text',
       }}>
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
           <circle cx={11} cy={11} r={7} stroke="currentColor" strokeWidth={1.8}/>
           <path d="M21 21l-4-4" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"/>
         </svg>
-        Search markets…
-      </div>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => onSearchChange(e.target.value)}
+          placeholder="Search teams, sports…"
+          style={{
+            background: 'transparent', border: 'none', outline: 'none',
+            color: 'var(--text)', fontSize: 12, fontFamily: 'var(--ui)',
+            width: '100%', padding: 0,
+          }}
+        />
+        {searchQuery && (
+          <span
+            onClick={e => { e.preventDefault(); onSearchChange('') }}
+            style={{
+              color: 'var(--text-3)', fontSize: 14, cursor: 'pointer',
+              padding: '0 4px', lineHeight: 1,
+            }}
+            title="Clear"
+          >×</span>
+        )}
+      </label>
     </div>
   )
 }

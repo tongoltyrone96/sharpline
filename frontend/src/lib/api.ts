@@ -29,6 +29,9 @@ export const getSports = () =>
 export const getStatus = () =>
   fetch('/api/v1/status').then(r => r.json())
 
+export const getParams = (): Promise<Record<string, number>> =>
+  fetch('/api/v1/params').then(r => r.json())
+
 // ---------------------------------------------------------------------------
 // Admin API — all calls require Basic auth header
 // ---------------------------------------------------------------------------

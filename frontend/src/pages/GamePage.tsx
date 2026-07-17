@@ -100,7 +100,7 @@ export default function GamePage() {
     <div>
       <LiveTicker events={events} />
       <div className="app-shell">
-        <Rail active="live" />
+        <Rail active="overview" />
         <div className="app-main">
           {/* Breadcrumb */}
           <div style={{
