@@ -169,7 +169,12 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
     fair_home_price = (1.0 / home_win_prob) if home_win_prob else None
     fair_away_price = (1.0 / away_win_prob) if away_win_prob else None
 
-    confidence = min(enabled_bm_count / 10.0, 1.0)
+    confidence, confidence_factors = _compute_confidence(
+        enabled_bm_count=enabled_bm_count,
+        outputs=outputs,
+        home_name=home_name,
+        home_win_prob=home_win_prob,
+    )
 
     # Find the best edge across all outputs
     best_output = max(outputs, key=lambda x: x.get("edge_pct", 0.0) or 0.0) if outputs else None
@@ -197,7 +202,7 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
         "fair_home_price": fair_home_price,
         "fair_away_price": fair_away_price,
         "rationale": rationale,
-        "factors_json": {},
+        "factors_json": confidence_factors,
     }
 
     # Step 10: upsert model_summary
@@ -213,7 +218,7 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
             fair_home_price=fair_home_price,
             fair_away_price=fair_away_price,
             rationale=rationale,
-            factors_json={},
+            factors_json=confidence_factors,
             computed_at=now,
         ))
     else:
@@ -225,7 +230,7 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
         existing.fair_home_price = fair_home_price
         existing.fair_away_price = fair_away_price
         existing.rationale = rationale
-        existing.factors_json = {}
+        existing.factors_json = confidence_factors
         existing.computed_at = now
 
     db.commit()
@@ -236,3 +241,77 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
         publish_model_update(redis_client, event_id)
 
     return summary_dict
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Multi-factor confidence
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _compute_confidence(
+    enabled_bm_count: int,
+    outputs: list[dict],
+    home_name: str,
+    home_win_prob: float | None,
+) -> tuple[float, dict]:
+    """
+    Blend four observable signals into a single confidence score in [0, 1].
+    Also returns the per-factor breakdown so the UI can explain it.
+
+    Signals:
+      - coverage           : how many bookmakers are quoting (saturates at 6)
+      - market_agreement   : coefficient-of-variation of home H2H prices
+                             (low CV = books agree = high confidence)
+      - probability_split  : how far the model's home_win_prob is from 50/50
+                             (bigger split = more decisive pick)
+      - market_completeness: fraction of {h2h, spreads, totals} markets present
+
+    Weights sum to 1.0. Rationale: coverage + agreement dominate because they
+    describe how well the market is priced; split and completeness are
+    smaller correction terms.
+    """
+    # 1) Coverage — saturates at 6 books
+    coverage = min(enabled_bm_count / 6.0, 1.0)
+
+    # 2) Market agreement — CV of home H2H prices across books
+    home_prices = [
+        o.get("offered_price")
+        for o in outputs
+        if o.get("market") == "h2h" and o.get("outcome") == home_name
+        and o.get("offered_price") is not None
+    ]
+    if len(home_prices) >= 2:
+        mean_p = sum(home_prices) / len(home_prices)
+        var_p = sum((p - mean_p) ** 2 for p in home_prices) / len(home_prices)
+        std_p = var_p ** 0.5
+        cv = std_p / mean_p if mean_p > 0 else 1.0
+        # CV = 0 → 1.0 (perfect agreement); CV = 0.10 (10% spread) → 0.0
+        agreement = max(0.0, 1.0 - cv * 10.0)
+    else:
+        agreement = 0.5  # not enough books to judge
+
+    # 3) Probability split — how decisive is the pick
+    if home_win_prob is not None:
+        split = abs(home_win_prob - 0.5) * 2.0  # 0..1
+    else:
+        split = 0.0
+
+    # 4) Market completeness — do we have h2h, spreads, totals?
+    markets_present = {o.get("market") for o in outputs}
+    completeness = len(markets_present & {"h2h", "spreads", "totals"}) / 3.0
+
+    confidence = (
+        coverage * 0.30
+        + agreement * 0.30
+        + split * 0.25
+        + completeness * 0.15
+    )
+    confidence = max(0.0, min(1.0, confidence))
+
+    factors = {
+        "coverage": round(coverage, 3),
+        "market_agreement": round(agreement, 3),
+        "probability_split": round(split, 3),
+        "market_completeness": round(completeness, 3),
+        "bookmaker_count": enabled_bm_count,
+    }
+    return confidence, factors
