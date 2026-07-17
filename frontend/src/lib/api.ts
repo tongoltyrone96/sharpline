@@ -7,6 +7,22 @@ export const getEvent = (id: string) =>
 export const getOpportunities = (limit = 6) =>
   fetch(`/api/v1/opportunities?limit=${limit}`).then(r => r.json())
 
+export interface HistoryPoint { recorded_at: string; price: number; point: number | null }
+export interface HistoryResponse {
+  event_id: string; market: string; outcome: string; bookmaker: string;
+  history: HistoryPoint[];
+}
+
+export const getEventHistory = (
+  id: string,
+  params: { market: string; outcome?: string; bookmaker_id?: number },
+): Promise<HistoryResponse> => {
+  const q = new URLSearchParams({ market: params.market })
+  if (params.outcome) q.set('outcome', params.outcome)
+  if (params.bookmaker_id != null) q.set('bookmaker_id', String(params.bookmaker_id))
+  return fetch(`/api/v1/events/${id}/history?${q.toString()}`).then(r => r.json())
+}
+
 export const getSports = () =>
   fetch('/api/v1/sports').then(r => r.json())
 

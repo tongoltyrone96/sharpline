@@ -20,6 +20,9 @@ export interface DashboardEvent {
   away_h2h_price: number | null
   projected_margin: number | null
   projected_total: number | null
+  home_win_prob: number | null
+  away_win_prob: number | null
+  confidence: number | null
 }
 
 const SPORT_TITLE_TO_KEY: Record<string, string> = {
@@ -55,6 +58,9 @@ function transformEvent(raw: Record<string, unknown>): DashboardEvent {
     away_h2h_price: (raw.away_h2h_price as number | null) ?? null,
     projected_margin: (raw.projected_margin as number | null) ?? null,
     projected_total: (raw.projected_total as number | null) ?? null,
+    home_win_prob: (raw.home_win_prob as number | null) ?? null,
+    away_win_prob: (raw.away_win_prob as number | null) ?? null,
+    confidence: (raw.confidence as number | null) ?? null,
   }
 }
 

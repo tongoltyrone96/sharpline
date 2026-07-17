@@ -2,33 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design-system tokens — match sharpline.html exactly */
+/* ── Sharpline Terminal v2 tokens ─────────────────────────────────────────── */
 :root {
-  --bg:       #0A0D14;
-  --panel:    #111520;
-  --panel-2:  #0E121B;
-  --raise:    #161B27;
-  --line:     rgba(255,255,255,.06);
+  --bg:       #080B10;
+  --panel:    #0D1118;
+  --panel-2:  #0A0E14;
+  --raise:    #131820;
+  --line:     rgba(255,255,255,.055);
   --line-2:   rgba(255,255,255,.10);
-  --text:     #E8ECF4;
-  --text-2:   #8F9AAE;
-  --text-3:   #5C6779;
-  --blue:     #3B82F6;
+  --grid:     rgba(255,255,255,.03);
+  --text:     #E6EBF2;
+  --text-2:   #8B97A8;
+  --text-3:   #525E70;
+
+  --cyan:     #2DD4BF;
+  --cyan-dim: rgba(45,212,191,.12);
+  --amber:    #F5A524;
+  --amber-dim:rgba(245,165,36,.12);
+  --pos:      #34D399;
+  --pos-dim:  rgba(52,211,153,.13);
+  --neg:      #F26D6D;
+  --neg-dim:  rgba(242,109,109,.12);
+  --blue:     #5B9BFF;
+  --blue-dim: rgba(91,155,255,.14);
+  --violet:   #A78BFA;
+
+  /* Legacy aliases kept so any yet-un-migrated component still renders */
   --blue-2:   #5B9BFF;
-  --blue-dim: rgba(59,130,246,.14);
-  --green:    #22C55E;
-  --green-dim:rgba(34,197,94,.13);
-  --red:      #EF4444;
-  --red-dim:  rgba(239,68,68,.12);
-  --amber:    #F59E0B;
-  --violet:   #8B5CF6;
+  --green:    #34D399;
+  --green-dim:rgba(52,211,153,.13);
+  --red:      #F26D6D;
+  --red-dim:  rgba(242,109,109,.12);
+
+  --mono:     'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ui:       'Inter', -apple-system, system-ui, sans-serif;
   --r:        12px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  font-family: var(--ui);
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -36,53 +50,43 @@ body {
   font-feature-settings: "tnum" 1;
 }
 
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.num  { font-variant-numeric: tabular-nums; }
+
 ::-webkit-scrollbar { width: 7px; height: 7px; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,.09); border-radius: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 
-.num { font-variant-numeric: tabular-nums; }
+/* Animations */
+@keyframes pulse       { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+@keyframes spin        { to { transform: rotate(360deg); } }
+@keyframes flash-up    { 0% { background: rgba(52,211,153,.25); } 100% { background: transparent; } }
+@keyframes flash-dn    { 0% { background: rgba(242,109,109,.25); } 100% { background: transparent; } }
+@keyframes ticker-slide{ from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-/* Flash animations for WebSocket price updates */
-@keyframes flash-up { 0% { background: rgba(34,197,94,.25); } 100% { background: transparent; } }
-@keyframes flash-dn { 0% { background: rgba(239,68,68,.25); } 100% { background: transparent; } }
 .flash-up { animation: flash-up 1s ease; }
 .flash-dn { animation: flash-dn 1s ease; }
 
-/* Spin animation for sidebar ring */
-@keyframes spin { to { transform: rotate(360deg); } }
+/* ── App shell ─────────────────────────────────────────────────────────────── */
+.app-shell    { display: grid; grid-template-columns: 56px 1fr; min-height: calc(100vh - 34px); }
+.app-main     { overflow-x: hidden; overflow-y: auto; }
 
-/* Pulse animation for live dot */
-@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
-
-/* App layout */
-.app-grid { display: grid; grid-template-columns: 186px 1fr; min-height: 100vh; }
-
-@media (max-width: 980px) {
-  .app-grid { grid-template-columns: 1fr !important; }
-  .app-sidebar { display: none !important; }
-  .tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .tbl-scroll table { min-width: 700px; }
+@media (max-width: 720px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .rail      { display: none !important; }
 }
 
-/* Mid-grid: 3 col on desktop, single col on tablet/phone */
-@media (max-width: 900px) {
-  .mid-grid { grid-template-columns: 1fr !important; }
+/* Two-column responsive grid used by dashboard body */
+.cols { display: grid; grid-template-columns: 1fr 340px; gap: 14px; }
+@media (max-width: 1180px) {
+  .cols { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 640px) {
+  .kpis { grid-template-columns: 1fr 1fr !important; }
 }
 
-/* Phone-specific adjustments */
-@media (max-width: 600px) {
-  .topbar-search { display: none !important; }
-  .topbar-updated { display: none !important; }
-  .topbar-user-label { display: none !important; }
-  .content-pad { padding: 10px 12px 20px !important; }
-  .filterbar-wrap { gap: 6px !important; }
-}
-
-/* momentum scrolling handled natively by modern browsers */
-
-/* Safe-area insets for notched iPhones */
 @supports (padding: env(safe-area-inset-left)) {
-  .app-grid { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
   body { padding-bottom: env(safe-area-inset-bottom); }
 }
 

@@ -7,10 +7,19 @@ export default defineConfig({
     port: 5173,
     host: '0.0.0.0',
     proxy: {
-      '/api': 'http://localhost:8000',
-      '/admin': 'http://localhost:8000',
+      '/api': {
+        target: 'https://api-production-95c7.up.railway.app',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/admin': {
+        target: 'https://api-production-95c7.up.railway.app',
+        changeOrigin: true,
+        secure: true,
+      },
       '/ws': {
-        target: 'ws://localhost:8000',
+        target: 'wss://api-production-95c7.up.railway.app',
+        changeOrigin: true,
         ws: true,
       },
     },

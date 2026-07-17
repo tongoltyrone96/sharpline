@@ -1,19 +1,28 @@
 import React, { useState, useCallback, useEffect } from 'react'
-import Sidebar from '../components/Sidebar'
-import TopBar from '../components/TopBar'
-import FilterBar from '../components/FilterBar'
-import FixtureCarousel from '../components/FixtureCarousel'
-import AIInsightsPanel from '../components/AIInsightsPanel'
-import WhyThisIsValue from '../components/WhyThisIsValue'
-import ModelPerformance from '../components/ModelPerformance'
-import AlertsPanel from '../components/AlertsPanel'
-import MarketComparison from '../components/MarketComparison'
-import WeatherPanel from '../components/WeatherPanel'
-import LineupPanel from '../components/LineupPanel'
+import { useNavigate } from 'react-router-dom'
+import Rail from '../components/v2/Rail'
+import Header from '../components/v2/Header'
+import LiveTicker from '../components/v2/LiveTicker'
+import KpiRow from '../components/v2/KpiRow'
+import LiveBoard from '../components/v2/LiveBoard'
+import LineMovementChart from '../components/v2/LineMovementChart'
+import ConfidenceRing from '../components/v2/ConfidenceRing'
+import EdgeByBookBars from '../components/v2/EdgeByBookBars'
+import ValueFeed from '../components/v2/ValueFeed'
 import { useDashboard } from '../hooks/useDashboard'
 import { useWebSocket, WsMessage } from '../hooks/useWebSocket'
 import { getEvent } from '../lib/api'
 import { timeAgo } from '../lib/format'
+
+interface MarketRow {
+  bookmaker: string
+  outcome: string
+  price: number
+  point: number | null
+  fair_price: number | null
+  edge_pct: number | null
+  is_best: boolean
+}
 
 interface EventDetail {
   event: {
@@ -35,75 +44,36 @@ interface EventDetail {
     rationale: string
     factors: Record<string, unknown>
   } | null
-  markets: {
-    h2h: MarketRow[]
-    spreads: MarketRow[]
-    totals: MarketRow[]
-  }
-  weather: {
-    temp_c: number
-    wind_kmh: number
-    rain_prob: number
-    humidity: number
-    condition: string
-    is_indoor: boolean
-  } | null
-  lineups: Array<{
-    team: string
-    player: string
-    status: string
-    reason?: string
-    confirmed: boolean
-  }>
-}
-
-interface MarketRow {
-  bookmaker: string
-  outcome: string
-  price: number
-  point: number | null
-  fair_price: number | null
-  edge_pct: number | null
-  is_best: boolean
+  markets: { h2h: MarketRow[]; spreads: MarketRow[]; totals: MarketRow[] }
+  weather: unknown
+  lineups: unknown[]
 }
 
 export default function Dashboard() {
-  const [activeSport, setActiveSport] = useState('All')
-  const [valueOnly, setValueOnly] = useState(true)
+  const navigate = useNavigate()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [eventDetail, setEventDetail] = useState<EventDetail | null>(null)
-  const [_detailLoading, setDetailLoading] = useState(false)
   const [wsState, setWsState] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
   const [lastUpdated, setLastUpdated] = useState('–')
   const [lastFetchedAt, setLastFetchedAt] = useState<Date | null>(null)
-  const [flashEventId, setFlashEventId] = useState<string | null>(null)
 
-  const { events, loading } = useDashboard(activeSport === 'All' ? undefined : activeSport)
+  const { events, loading } = useDashboard()
 
-  // Auto-select first event when events load
   useEffect(() => {
-    if (events.length > 0 && !selectedId) {
-      setSelectedId(events[0].id)
-    }
+    if (events.length > 0 && !selectedId) setSelectedId(events[0].id)
   }, [events, selectedId])
 
-  // Fetch event detail whenever selection changes
   const fetchDetail = useCallback((id: string) => {
-    setDetailLoading(true)
     getEvent(id)
       .then((data: EventDetail) => {
         setEventDetail(data)
         setLastFetchedAt(new Date())
       })
       .catch(() => setEventDetail(null))
-      .finally(() => setDetailLoading(false))
   }, [])
 
-  useEffect(() => {
-    if (selectedId) fetchDetail(selectedId)
-  }, [selectedId, fetchDetail])
+  useEffect(() => { if (selectedId) fetchDetail(selectedId) }, [selectedId, fetchDetail])
 
-  // Update "last updated" display every second
   useEffect(() => {
     const id = setInterval(() => {
       if (lastFetchedAt) setLastUpdated(timeAgo(lastFetchedAt.toISOString()))
@@ -111,142 +81,97 @@ export default function Dashboard() {
     return () => clearInterval(id)
   }, [lastFetchedAt])
 
-  // WebSocket handler
-  const handleWsMessage = useCallback((msg: WsMessage) => {
+  const handleWs = useCallback((msg: WsMessage) => {
     if (msg.type === 'model_update' && msg.event_id === selectedId) {
       fetchDetail(msg.event_id as string)
-      setFlashEventId(msg.event_id as string + '_' + Date.now())
     }
   }, [selectedId, fetchDetail])
 
-  useWebSocket({
-    onMessage: handleWsMessage,
-    onStateChange: setWsState,
-  })
+  useWebSocket({ onMessage: handleWs, onStateChange: setWsState })
 
-  const handleSelect = (id: string) => {
-    setSelectedId(id)
+  const openGame = (id: string) => {
+    navigate(`/game/${id}`)
   }
+
+  // Derive KPI signals
+  const bookmakerCount = new Set(
+    (eventDetail?.markets?.h2h ?? [])
+      .concat(eventDetail?.markets?.spreads ?? [])
+      .concat(eventDetail?.markets?.totals ?? [])
+      .map(m => m.bookmaker)
+  ).size
+  const edgesFound = events.filter(e => (e.best_edge_pct ?? 0) > 0).length
+  const modelOnline = wsState === 'connected'
 
   const detail = eventDetail
   const model = detail?.model ?? null
-  const markets = detail?.markets ?? { h2h: [], spreads: [], totals: [] }
-  const weather = detail?.weather ?? null
-  const lineups = detail?.lineups ?? []
   const eventInfo = detail?.event ?? null
 
   return (
-    <div className="app-grid" style={{
-      display: 'grid',
-      gridTemplateColumns: '186px 1fr',
-      minHeight: '100vh',
-    }}>
-      <style>{`
-        @media (max-width: 980px) {
-          .app-sidebar { display: none !important; }
-          .app-grid { grid-template-columns: 1fr !important; }
-          .tbl-scroll { overflow-x: auto; }
-          .tbl-scroll table { min-width: 900px; }
-        }
-        @media (max-width: 560px) {
-          .topbar-wrap { flex-wrap: wrap; gap: 9px; }
-        }
-        @media (max-width: 640px) {
-          .carousel-arrow { display: none !important; }
-          .fixture-card { flex-basis: calc(80vw) !important; min-width: 0 !important; }
-          .fixture-jersey { width: 32px !important; height: 32px !important; }
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
-        @keyframes flash-up { 0% { background: rgba(34,197,94,.25); } 100% { background: transparent; } }
-        @keyframes flash-dn { 0% { background: rgba(239,68,68,.25); } 100% { background: transparent; } }
-        .flash-up { animation: flash-up 1s ease; }
-        .flash-dn { animation: flash-dn 1s ease; }
-      `}</style>
+    <div>
+      <LiveTicker events={events} />
+      <div className="app-shell">
+        <Rail active="overview" />
 
-      {/* Sidebar */}
-      <div className="app-sidebar">
-        <Sidebar wsState={wsState} lastUpdated={lastUpdated || '–'} />
-      </div>
-
-      {/* Main content */}
-      <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <TopBar lastUpdated={lastUpdated || '–'} />
-
-        <div className="content-pad" style={{ padding: '14px 20px 26px', flex: 1 }}>
-          {/* Filter bar */}
-          <FilterBar
-            activeSport={activeSport}
-            onSportChange={setActiveSport}
-            valueOnly={valueOnly}
-            onValueOnlyChange={setValueOnly}
+        <div className="app-main">
+          <Header
+            title="Terminal"
+            subtitle="Overview"
+            modelOnline={modelOnline}
+            edgesFound={edgesFound}
+            lastUpdated={lastUpdated}
           />
 
-          {/* Fixture carousel */}
-          <FixtureCarousel
-            events={valueOnly ? events.filter(e => (e.best_edge_pct ?? 0) > 0) : events}
-            selectedId={selectedId}
-            onSelect={handleSelect}
-            loading={loading}
-          />
+          <div style={{ padding: '16px 20px 40px' }}>
+            <KpiRow events={events} bookmakerCount={bookmakerCount} />
 
-          {/* Mid grid: AI Insights | Why This Is Value | Model Performance + Alerts */}
-          <div className="mid-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1.35fr 1fr',
-            gap: 12,
-            marginBottom: 12,
-          }}>
-            {/* AI Insights */}
-            <AIInsightsPanel />
+            <div className="cols">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+                <LiveBoard
+                  events={events}
+                  loading={loading}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                />
+                <LineMovementChart
+                  eventId={selectedId}
+                  homeName={eventInfo?.home?.name ?? ''}
+                  awayName={eventInfo?.away?.name ?? ''}
+                  fairHomePrice={model?.fair_home_price ?? null}
+                  fairAwayPrice={model?.fair_away_price ?? null}
+                />
+              </div>
 
-            {/* Why this is value */}
-            <WhyThisIsValue
-              model={model}
-              spreadMarkets={markets.spreads}
-              totalMarkets={markets.totals}
-              homeTeam={eventInfo?.home?.name ?? 'Home'}
-              awayTeam={eventInfo?.away?.name ?? 'Away'}
-            />
-
-            {/* Right column: Model Performance + Alerts */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <ModelPerformance />
-              <AlertsPanel />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <ConfidenceRing
+                  homeName={eventInfo?.home?.name ?? 'Select fixture'}
+                  awayName={eventInfo?.away?.name ?? ''}
+                  homeWinProb={model?.home_win_prob ?? null}
+                  fairHomePrice={model?.fair_home_price ?? null}
+                  bestEdgePct={events.find(e => e.id === selectedId)?.best_edge_pct ?? null}
+                  confidence={model?.confidence ?? null}
+                  onOpenGame={selectedId ? () => openGame(selectedId) : undefined}
+                />
+                <EdgeByBookBars
+                  h2h={detail?.markets?.h2h ?? []}
+                  spreads={detail?.markets?.spreads ?? []}
+                  totals={detail?.markets?.totals ?? []}
+                  homeName={eventInfo?.home?.name ?? ''}
+                  awayName={eventInfo?.away?.name ?? ''}
+                />
+                <ValueFeed onOpenEvent={id => { setSelectedId(id); openGame(id) }} />
+              </div>
             </div>
+
+            <footer style={{
+              display: 'flex', justifyContent: 'space-between',
+              padding: '20px 0 0', fontSize: 10.5, color: 'var(--text-3)',
+              flexWrap: 'wrap', gap: 10,
+            }}>
+              <span>Prices are indicative only. Always verify on bookmaker site. 18+ gamble responsibly.</span>
+              <span>Data powered by Sharpline AI</span>
+            </footer>
           </div>
-
-          {/* Weather + Lineup — always shown when an event is selected */}
-          {detail && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-              <WeatherPanel weather={weather} />
-              <LineupPanel lineups={lineups} />
-            </div>
-          )}
-
-          {/* Bookmaker Comparison Table (REQ-8) */}
-          <div className="tbl-scroll">
-            <MarketComparison
-              event={eventInfo}
-              h2hMarkets={markets.h2h}
-              spreadMarkets={markets.spreads}
-              totalMarkets={markets.totals}
-              fairHomePrice={model?.fair_home_price}
-              fairAwayPrice={model?.fair_away_price}
-              flashEventId={flashEventId}
-              loading={_detailLoading}
-            />
-          </div>
-
-          {/* Footer */}
-          <footer style={{
-            display: 'flex', justifyContent: 'space-between',
-            padding: '14px 0 0', fontSize: 10.5, color: 'var(--text-3)',
-            flexWrap: 'wrap', gap: 10,
-          }}>
-            <span>Prices are indicative only. Always verify on bookmaker site. 18+ gamble responsibly.</span>
-            <span>Data powered by Sharpline AI</span>
-          </footer>
         </div>
       </div>
     </div>

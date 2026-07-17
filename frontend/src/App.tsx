@@ -1,19 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
+import GamePage from './pages/GamePage'
 import Admin from './pages/Admin'
 
-function useHash() {
-  const [hash, setHash] = useState(window.location.hash)
-  useEffect(() => {
-    const handler = () => setHash(window.location.hash)
-    window.addEventListener('hashchange', handler)
-    return () => window.removeEventListener('hashchange', handler)
-  }, [])
-  return hash
-}
-
 export default function App() {
-  const hash = useHash()
-  if (hash === '#/admin') return <Admin />
-  return <Dashboard />
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/game/:eventId" element={<GamePage />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="*" element={<Dashboard />} />
+      </Routes>
+    </HashRouter>
+  )
 }
