@@ -52,12 +52,23 @@ function trendPoints(id: string, up: boolean): number[] {
 
 const SPORT_FILTERS = ['ALL', 'AFL', 'NRL', 'NBA', 'NFL', 'MLB']
 
+/** Match backend opportunities cap: rows above this are almost always
+ * de-vig or feed anomalies, not real value. */
+const MAX_PLAUSIBLE_EDGE = 20.0
+
 export default function LiveBoard({ events, loading, selectedId, onSelect, onOpenGame }: Props) {
   const [filter, setFilter] = useState<string>('ALL')
 
-  const filtered = filter === 'ALL'
+  const filtered = (filter === 'ALL'
     ? events
     : events.filter(e => getSportAbbr(e.sport_key) === filter)
+  ).map(e => {
+    // Suppress outlier edges (> 20%) — they're de-vig anomalies, not real value
+    if (e.best_edge_pct != null && e.best_edge_pct > MAX_PLAUSIBLE_EDGE) {
+      return { ...e, best_edge_pct: null }
+    }
+    return e
+  })
 
   return (
     <div style={{
