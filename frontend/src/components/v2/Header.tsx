@@ -10,11 +10,13 @@ interface Props {
   onSearchChange: (q: string) => void
   valueOnly: boolean
   onValueOnlyChange: (v: boolean) => void
+  onOpenAdmin?: () => void
 }
 
 export default function Header({
   title, subtitle, modelOnline, edgesFound, lastUpdated,
   searchQuery, onSearchChange, valueOnly, onValueOnlyChange,
+  onOpenAdmin,
 }: Props) {
   return (
     <div className="terminal-header">
@@ -59,6 +61,21 @@ export default function Header({
           >×</span>
         )}
       </label>
+
+      {onOpenAdmin && (
+        <button
+          type="button"
+          onClick={onOpenAdmin}
+          title="Admin"
+          aria-label="Admin"
+          className="terminal-header-admin"
+        >
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+            <circle cx={12} cy={12} r={3} stroke="currentColor" strokeWidth={1.7}/>
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round"/>
+          </svg>
+        </button>
+      )}
     </div>
   )
 }

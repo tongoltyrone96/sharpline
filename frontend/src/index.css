@@ -72,8 +72,8 @@ body {
 .app-main     { overflow-x: hidden; overflow-y: auto; }
 
 @media (max-width: 720px) {
-  .app-shell { grid-template-columns: 44px 1fr; }
-  .rail      { padding: 8px 0 !important; }
+  .app-shell { grid-template-columns: 1fr; }
+  .rail      { display: none !important; }
 }
 
 /* Dashboard content padding — fills viewport on mobile */
@@ -112,15 +112,25 @@ body {
   min-width: 200px; max-width: 320px; width: 260px;
   color: var(--text-3); font-size: 12px; cursor: text;
 }
+.terminal-header-admin {
+  display: none;
+  width: 32px; height: 32px; border-radius: 8px;
+  place-items: center;
+  background: var(--panel); border: 1px solid var(--line);
+  color: var(--text-2); cursor: pointer; flex-shrink: 0;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.terminal-header-admin:hover { color: var(--cyan); border-color: var(--line-2); }
 
 @media (max-width: 720px) {
   .terminal-header       { padding: 10px 10px; gap: 8px; }
-  .terminal-header-title { flex: 1 1 auto; }
+  .terminal-header-title { flex: 1 1 auto; order: 1; }
+  .terminal-header-admin { display: grid; order: 1; margin-left: auto; }
+  .terminal-header-badges { order: 2; flex-basis: 100%; }
   .terminal-header-search {
     order: 3; margin-left: 0;
     flex-basis: 100%; max-width: none; width: auto;
   }
-  .terminal-header-badges { order: 2; flex-basis: 100%; }
 }
 
 /* ── LiveBoard: sport tabs wrap to next row on mobile ─────────────────── */
@@ -137,6 +147,12 @@ body {
   .live-board-header { padding: 10px 10px; }
   .live-board-title  { flex-basis: 100%; }
   .live-board-tabs   { margin-left: 0; flex-basis: 100%; }
+}
+
+/* ── Game detail page: mobile-only padding shrink ─────────────────────── */
+@media (max-width: 720px) {
+  .game-breadcrumb { padding: 10px 8px !important; }
+  .game-body       { padding: 10px 6px 28px !important; gap: 12px !important; }
 }
 
 /* ── LiveBoard body: cap at ~10 rows with vertical scroll ─────────────── */

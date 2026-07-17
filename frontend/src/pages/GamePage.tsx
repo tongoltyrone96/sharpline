@@ -103,9 +103,10 @@ export default function GamePage() {
         <Rail active="overview" />
         <div className="app-main">
           {/* Breadcrumb */}
-          <div style={{
+          <div className="game-breadcrumb" style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            padding: '12px 22px', borderBottom: '1px solid var(--line)',
+            padding: '12px 22px',
+            borderBottom: '1px solid var(--line)',
             fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-3)',
           }}>
             <a onClick={() => navigate('/')} style={{ color: 'var(--text-2)', cursor: 'pointer' }}>Overview</a>
