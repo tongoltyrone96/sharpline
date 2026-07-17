@@ -72,8 +72,14 @@ body {
 .app-main     { overflow-x: hidden; overflow-y: auto; }
 
 @media (max-width: 720px) {
-  .app-shell { grid-template-columns: 1fr; }
-  .rail      { display: none !important; }
+  .app-shell { grid-template-columns: 44px 1fr; }
+  .rail      { padding: 8px 0 !important; }
+}
+
+/* Dashboard content padding — fills viewport on mobile */
+.dash-content { padding: 16px 20px 40px; }
+@media (max-width: 720px) {
+  .dash-content { padding: 10px 8px 24px; }
 }
 
 /* Two-column responsive grid used by dashboard body */
@@ -83,7 +89,64 @@ body {
   .kpis { grid-template-columns: repeat(2, 1fr) !important; }
 }
 @media (max-width: 640px) {
-  .kpis { grid-template-columns: 1fr 1fr !important; }
+  .kpis { grid-template-columns: 1fr 1fr !important; gap: 8px !important; margin-bottom: 10px !important; }
+  .cols { gap: 10px !important; }
+}
+
+/* ── Header (Terminal / Overview + badges + search) ─────────────────────── */
+.terminal-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.terminal-header-title    { flex-shrink: 0; }
+.terminal-header-badges   {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.terminal-header-search   {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 12px;
+  min-width: 200px; max-width: 320px; width: 260px;
+  color: var(--text-3); font-size: 12px; cursor: text;
+}
+
+@media (max-width: 720px) {
+  .terminal-header       { padding: 10px 10px; gap: 8px; }
+  .terminal-header-title { flex: 1 1 auto; }
+  .terminal-header-search {
+    order: 3; margin-left: 0;
+    flex-basis: 100%; max-width: none; width: auto;
+  }
+  .terminal-header-badges { order: 2; flex-basis: 100%; }
+}
+
+/* ── LiveBoard: sport tabs wrap to next row on mobile ─────────────────── */
+.live-board-header {
+  display: flex; align-items: center; gap: 9px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.live-board-title { display: flex; align-items: center; gap: 9px; }
+.live-board-tabs  { margin-left: auto; overflow-x: auto; max-width: 100%; }
+
+@media (max-width: 720px) {
+  .live-board-header { padding: 10px 10px; }
+  .live-board-title  { flex-basis: 100%; }
+  .live-board-tabs   { margin-left: 0; flex-basis: 100%; }
+}
+
+/* ── LiveBoard body: cap at ~10 rows with vertical scroll ─────────────── */
+.live-board-body {
+  max-height: 560px;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+@media (max-width: 720px) {
+  .live-board-body { max-height: 440px; }
 }
 
 @supports (padding: env(safe-area-inset-left)) {

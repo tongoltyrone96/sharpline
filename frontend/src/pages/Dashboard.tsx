@@ -128,7 +128,7 @@ export default function Dashboard() {
             onValueOnlyChange={setValueOnly}
           />
 
-          <div style={{ padding: '16px 20px 40px' }}>
+          <div className="dash-content">
             <KpiRow events={events} bookmakerCount={bookmakerCount} />
 
             <div className="cols">

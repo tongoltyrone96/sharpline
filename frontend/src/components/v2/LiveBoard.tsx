@@ -67,18 +67,17 @@ export default function LiveBoard({
       background: 'var(--panel)', border: '1px solid var(--line)',
       borderRadius: 12,
     }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 9,
-        padding: '12px 14px', borderBottom: '1px solid var(--line)',
-      }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Live Board</span>
-        <span style={{
-          fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)',
-          textTransform: 'uppercase', letterSpacing: '.08em',
-        }}>// model vs market</span>
-        <div style={{ marginLeft: 'auto' }}>
+      <div className="live-board-header">
+        <div className="live-board-title">
+          <span style={{ fontSize: 13, fontWeight: 600 }}>Live Board</span>
+          <span style={{
+            fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)',
+            textTransform: 'uppercase', letterSpacing: '.08em',
+          }}>// model vs market</span>
+        </div>
+        <div className="live-board-tabs">
           <div style={{
-            display: 'flex', gap: 2, background: 'var(--panel-2)',
+            display: 'inline-flex', gap: 2, background: 'var(--panel-2)',
             border: '1px solid var(--line)', borderRadius: 7, padding: 2,
           }}>
             {SPORT_FILTERS.map(f => (
@@ -90,6 +89,7 @@ export default function LiveBoard({
                   color: filter === f ? 'var(--cyan)' : 'var(--text-3)',
                   background: filter === f ? 'var(--raise)' : 'transparent',
                   border: 0, borderRadius: 5, padding: '4px 9px', cursor: 'pointer',
+                  whiteSpace: 'nowrap',
                 }}
               >{f}</button>
             ))}
@@ -97,9 +97,12 @@ export default function LiveBoard({
         </div>
       </div>
 
-      <div style={{ overflowX: 'auto' }}>
+      <div className="live-board-body">
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
-          <thead>
+          <thead style={{
+            position: 'sticky', top: 0, zIndex: 2,
+            background: 'var(--panel)',
+          }}>
             <tr>
               {['Match', 'Home', 'Away', 'Edge', 'Confidence'].map((h, i) => (
                 <th key={h} style={{
