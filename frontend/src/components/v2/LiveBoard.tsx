@@ -142,14 +142,13 @@ export default function LiveBoard({ events, loading, selectedId, onSelect, onOpe
               return (
                 <tr
                   key={e.id}
-                  onClick={() => {
-                    onSelect(e.id)
-                    onOpenGame?.(e.id)
-                  }}
+                  onClick={() => onSelect(e.id)}
+                  onDoubleClick={() => onOpenGame?.(e.id)}
                   style={{
                     cursor: 'pointer',
                     background: isSelected ? 'var(--raise)' : 'transparent',
                   }}
+                  title="Click to preview · double-click to open detail"
                   onMouseEnter={ev => { if (!isSelected) (ev.currentTarget as HTMLTableRowElement).style.background = 'var(--raise)' }}
                   onMouseLeave={ev => { if (!isSelected) (ev.currentTarget as HTMLTableRowElement).style.background = 'transparent' }}
                 >

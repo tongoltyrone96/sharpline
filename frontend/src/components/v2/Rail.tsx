@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 
-type NavKey = 'overview' | 'live' | 'models' | 'charts' | 'alerts' | 'settings'
+type NavKey = 'overview' | 'live' | 'models' | 'charts' | 'settings'
 
 interface Props {
   active: NavKey
@@ -44,16 +44,9 @@ const ITEMS: { key: NavKey; title: string; icon: React.ReactNode; path: string }
       </svg>
     ),
   },
+  // Admin (gear) sits where the bell used to be — no bottom-anchored item.
   {
-    key: 'alerts', title: 'Alerts', path: '/alerts',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-  },
-  {
-    key: 'settings', title: 'Settings', path: '/admin',
+    key: 'settings', title: 'Admin', path: '/admin',
     icon: (
       <svg viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.7"/>
@@ -84,35 +77,32 @@ export default function Rail({ active, onNavigate }: Props) {
 
       {ITEMS.map(item => {
         const on = item.key === active
-        const isBottom = item.key === 'settings'
         return (
-          <React.Fragment key={item.key}>
-            {isBottom && <div style={{ flex: 1 }} />}
-            <a
-              title={item.title}
-              onClick={() => {
-                navigate(item.path)
-                onNavigate?.(item.key)
-              }}
-              style={{
-                width: 38, height: 38, borderRadius: 9,
-                display: 'grid', placeItems: 'center',
-                color: on ? 'var(--cyan)' : 'var(--text-3)',
-                background: on ? 'var(--cyan-dim)' : 'transparent',
-                cursor: 'pointer', position: 'relative',
-                transition: 'background .12s, color .12s',
-              }}
-            >
-              <div style={{ width: 18, height: 18 }}>{item.icon}</div>
-              {on && (
-                <span style={{
-                  content: '""', position: 'absolute',
-                  left: -12, top: 9, bottom: 9, width: 2,
-                  borderRadius: 2, background: 'var(--cyan)',
-                }} />
-              )}
-            </a>
-          </React.Fragment>
+          <a
+            key={item.key}
+            title={item.title}
+            onClick={() => {
+              navigate(item.path)
+              onNavigate?.(item.key)
+            }}
+            style={{
+              width: 38, height: 38, borderRadius: 9,
+              display: 'grid', placeItems: 'center',
+              color: on ? 'var(--cyan)' : 'var(--text-3)',
+              background: on ? 'var(--cyan-dim)' : 'transparent',
+              cursor: 'pointer', position: 'relative',
+              transition: 'background .12s, color .12s',
+            }}
+          >
+            <div style={{ width: 18, height: 18 }}>{item.icon}</div>
+            {on && (
+              <span style={{
+                position: 'absolute',
+                left: -12, top: 9, bottom: 9, width: 2,
+                borderRadius: 2, background: 'var(--cyan)',
+              }} />
+            )}
+          </a>
         )
       })}
     </nav>

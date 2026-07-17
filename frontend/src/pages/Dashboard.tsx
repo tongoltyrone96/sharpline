@@ -132,6 +132,7 @@ export default function Dashboard() {
                   loading={loading}
                   selectedId={selectedId}
                   onSelect={setSelectedId}
+                  onOpenGame={openGame}
                 />
                 <LineMovementChart
                   eventId={selectedId}
