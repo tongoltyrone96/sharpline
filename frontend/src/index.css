@@ -41,6 +41,14 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+html {
+  /* Chrome for Android auto-inflates text on narrow viewports, which
+     silently breaks flex layouts that assume text stays at its declared
+     size. Lock text scaling to 100% so mobile matches desktop. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   font-family: var(--ui);
   background: var(--bg);

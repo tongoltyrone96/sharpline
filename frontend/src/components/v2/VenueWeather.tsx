@@ -32,11 +32,14 @@ export default function VenueWeather({ weather }: Props) {
           </div>
         ) : (
           <div style={{
-            padding: 14, display: 'flex', alignItems: 'center',
-            gap: 16, flexWrap: 'wrap',
+            padding: 14,
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr',
+            columnGap: 16, rowGap: 12,
+            alignItems: 'center',
           }}>
-            <div style={{ flexShrink: 0, minWidth: 60 }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 34, fontWeight: 600, lineHeight: 1 }}>
+            <div style={{ minWidth: 60 }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 30, fontWeight: 600, lineHeight: 1 }}>
                 {weather.temp_c.toFixed(0)}°
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 4 }}>
@@ -44,8 +47,11 @@ export default function VenueWeather({ weather }: Props) {
               </div>
             </div>
             <div style={{
-              display: 'grid', gridTemplateColumns: '1fr 1fr',
-              gap: '8px 18px', flex: '1 1 180px', minWidth: 0, fontSize: 11,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+              gap: '8px 14px',
+              fontSize: 11,
+              minWidth: 0,
             }}>
               <Info label="Wind" value={`${weather.wind_kmh.toFixed(0)} km/h`} icon={<path d="M3 8h11a3 3 0 1 0-3-3M3 16h15a3 3 0 1 1-3 3M3 12h8" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"/>} />
               <Info label="Rain" value={`${Math.round(weather.rain_prob * 100)}%`} icon={<path d="M7 15a4 4 0 0 1-.5-8A5 5 0 0 1 16 6.5a3.5 3.5 0 0 1 1 6.9" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"/>} />
