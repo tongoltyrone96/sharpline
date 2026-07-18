@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Bookmaker, Event, ModelOutput, ModelParam, ModelSummary, Odds
+from app.models import Bookmaker, Event, Lineup, ModelOutput, ModelParam, ModelSummary, Odds, Weather
 from app.services.model import compute_model_outputs, compute_projections
 from app.services.rationale import build_rationale
 
@@ -176,6 +176,16 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
         home_win_prob=home_win_prob,
     )
 
+    # Collect observable context (weather + lineups) so REQ-14 can show "why".
+    weather_ctx, weather_notes = _collect_weather_context(db, event_id)
+    lineup_ctx, lineup_notes = _collect_lineup_context(db, event_id)
+
+    factors_json = dict(confidence_factors)
+    if weather_ctx:
+        factors_json["weather"] = weather_ctx
+    if lineup_ctx:
+        factors_json["lineups_missing"] = lineup_ctx
+
     # Find the best edge across all outputs
     best_output = max(outputs, key=lambda x: x.get("edge_pct", 0.0) or 0.0) if outputs else None
 
@@ -188,7 +198,7 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
         "best_market": best_output.get("market", "") if best_output else "",
         "best_outcome": best_output.get("outcome", "") if best_output else "",
         "best_bookmaker": best_output.get("bookmaker_key", "") if best_output else "",
-        "factors": [],
+        "factors": weather_notes + lineup_notes,
     }
     rationale = build_rationale(rationale_summary)
 
@@ -202,7 +212,7 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
         "fair_home_price": fair_home_price,
         "fair_away_price": fair_away_price,
         "rationale": rationale,
-        "factors_json": confidence_factors,
+        "factors_json": factors_json,
     }
 
     # Step 10: upsert model_summary
@@ -218,7 +228,7 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
             fair_home_price=fair_home_price,
             fair_away_price=fair_away_price,
             rationale=rationale,
-            factors_json=confidence_factors,
+            factors_json=factors_json,
             computed_at=now,
         ))
     else:
@@ -315,3 +325,51 @@ def _compute_confidence(
         "bookmaker_count": enabled_bm_count,
     }
     return confidence, factors
+
+
+def _collect_weather_context(db: Session, event_id: str) -> tuple[dict, list[str]]:
+    """Load latest weather row for the event and return (dict, human notes)."""
+    w = db.query(Weather).filter(Weather.event_id == event_id).first()
+    if w is None:
+        return {}, []
+    if w.is_indoor:
+        return {"is_indoor": True}, ["indoor venue"]
+    ctx = {
+        "temp_c": w.temp_c,
+        "wind_kmh": w.wind_kmh,
+        "rain_prob": w.rain_prob,
+        "humidity": w.humidity,
+        "condition": w.condition,
+        "is_indoor": False,
+    }
+    notes: list[str] = []
+    if w.wind_kmh is not None and w.wind_kmh >= 20:
+        notes.append(f"wind {w.wind_kmh:.0f} km/h")
+    if w.rain_prob is not None and w.rain_prob >= 40:
+        notes.append(f"rain {w.rain_prob:.0f}% prob")
+    return ctx, notes
+
+
+def _collect_lineup_context(db: Session, event_id: str) -> tuple[list[dict], list[str]]:
+    """Load out/doubtful/questionable lineup rows and summarise them."""
+    rows = (
+        db.query(Lineup)
+        .filter(Lineup.event_id == event_id)
+        .filter(Lineup.status.in_(["out", "doubtful", "questionable"]))
+        .all()
+    )
+    if not rows:
+        return [], []
+    missing = [
+        {
+            "player": r.player_name,
+            "status": r.status,
+            "importance": r.importance,
+        }
+        for r in rows
+    ]
+    outs = [r.player_name for r in rows if r.status == "out"]
+    if outs:
+        preview = ", ".join(outs[:3]) + (f" +{len(outs) - 3}" if len(outs) > 3 else "")
+        return missing, [f"out: {preview}"]
+    return missing, [f"{len(rows)} players doubtful"]

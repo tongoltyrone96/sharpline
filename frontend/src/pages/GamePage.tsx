@@ -4,6 +4,7 @@ import Rail from '../components/v2/Rail'
 import LiveTicker from '../components/v2/LiveTicker'
 import GameHeader from '../components/v2/GameHeader'
 import AiVerdict from '../components/v2/AiVerdict'
+import WhyThisIsValue from '../components/WhyThisIsValue'
 import AllMarketsTable from '../components/v2/AllMarketsTable'
 import MarginDistribution from '../components/v2/MarginDistribution'
 import ConfidenceBreakdown from '../components/v2/ConfidenceBreakdown'
@@ -144,6 +145,13 @@ export default function GamePage() {
                 homeName={event?.home.name ?? ''}
                 awayName={event?.away.name ?? ''}
                 bestBookEdge={bestBookEdge}
+              />
+              <WhyThisIsValue
+                model={model}
+                spreadMarkets={markets.spreads}
+                totalMarkets={markets.totals}
+                homeTeam={event?.home.name ?? ''}
+                awayTeam={event?.away.name ?? ''}
               />
               <AllMarketsTable
                 h2h={markets.h2h}

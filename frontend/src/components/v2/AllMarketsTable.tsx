@@ -46,16 +46,16 @@ export default function AllMarketsTable(props: Props) {
     : market === 'line'
     ? { cells: [
         { text: projectedMargin != null ? (projectedMargin > 0 ? '+' : '') + projectedMargin.toFixed(2) : '–' },
-        { text: '1.91' /* placeholder — fair line odds always ~1.91 by construction */ },
+        { text: projectedMargin != null ? '2.00' : '–' /* at fair line: P(cover)=0.5 → fair no-vig = 2.00 */ },
         { text: '—' },
         { text: projectedMargin != null ? (-projectedMargin > 0 ? '+' : '') + (-projectedMargin).toFixed(2) : '–' },
-        { text: '1.91' },
+        { text: projectedMargin != null ? '2.00' : '–' },
       ]}
     : { cells: [
         { text: projectedTotal != null ? projectedTotal.toFixed(2) : '–' },
-        { text: '1.91' },
+        { text: projectedTotal != null ? '2.00' : '–' },
         { text: '—' },
-        { text: '1.91' },
+        { text: projectedTotal != null ? '2.00' : '–' },
         { text: '—' },
       ]}
 
@@ -174,6 +174,20 @@ export default function AllMarketsTable(props: Props) {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        padding: '8px 14px', borderTop: '1px solid var(--line)',
+        fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)',
+        textTransform: 'uppercase', letterSpacing: '.05em',
+        flexWrap: 'wrap',
+      }}>
+        <span style={{
+          width: 6, height: 6, borderRadius: '50%',
+          background: 'var(--text-3)', opacity: 0.6,
+        }} />
+        Pickle Bet — no feed available (auto-enable when feed added)
       </div>
     </div>
   )

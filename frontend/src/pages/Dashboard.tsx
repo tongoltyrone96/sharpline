@@ -9,6 +9,7 @@ import LineMovementChart from '../components/v2/LineMovementChart'
 import ConfidenceRing from '../components/v2/ConfidenceRing'
 import EdgeByBookBars from '../components/v2/EdgeByBookBars'
 import ValueFeed from '../components/v2/ValueFeed'
+import ModelPerformance from '../components/ModelPerformance'
 import { useDashboard } from '../hooks/useDashboard'
 import { useWebSocket, WsMessage } from '../hooks/useWebSocket'
 import { getEvent } from '../lib/api'
@@ -169,6 +170,7 @@ export default function Dashboard() {
                   awayName={eventInfo?.away?.name ?? ''}
                 />
                 <ValueFeed onOpenEvent={id => { setSelectedId(id); openGame(id) }} />
+                <ModelPerformance />
               </div>
             </div>
 
