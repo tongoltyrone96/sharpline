@@ -175,20 +175,6 @@ export default function AllMarketsTable(props: Props) {
           </tbody>
         </table>
       </div>
-
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        padding: '8px 14px', borderTop: '1px solid var(--line)',
-        fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)',
-        textTransform: 'uppercase', letterSpacing: '.05em',
-        flexWrap: 'wrap',
-      }}>
-        <span style={{
-          width: 6, height: 6, borderRadius: '50%',
-          background: 'var(--text-3)', opacity: 0.6,
-        }} />
-        Pickle Bet — no feed available (auto-enable when feed added)
-      </div>
     </div>
   )
 }
