@@ -285,6 +285,60 @@ class TestComputeModelOutputs:
                 assert o["point"] is not None
 
 
+class TestAwayFavouriteSignConvention:
+    """
+    Regression: when the AWAY team is the favourite (common in AFL/NRL),
+    passing home_name must produce mu > 0 (home is the underdog) so the
+    rationale describes the favourite correctly. The legacy heuristic
+    (no home_name) collapsed this to mu < 0 and named the wrong team as
+    favoured.
+
+    Fixture mirrors the real Port Adelaide (home, +46 dog) vs Fremantle
+    (away, -46 fav) AFL match that surfaced the bug in production.
+    """
+
+    def _paf_rows(self):
+        return [
+            {"bookmaker_key": "tab",       "market": "spreads", "outcome": "Port Adelaide Power", "price": 1.90, "point":  46.0, "devig_weight": 1.0},
+            {"bookmaker_key": "tab",       "market": "spreads", "outcome": "Fremantle Dockers",   "price": 1.90, "point": -46.0, "devig_weight": 1.0},
+            {"bookmaker_key": "sportsbet", "market": "spreads", "outcome": "Port Adelaide Power", "price": 1.90, "point":  46.5, "devig_weight": 1.0},
+            {"bookmaker_key": "sportsbet", "market": "spreads", "outcome": "Fremantle Dockers",   "price": 1.90, "point": -46.5, "devig_weight": 1.0},
+            {"bookmaker_key": "tab",       "market": "h2h",     "outcome": "Port Adelaide Power", "price": 12.00, "point": None, "devig_weight": 1.0},
+            {"bookmaker_key": "tab",       "market": "h2h",     "outcome": "Fremantle Dockers",   "price": 1.08,  "point": None, "devig_weight": 1.0},
+        ]
+
+    def test_home_underdog_yields_positive_margin(self):
+        from app.services.model import compute_projections
+        proj = compute_projections(self._paf_rows(), 28.0, 22.0, home_name="Port Adelaide Power")
+        # Home (PAP) is +46 underdog → mu must be positive
+        assert proj["projected_margin"] is not None
+        assert proj["projected_margin"] > 0, (
+            f"Home team is +46 underdog but projected_margin came out "
+            f"{proj['projected_margin']} (should be > 0 by the "
+            f"'mu < 0 = home favoured' convention)."
+        )
+
+    def test_legacy_heuristic_without_home_name_still_returns_negative(self):
+        """Backward compatibility: no home_name → old behaviour preserved."""
+        from app.services.model import compute_projections
+        proj = compute_projections(self._paf_rows(), 28.0, 22.0)
+        # Without home_name, the legacy heuristic picks the favourite side
+        # (point < 0) and returns that value directly, so mu < 0 even when
+        # the favourite is away. We keep this to avoid breaking older
+        # callers, but the correct callers must pass home_name.
+        assert proj["projected_margin"] < 0
+
+    def test_home_favourite_still_yields_negative_margin(self):
+        """Sanity: when home IS the favourite, mu is still negative."""
+        rows = [
+            {"bookmaker_key": "tab", "market": "spreads", "outcome": "Home", "price": 1.90, "point": -6.5, "devig_weight": 1.0},
+            {"bookmaker_key": "tab", "market": "spreads", "outcome": "Away", "price": 1.90, "point":  6.5, "devig_weight": 1.0},
+        ]
+        from app.services.model import compute_projections
+        proj = compute_projections(rows, 13.0, 22.0, home_name="Home")
+        assert proj["projected_margin"] < 0
+
+
 # ── Rationale ─────────────────────────────────────────────────────────────────
 
 class TestRationale:

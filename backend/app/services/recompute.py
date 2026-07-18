@@ -100,16 +100,21 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
     sigma_margin = _get_param("sigma_margin", _DEFAULT_SIGMA_MARGIN)
     sigma_total = _get_param("sigma_total", _DEFAULT_SIGMA_TOTAL)
 
+    # Anchor the model to the actual home team so mu sign is always
+    # "home favoured ⇔ mu < 0" — otherwise games where the AWAY team is the
+    # favourite invert the rationale and spread interpretation.
+    home_name_for_model = event.home_team.name if event.home_team else None
+
     # Step 6: compute model outputs (one row per bookmaker × outcome, priced)
     try:
-        outputs = compute_model_outputs(input_rows, sigma_margin, sigma_total)
+        outputs = compute_model_outputs(input_rows, sigma_margin, sigma_total, home_name=home_name_for_model)
     except Exception as exc:
         log.warning("compute_model_outputs failed for %s: %s", event_id, exc)
         outputs = []
 
     # Step 7: compute projections and h2h consensus
     try:
-        projections = compute_projections(input_rows, sigma_margin, sigma_total)
+        projections = compute_projections(input_rows, sigma_margin, sigma_total, home_name=home_name_for_model)
     except Exception as exc:
         log.warning("compute_projections failed for %s: %s", event_id, exc)
         projections = {"projected_margin": None, "projected_total": None, "h2h_probs": {}}

@@ -103,6 +103,7 @@ def compute_model_outputs(
     rows: list[dict],
     sigma_margin: float,
     sigma_total: float,
+    home_name: str | None = None,
 ) -> list[dict]:
     """
     Convert a flat list of odds rows (one row per bookmaker × outcome) into
@@ -110,6 +111,13 @@ def compute_model_outputs(
 
     Each input row must have:
       bookmaker_key, market, outcome, price, point (None for h2h), devig_weight
+
+    home_name: the home team's exact outcome string. When provided, the
+    projected margin is anchored to the HOME team's spread point (so mu < 0
+    always means home favoured, regardless of whether the favourite is home
+    or away). When None (legacy callers, tests), falls back to a
+    negative-point heuristic that only holds when the home team is the
+    favourite.
 
     Returns a list of dicts with:
       bookmaker_key, market, outcome, point, fair_price, edge_pct, factors_json
@@ -138,15 +146,25 @@ def compute_model_outputs(
                 log.warning("Skipping bookmaker %s for spreads consensus — implausible overround", bk)
                 continue
             for r in bm_rows:
-                # Only feed the giving-points side (negative point) into project_margin
-                # so the consensus reflects: "home/favourite gives X points"
-                if r["point"] is not None and r["point"] < 0:
-                    spread_consensus.append({
-                        "outcome": r["outcome"],
-                        "point": r["point"],
-                        "fair_prob": 1.0 / fair_prices[r["outcome"]],
-                        "weight": w,
-                    })
+                if r["point"] is None:
+                    continue
+                # Correct behaviour: anchor to the HOME team's point so mu
+                # reflects the home team's spread. Then mu < 0 always means
+                # home is favoured (giving points), mu > 0 always means home
+                # is the underdog (getting points), regardless of side.
+                if home_name is not None:
+                    if r["outcome"] != home_name:
+                        continue
+                # Legacy heuristic: pick the favourite side (negative point).
+                # Only correct when the favourite is the home team.
+                elif r["point"] >= 0:
+                    continue
+                spread_consensus.append({
+                    "outcome": r["outcome"],
+                    "point": r["point"],
+                    "fair_prob": 1.0 / fair_prices[r["outcome"]],
+                    "weight": w,
+                })
 
     # Totals consensus (for project_total)
     total_consensus: list[dict] = []
@@ -181,7 +199,7 @@ def compute_model_outputs(
     for r in spread_rows:
         if projected_margin is None or r["point"] is None:
             continue
-        side = "home" if _is_home_side(r["outcome"], spread_rows) else "away"
+        side = "home" if _is_home_side(r["outcome"], spread_rows, home_name) else "away"
         prob, fair = fair_price_spread(projected_margin, r["point"], sigma_margin, side)
         outputs.append({
             "bookmaker_key": r["bookmaker_key"],
@@ -259,10 +277,13 @@ def compute_projections(
     rows: list[dict],
     sigma_margin: float,
     sigma_total: float,
+    home_name: str | None = None,
 ) -> dict:
     """
     Returns a dict with keys:
-      projected_margin  — float or None
+      projected_margin  — float or None (mu < 0 when home is favoured,
+                          mu > 0 when home is the underdog, when home_name
+                          is provided; else follows the legacy heuristic)
       projected_total   — float or None
       h2h_probs         — dict[str, float]  outcome_name → de-vigged consensus probability
 
@@ -283,13 +304,19 @@ def compute_projections(
             w = bm_rows[0].get("devig_weight", 1.0)
             fair_prices = devig_spreads(bm_rows)
             for r in bm_rows:
-                if r["point"] is not None and r["point"] < 0:
-                    spread_consensus.append({
-                        "outcome": r["outcome"],
-                        "point": r["point"],
-                        "fair_prob": 1.0 / fair_prices[r["outcome"]],
-                        "weight": w,
-                    })
+                if r["point"] is None:
+                    continue
+                if home_name is not None:
+                    if r["outcome"] != home_name:
+                        continue
+                elif r["point"] >= 0:
+                    continue
+                spread_consensus.append({
+                    "outcome": r["outcome"],
+                    "point": r["point"],
+                    "fair_prob": 1.0 / fair_prices[r["outcome"]],
+                    "weight": w,
+                })
 
     projected_margin = project_margin(spread_consensus) if spread_consensus else None
 
@@ -347,13 +374,21 @@ def compute_projections(
     }
 
 
-def _is_home_side(outcome: str, spread_rows: list[dict]) -> bool:
+def _is_home_side(
+    outcome: str,
+    spread_rows: list[dict],
+    home_name: str | None = None,
+) -> bool:
     """
-    Heuristic: the team with a negative point (giving points) is the home favourite.
-    If the outcome name matches the team on the negative side, it's the home side.
+    Determine whether an outcome is the home team's side.
+
+    Preferred: exact name match against home_name. Falls back to the legacy
+    "negative point = home favourite" heuristic when home_name is not given
+    (only correct when the favourite is the home team).
     """
+    if home_name is not None:
+        return outcome == home_name
     for r in spread_rows:
         if r["outcome"] == outcome and r["point"] is not None:
             return r["point"] < 0
-    # Fallback: assume any ambiguous case is home
     return True
