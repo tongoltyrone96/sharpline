@@ -25,7 +25,22 @@ _conf: dict = {
     "accept_content": ["json"],
     "timezone": "UTC",
     "enable_utc": True,
-    "task_track_started": True,
+    "task_track_started": False,
+    # Upstash Redis free tier caps at 500k requests/day. Celery's default
+    # broker polling burns ~86k/day per worker (BRPOP at 1s). We raise the
+    # idle poll interval and disable result storage so a single worker
+    # stays comfortably under the cap.
+    "broker_transport_options": {
+        "polling_interval": 5.0,
+        "visibility_timeout": 3600,
+    },
+    "result_backend_transport_options": {
+        "polling_interval": 5.0,
+    },
+    "broker_pool_limit": 1,
+    "worker_concurrency": 1,
+    "worker_prefetch_multiplier": 1,
+    "task_ignore_result": True,
 }
 
 if _broker.startswith("rediss://"):
