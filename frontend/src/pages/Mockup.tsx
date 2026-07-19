@@ -469,11 +469,12 @@ function OddsComparison({ detail }: { detail: EventDetail }) {
   const m = detail.model
 
   const rows = useMemo(() => {
+    const h2hRows = detail.markets?.h2h ?? []
     if (tab === 'h2h') {
-      const books = new Set(detail.markets.h2h.map(r => r.bookmaker))
+      const books = new Set(h2hRows.map(r => r.bookmaker))
       return Array.from(books).slice(0, 6).map(bm => {
-        const h = detail.markets.h2h.find(r => r.bookmaker === bm && r.outcome === home.name)
-        const a = detail.markets.h2h.find(r => r.bookmaker === bm && r.outcome === away.name)
+        const h = h2hRows.find(r => r.bookmaker === bm && r.outcome === home.name)
+        const a = h2hRows.find(r => r.bookmaker === bm && r.outcome === away.name)
         return {
           bookmaker: bm,
           homePrice: h?.price ?? null,
@@ -636,8 +637,9 @@ function MiniLineChart({ color, secondary }: { color: string; secondary?: string
 
 function LineupsPanel({ detail }: { detail: EventDetail }) {
   const { home, away } = detail.event
-  const homeLineups = detail.lineups.filter(l => l.team === home.name).slice(0, 4)
-  const awayLineups = detail.lineups.filter(l => l.team === away.name).slice(0, 4)
+  const lineups = detail.lineups ?? []
+  const homeLineups = lineups.filter(l => l.team === home.name).slice(0, 4)
+  const awayLineups = lineups.filter(l => l.team === away.name).slice(0, 4)
 
   return (
     <div style={{ background: CARD_BG, borderRadius: 12, border: '1px solid ' + CARD_BORDER, padding: '18px 20px' }}>
@@ -714,8 +716,13 @@ function StatusBar({ detail }: { detail: EventDetail }) {
   const winner = m.home_win_prob > m.away_win_prob ? detail.event.home : detail.event.away
   const score = computeProjectedScore(m.projected_margin, m.projected_total)
 
-  // Best value: find best positive-edge across all outputs
-  const all = [...detail.markets.h2h, ...detail.markets.spreads, ...detail.markets.totals]
+  // Best value: find best positive-edge across all outputs.
+  // Any of h2h/spreads/totals may be absent for a given fixture so guard the spread.
+  const all = [
+    ...(detail.markets?.h2h ?? []),
+    ...(detail.markets?.spreads ?? []),
+    ...(detail.markets?.totals ?? []),
+  ]
   const best = all.filter(r => (r.edge_pct ?? 0) > 0 && (r.edge_pct ?? 0) < 20)
     .sort((a, b) => (b.edge_pct ?? 0) - (a.edge_pct ?? 0))[0]
 
@@ -798,8 +805,25 @@ function ConfidenceBreakdownCard({ detail }: { detail: EventDetail }) {
   )
 }
 
+// ─── Error boundary ─────────────────────────────────────────────────────────
+class MockupBoundary extends React.Component<{ children: React.ReactNode }, { err: Error | null }> {
+  state = { err: null as Error | null }
+  static getDerivedStateFromError(err: Error) { return { err } }
+  render() {
+    if (this.state.err) {
+      return (
+        <div style={{ padding: 32, color: '#F26D6D', fontFamily: 'monospace', background: '#0A0F16', minHeight: '100vh' }}>
+          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Mockup render error — please share this:</div>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{String(this.state.err.stack ?? this.state.err.message)}</pre>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 // ─── Main page ──────────────────────────────────────────────────────────────
-export default function Mockup() {
+function MockupInner() {
   const { events } = useDashboard()
   const [detail, setDetail] = useState<EventDetail | null>(null)
   const [now, setNow] = useState(new Date())
@@ -870,5 +894,13 @@ export default function Mockup() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function Mockup() {
+  return (
+    <MockupBoundary>
+      <MockupInner />
+    </MockupBoundary>
   )
 }
