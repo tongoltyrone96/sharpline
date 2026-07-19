@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import GamePage from './pages/GamePage'
 import Admin from './pages/Admin'
+import Mockup from './pages/Mockup'
 
 export default function App() {
   return (
@@ -11,6 +12,7 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/game/:eventId" element={<GamePage />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/mockup" element={<Mockup />} />
         <Route path="*" element={<Dashboard />} />
       </Routes>
     </HashRouter>
