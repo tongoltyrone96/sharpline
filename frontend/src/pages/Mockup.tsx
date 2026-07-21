@@ -322,17 +322,20 @@ const CSS = `
 .mck-root .wnote .tt{font-size:8px;letter-spacing:.09em;font-weight:800;color:#9fb0c6}
 .mck-root .wnote p{font-size:9px;color:var(--mdim);line-height:1.35}
 
-.mck-root .h2h{display:flex;border-radius:6px;overflow:hidden;flex:none}
-.mck-root .h2h .s{flex:1;display:flex;align-items:center;gap:6px;padding:5px 8px;font-size:8.5px;letter-spacing:.05em;font-weight:700;color:#fff}
+.mck-root .h2h{display:flex;border-radius:7px;overflow:hidden;flex:none;position:relative}
+.mck-root .h2h .s{flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:10px;letter-spacing:.06em;font-weight:800;color:#fff}
 .mck-root .h2h .s.a{justify-content:flex-end}
-.mck-root .h2h .s .n{font-size:13px;font-weight:800;font-family:'IBM Plex Mono',monospace}
-.mck-root .chips{display:flex;gap:3px;justify-content:space-between;margin-top:5px}
-.mck-root .chip{flex:1;aspect-ratio:1;max-width:18px;border-radius:50%;display:grid;place-items:center;font-size:8px;font-weight:800;font-family:'IBM Plex Mono',monospace}
-.mck-root .fg{display:grid;grid-template-columns:1fr 1fr;gap:5px;flex:1;min-height:0}
-.mck-root .fgc{background:var(--mpanel2);border:1px solid var(--mline);border-radius:7px;padding:6px 7px;display:flex;flex-direction:column;justify-content:center}
-.mck-root .fgc h5{font-size:8.5px;font-weight:800;margin-bottom:5px}
-.mck-root .fgc .row5{display:flex;gap:3px}
-.mck-root .fgc .fs{font-size:7.5px;color:var(--mdim2);letter-spacing:.07em;font-weight:700;margin-top:5px;display:flex;justify-content:space-between}
+.mck-root .h2h .s .n{font-size:13px;font-weight:800;font-family:'IBM Plex Mono',monospace;padding:3px 8px;border-radius:4px;color:#fff;line-height:1}
+.mck-root .h2h-mid{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--mpanel);border:1px solid var(--mline);padding:3px 8px;border-radius:4px;font-size:8px;letter-spacing:.11em;color:#c3d0e2;font-weight:800;pointer-events:none;z-index:2}
+.mck-root .chips{display:flex;gap:4px;justify-content:space-between;margin-top:7px}
+.mck-root .chip{flex:1;aspect-ratio:1;max-width:24px;border-radius:5px;display:grid;place-items:center;font-size:10px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#fff}
+.mck-root .fg{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;min-height:0}
+.mck-root .fgc{background:var(--mpanel2);border:1px solid var(--mline);border-radius:7px;padding:8px 9px;display:flex;flex-direction:column;justify-content:center}
+.mck-root .fgc h5{font-size:9.5px;font-weight:800;margin-bottom:7px;letter-spacing:.02em}
+.mck-root .fgc .row5{display:flex;gap:4px}
+.mck-root .fgc .row5 .f{width:22px;height:22px;border-radius:5px;font-size:11px}
+.mck-root .fgc .fs{font-size:9px;color:var(--mdim2);letter-spacing:.08em;font-weight:700;margin-top:7px;display:flex;justify-content:space-between}
+.mck-root .fgc .fs .mono{color:#c3d0e2;font-size:10px}
 
 .mck-root .vf{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--msoft)}
 .mck-root .vf:last-child{border-bottom:0}
@@ -354,24 +357,85 @@ const CSS = `
 .mck-root .bbet{font-size:11px;font-weight:700;color:#d6e0ee;white-space:nowrap}
 
 @media(max-width:1240px){ .mck-root .rm{grid-template-columns:1fr 1fr} .mck-root .rh{grid-template-columns:1fr} .mck-root .srch{width:104px} }
+
+/* Tablet-ish */
 @media(max-width:900px){
-  .mck-root{flex-direction:column;padding:7px}
-  .mck-root .side{width:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:6px}
-  .mck-root .nav{flex-direction:row}
+  .mck-root{flex-direction:column;padding:7px;height:auto;min-height:100vh;overflow:visible}
+  .mck-root main{overflow:visible}
+  .mck-root .side{width:auto;flex-direction:row;align-items:center;overflow-x:auto;overflow-y:hidden;padding:6px 8px;gap:6px}
+  .mck-root .brand{padding:0 6px 0 0;border-right:1px solid var(--mline);margin-right:4px}
+  .mck-root .nav{flex-direction:row;flex:1;min-width:0}
   .mck-root .navsep{display:none}
-  .mck-root .nav a{border-left:0;border-bottom:2px solid transparent;white-space:nowrap}
-  .mck-root .nav a.on{border-left:0;border-bottom-color:var(--mblue)}
+  .mck-root .nav a{border-left:0;border-bottom:2px solid transparent;white-space:nowrap;padding:6px 8px}
+  .mck-root .nav a.on{border-left:0;border-bottom-color:var(--mblue);background:transparent}
   .mck-root .cc{display:none}
-  .mck-root .top{flex-wrap:wrap} .mck-root .ctl{margin-left:0;flex-wrap:wrap} .mck-root .srch{width:100%}
-  .mck-root .stripw{flex:none;height:88px}
+  .mck-root .top{flex-wrap:wrap;gap:6px}
+  .mck-root .top>div:first-child{flex:1;min-width:150px}
+  .mck-root .ctl{margin-left:0;flex-wrap:wrap;width:100%}
+  .mck-root .srch{width:100%;min-width:120px}
+  .mck-root .srchw{flex:1}
+  .mck-root .stripw{flex:none;height:98px}
   .mck-root .row,.mck-root .rh,.mck-root .r3g,.mck-root .rm{grid-template-columns:1fr!important;flex:none!important}
-  .mck-root .hero{grid-template-columns:1fr;text-align:center}
+  .mck-root .stk{flex-direction:column}
+  .mck-root .hero{grid-template-columns:1fr}
   .mck-root .st,.mck-root .st.aw{flex-direction:column;text-align:center;gap:6px;padding:12px}
+  .mck-root .st.aw{padding-top:0}
   .mck-root .st.aw .tf{justify-content:center}
-  .mck-root .lu,.mck-root .fg{grid-template-columns:1fr}
-  .mck-root .bottom{grid-template-columns:1fr;gap:8px}
-  .mck-root .bc,.mck-root .bc:first-child,.mck-root .bc:last-child{justify-content:center}
-  .mck-root .p{min-height:150px}
+  .mck-root .hmid{padding:10px 0;border-top:1px solid var(--msoft);border-bottom:1px solid var(--msoft)}
+  .mck-root .lu{grid-template-columns:1fr 1fr}
+  .mck-root .bottom{grid-template-columns:1fr;gap:10px}
+  .mck-root .bc,.mck-root .bc:first-child,.mck-root .bc:last-child{justify-content:center;flex-wrap:wrap}
+  .mck-root .p{min-height:170px}
+  .mck-root .p svg.ch{min-height:150px}
+}
+
+/* Phone */
+@media(max-width:600px){
+  .mck-root{padding:5px;gap:5px}
+  .mck-root .top h1{font-size:12.5px}
+  .mck-root .top .sb{font-size:6.5px}
+  .mck-root select,.mck-root .srch,.mck-root .tg,.mck-root .livep,.mck-root .mockp{font-size:10px;padding:5px 7px}
+  .mck-root .stripw{height:96px}
+  .mck-root .gi{flex-basis:172px;padding:6px 7px}
+  .mck-root .gi .ab{font-size:10px}
+  .mck-root .hero{padding:0}
+  .mck-root .crest{width:56px;height:56px}
+  .mck-root .tn{font-size:18px}
+  .mck-root .tmeta{font-size:9.5px}
+  .mck-root .pred{padding:9px 10px}
+  .mck-root .pred .tm2{font-size:15px}
+  .mck-root .score .n{font-size:22px}
+  .mck-root .wp .pc,.mck-root .lc .v,.mck-root .tc .big{font-size:17px}
+  .mck-root table{font-size:10px}
+  .mck-root th{font-size:6.5px}
+  .mck-root td{padding:5px 3px}
+  .mck-root .bk{font-size:9px;gap:4px}
+  .mck-root .bk i{width:13px;height:13px;font-size:5.5px}
+  .mck-root .val{font-size:8.5px}
+  .mck-root .luc{padding:8px}
+  .mck-root .luc h4{font-size:9.5px}
+  .mck-root .pl{font-size:10px}
+  .mck-root .lu{grid-template-columns:1fr;gap:8px}
+  .mck-root .h2h .s{padding:7px 10px;font-size:9.5px}
+  .mck-root .h2h .s .n{font-size:12px;padding:3px 7px}
+  .mck-root .chip{max-width:22px;font-size:9.5px}
+  .mck-root .fgc .row5 .f{width:20px;height:20px;font-size:10px}
+  .mck-root .bwin{font-size:13px}
+  .mck-root .bsc .n{font-size:15px}
+  .mck-root .bbet{white-space:normal;font-size:10.5px;text-align:center}
+}
+
+/* Very narrow phones */
+@media(max-width:400px){
+  .mck-root .top h1{font-size:11.5px}
+  .mck-root select{padding:5px 6px}
+  .mck-root .srch{padding-left:20px}
+  .mck-root .ctl{gap:4px}
+  .mck-root .stripw{height:94px}
+  .mck-root .gi{flex-basis:158px}
+  .mck-root .crest{width:50px;height:50px}
+  .mck-root .tn{font-size:16px}
+  .mck-root .chip{max-width:18px;font-size:8.5px}
 }
 `
 
@@ -1154,16 +1218,21 @@ function H2HFormStack({ md }: { md: EventDetail }) {
         <div className="ph"><span className="pt">H2H History (Last 10)</span></div>
         <div className="pb">
           <div className="h2h">
-            <div className="s" style={{ background: hd }}><span className="n">{h2h.hw}</span><span>{home.abbr} WINS</span></div>
-            <div className="s a" style={{ background: ad }}><span>{away.abbr} WINS</span><span className="n">{h2h.aw}</span></div>
+            <div className="s" style={{ background: hd }}>
+              <span className="n" style={{ background: hp }}>{h2h.hw}</span>
+              <span>{home.abbr} WINS</span>
+            </div>
+            <span className="h2h-mid">LAST 10</span>
+            <div className="s a" style={{ background: ad }}>
+              <span>{away.abbr} WINS</span>
+              <span className="n" style={{ background: ap }}>{h2h.aw}</span>
+            </div>
           </div>
           <div className="chips">
             {h2h.last.map((w, i) => {
               const isH = w === 'h'
-              const bg = isH ? hd : ad
-              const fg = isH ? hp : ap
-              const abbr = isH ? home.abbr : away.abbr
-              return <span key={i} className="chip" style={{ background: bg, color: fg }}>{abbr.charAt(0)}</span>
+              const bg = isH ? hp : ap
+              return <span key={i} className="chip" style={{ background: bg }}>W</span>
             })}
           </div>
         </div>
