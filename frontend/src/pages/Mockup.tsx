@@ -974,8 +974,6 @@ function WinProbMovement({ md }: { md: EventDetail }) {
   const lo = Math.max(5, Math.min(...hS, ...aS) - 10)
   const hi = Math.min(100, Math.max(...hS, ...aS) + 10)
   const hLast = hS[hS.length - 1], aLast = aS[aS.length - 1]
-  const hLy = 150 - (hLast - lo) / (hi - lo || 1) * (150 - 20)
-  const aLy = 150 - (aLast - lo) / (hi - lo || 1) * (150 - 20)
 
   return (
     <div className="p" id="pMove">
@@ -985,24 +983,24 @@ function WinProbMovement({ md }: { md: EventDetail }) {
         <span><i className="key" style={{ background: ap }} />{away.abbr}</span>
       </div>
       <div className="pb">
-        <svg className="ch" viewBox="0 0 360 190" preserveAspectRatio="xMidYMid meet">
-          <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4">
-            {[0,1,2,3,4].map(i => { const y = 20 + i * 32.5; return <line key={i} x1={34} y1={y} x2={326} y2={y} /> })}
+        <svg className="ch" viewBox="0 0 360 340" preserveAspectRatio="none">
+          <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
+            {[0,1,2,3,4].map(i => { const y = 30 + i * 62.5; return <line key={i} x1={34} y1={y} x2={326} y2={y} /> })}
           </g>
-          <g fontFamily="IBM Plex Mono" fontSize={8.5} fill="#55647a" textAnchor="end">
-            {[0,1,2,3,4].map(i => { const y = 20 + i * 32.5; const v = Math.round(hi - (hi - lo) * i / 4); return <text key={i} x={28} y={y + 3}>{v}%</text> })}
+          <g fontFamily="IBM Plex Mono" fontSize={10} fill="#55647a" textAnchor="end">
+            {[0,1,2,3,4].map(i => { const y = 30 + i * 62.5; const v = Math.round(hi - (hi - lo) * i / 4); return <text key={i} x={28} y={y + 3}>{v}%</text> })}
           </g>
-          <polyline points={poly(hS, 36, 318, 20, 150, lo, hi)} fill="none" stroke={hp} strokeWidth={2.2} strokeLinejoin="round" />
-          <polyline points={poly(aS, 36, 318, 20, 150, lo, hi)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" />
-          {dotList(hS, 36, 318, 20, 150, lo, hi, hp)}
-          {dotList(aS, 36, 318, 20, 150, lo, hi, ap)}
-          <circle cx={318} cy={hLy.toFixed(1) as unknown as number} r={4} fill={hp} />
-          <circle cx={318} cy={aLy.toFixed(1) as unknown as number} r={4} fill={ap} />
-          <text x={352} y={(hLy + 3).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={11} fontWeight={700} fill={hp} textAnchor="end">{Math.round(hLast)}%</text>
-          <text x={352} y={(aLy + 3).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={11} fontWeight={700} fill={ap} textAnchor="end">{Math.round(aLast)}%</text>
-          <g fontFamily="IBM Plex Mono" fontSize={8.5} fill="#55647a" textAnchor="middle">
-            <text x={36}  y={170}>-24h</text><text x={114} y={170}>-12h</text><text x={192} y={170}>-6h</text>
-            <text x={270} y={170}>-3h</text><text x={318} y={170}>Now</text>
+          <polyline points={poly(hS, 36, 318, 30, 280, lo, hi)} fill="none" stroke={hp} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          <polyline points={poly(aS, 36, 318, 30, 280, lo, hi)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          {dotList(hS, 36, 318, 30, 280, lo, hi, hp)}
+          {dotList(aS, 36, 318, 30, 280, lo, hi, ap)}
+          <circle cx={318} cy={(280 - (hLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={4} fill={hp} />
+          <circle cx={318} cy={(280 - (aLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={4} fill={ap} />
+          <text x={352} y={(280 - (hLast - lo) / (hi - lo || 1) * 250 + 3).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={12} fontWeight={700} fill={hp} textAnchor="end">{Math.round(hLast)}%</text>
+          <text x={352} y={(280 - (aLast - lo) / (hi - lo || 1) * 250 + 3).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={12} fontWeight={700} fill={ap} textAnchor="end">{Math.round(aLast)}%</text>
+          <g fontFamily="IBM Plex Mono" fontSize={10} fill="#55647a" textAnchor="middle">
+            <text x={36}  y={310}>-24h</text><text x={114} y={310}>-12h</text><text x={192} y={310}>-6h</text>
+            <text x={270} y={310}>-3h</text><text x={318} y={310}>Now</text>
           </g>
         </svg>
       </div>
@@ -1019,31 +1017,29 @@ function LineTotalStack({ md }: { md: EventDetail }) {
   const lS = seriesTo(mu, mu + (mu < 0 ? 1.2 : -1.2), 12, 0.12)
   const llo = Math.min(...lS) - 2.5, lhi = Math.max(...lS) + 2.5
   const lLast = lS[lS.length - 1]
-  const lLy = 74 - (lLast - llo) / (lhi - llo || 1) * (74 - 14)
 
   const tS = seriesTo(tot, tot - 3.5, 12, 0.3)
   const tlo = Math.min(...tS) - 2, thi = Math.max(...tS) + 2
   const tLast = tS[tS.length - 1]
-  const tLy = 74 - (tLast - tlo) / (thi - tlo || 1) * (74 - 14)
 
   return (
     <div className="stk">
       <div className="p">
         <div className="ph"><span className="pt">Line Movement</span><span className="hv mono" style={{ color: ap }}>{sgn(mu)}</span></div>
         <div className="pb">
-          <svg className="ch" viewBox="0 0 360 108" preserveAspectRatio="xMidYMid meet">
-            <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4">
-              {[0,1,2,3].map(i => { const y = 14 + i * 20; return <line key={i} x1={30} y1={y} x2={326} y2={y} /> })}
+          <svg className="ch" viewBox="0 0 360 200" preserveAspectRatio="none">
+            <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
+              {[0,1,2,3].map(i => { const y = 18 + i * 47; return <line key={i} x1={30} y1={y} x2={326} y2={y} /> })}
             </g>
-            <g fontFamily="IBM Plex Mono" fontSize={8} fill="#55647a" textAnchor="end">
-              {[0,1,2,3].map(i => { const y = 14 + i * 20; const v = lhi - (lhi - llo) * i / 3; return <text key={i} x={25} y={y + 3}>{v.toFixed(1)}</text> })}
+            <g fontFamily="IBM Plex Mono" fontSize={10} fill="#55647a" textAnchor="end">
+              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = lhi - (lhi - llo) * i / 3; return <text key={i} x={25} y={y + 3}>{v.toFixed(1)}</text> })}
             </g>
-            <polyline points={poly(lS, 32, 308, 14, 74, llo, lhi)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" />
-            {dotList(lS, 32, 308, 14, 74, llo, lhi, ap)}
-            <circle cx={308} cy={lLy.toFixed(1) as unknown as number} r={3.6} fill={ap} />
-            <g fontFamily="IBM Plex Mono" fontSize={8} fill="#55647a" textAnchor="middle">
-              <text x={32} y={94}>-24h</text><text x={110} y={94}>-12h</text><text x={188} y={94}>-6h</text>
-              <text x={266} y={94}>-3h</text><text x={308} y={94}>Now</text>
+            <polyline points={poly(lS, 32, 308, 18, 159, llo, lhi)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            {dotList(lS, 32, 308, 18, 159, llo, lhi, ap)}
+            <circle cx={308} cy={(159 - (lLast - llo) / (lhi - llo || 1) * 141).toFixed(1) as unknown as number} r={3.6} fill={ap} />
+            <g fontFamily="IBM Plex Mono" fontSize={10} fill="#55647a" textAnchor="middle">
+              <text x={32} y={185}>-24h</text><text x={110} y={185}>-12h</text><text x={188} y={185}>-6h</text>
+              <text x={266} y={185}>-3h</text><text x={308} y={185}>Now</text>
             </g>
           </svg>
         </div>
@@ -1051,26 +1047,26 @@ function LineTotalStack({ md }: { md: EventDetail }) {
       <div className="p">
         <div className="ph"><span className="pt">Total Points Movement</span><span className="hv mono" style={{ color: '#25d97b' }}>{tot.toFixed(1)}</span></div>
         <div className="pb">
-          <svg className="ch" viewBox="0 0 360 108" preserveAspectRatio="xMidYMid meet">
+          <svg className="ch" viewBox="0 0 360 200" preserveAspectRatio="none">
             <defs>
               <linearGradient id="mck-gt2" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#25d97b" stopOpacity=".3" />
                 <stop offset="100%" stopColor="#25d97b" stopOpacity="0" />
               </linearGradient>
             </defs>
-            <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4">
-              {[0,1,2,3].map(i => { const y = 14 + i * 20; return <line key={i} x1={30} y1={y} x2={326} y2={y} /> })}
+            <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
+              {[0,1,2,3].map(i => { const y = 18 + i * 47; return <line key={i} x1={30} y1={y} x2={326} y2={y} /> })}
             </g>
-            <g fontFamily="IBM Plex Mono" fontSize={8} fill="#55647a" textAnchor="end">
-              {[0,1,2,3].map(i => { const y = 14 + i * 20; const v = thi - (thi - tlo) * i / 3; return <text key={i} x={25} y={y + 3}>{v.toFixed(1)}</text> })}
+            <g fontFamily="IBM Plex Mono" fontSize={10} fill="#55647a" textAnchor="end">
+              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = thi - (thi - tlo) * i / 3; return <text key={i} x={25} y={y + 3}>{v.toFixed(1)}</text> })}
             </g>
-            <polygon points={poly(tS, 32, 308, 14, 74, tlo, thi) + ' 308,78 32,78'} fill="url(#mck-gt2)" />
-            <polyline points={poly(tS, 32, 308, 14, 74, tlo, thi)} fill="none" stroke="#25d97b" strokeWidth={2.2} strokeLinejoin="round" />
-            {dotList(tS, 32, 308, 14, 74, tlo, thi, '#25d97b')}
-            <circle cx={308} cy={tLy.toFixed(1) as unknown as number} r={3.6} fill="#25d97b" />
-            <g fontFamily="IBM Plex Mono" fontSize={8} fill="#55647a" textAnchor="middle">
-              <text x={32} y={94}>-24h</text><text x={110} y={94}>-12h</text><text x={188} y={94}>-6h</text>
-              <text x={266} y={94}>-3h</text><text x={308} y={94}>Now</text>
+            <polygon points={poly(tS, 32, 308, 18, 159, tlo, thi) + ' 308,163 32,163'} fill="url(#mck-gt2)" />
+            <polyline points={poly(tS, 32, 308, 18, 159, tlo, thi)} fill="none" stroke="#25d97b" strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            {dotList(tS, 32, 308, 18, 159, tlo, thi, '#25d97b')}
+            <circle cx={308} cy={(159 - (tLast - tlo) / (thi - tlo || 1) * 141).toFixed(1) as unknown as number} r={3.6} fill="#25d97b" />
+            <g fontFamily="IBM Plex Mono" fontSize={10} fill="#55647a" textAnchor="middle">
+              <text x={32} y={185}>-24h</text><text x={110} y={185}>-12h</text><text x={188} y={185}>-6h</text>
+              <text x={266} y={185}>-3h</text><text x={308} y={185}>Now</text>
             </g>
           </svg>
         </div>
