@@ -485,9 +485,84 @@ const CSS = `
 // ───────────────────────────────────────────────────────────────────────────
 // Small building blocks
 // ───────────────────────────────────────────────────────────────────────────
-function Crest({ primary, secondary, abbr, className = 'crest' }: { primary: string; secondary: string; abbr: string; className?: string }) {
+// Wikipedia Commons Special:FilePath — redirects to the current file location
+// so the URL stays stable even when the underlying file is re-uploaded.
+const WP = (filename: string) => `https://en.wikipedia.org/wiki/Special:FilePath/${filename}`
+
+const TEAM_LOGOS: Record<string, string> = {
+  // NRL
+  'Brisbane Broncos':              WP('Brisbane_Broncos_logo.svg'),
+  'Canberra Raiders':              WP('Canberra_Raiders_logo.svg'),
+  'Canterbury Bulldogs':           WP('Canterbury-Bankstown_Bulldogs_logo.svg'),
+  'Cronulla Sutherland Sharks':    WP('Cronulla-Sutherland_Sharks_logo.svg'),
+  'Cronulla Sharks':               WP('Cronulla-Sutherland_Sharks_logo.svg'),
+  'Dolphins':                      WP('Dolphins_NRL_logo.svg'),
+  'Gold Coast Titans':             WP('Gold_Coast_Titans_logo.svg'),
+  'Manly Warringah Sea Eagles':    WP('Manly-Warringah_Sea_Eagles_logo.svg'),
+  'Manly Sea Eagles':              WP('Manly-Warringah_Sea_Eagles_logo.svg'),
+  'Melbourne Storm':               WP('Melbourne_Storm_logo.svg'),
+  'New Zealand Warriors':          WP('New_Zealand_Warriors_logo.svg'),
+  'Newcastle Knights':             WP('Newcastle_Knights_logo.svg'),
+  'North Queensland Cowboys':      WP('North_Queensland_Cowboys_logo.svg'),
+  'Parramatta Eels':               WP('Parramatta_Eels_logo.svg'),
+  'Penrith Panthers':              WP('Penrith_Panthers_logo.svg'),
+  'South Sydney Rabbitohs':        WP('South_Sydney_Rabbitohs_logo.svg'),
+  'St George Illawarra Dragons':   WP('St_George_Illawarra_Dragons_logo.svg'),
+  'Sydney Roosters':               WP('Sydney_Roosters_logo.svg'),
+  'Wests Tigers':                  WP('Wests_Tigers_logo.svg'),
+
+  // AFL
+  'Adelaide Crows':                WP('Adelaide_Football_Club_logo.svg'),
+  'Brisbane Lions':                WP('Brisbane_Lions_logo_2010.svg'),
+  'Carlton Blues':                 WP('Carlton_FC_Logo_2020.svg'),
+  'Collingwood Magpies':           WP('Collingwood_Football_Club_Logo_(2017).svg'),
+  'Essendon Bombers':              WP('Essendon_FC_logo_2010.svg'),
+  'Fremantle Dockers':             WP('Fremantle_FC_logo.svg'),
+  'Geelong Cats':                  WP('Geelong_Cats_logo.svg'),
+  'Gold Coast Suns':               WP('Gold_Coast_Suns_logo_2010.svg'),
+  'Greater Western Sydney Giants': WP('Greater_Western_Sydney_Giants_logo.svg'),
+  'GWS Giants':                    WP('Greater_Western_Sydney_Giants_logo.svg'),
+  'Hawthorn Hawks':                WP('Hawthorn_Hawks_logo_2008.svg'),
+  'Melbourne Demons':              WP('Melbourne_Football_Club_logo.svg'),
+  'North Melbourne Kangaroos':     WP('North_Melbourne_FC_logo.svg'),
+  'Port Adelaide Power':           WP('Port_Adelaide_Football_Club_logo.svg'),
+  'Richmond Tigers':               WP('Richmond_Tigers_logo_2016.svg'),
+  'St Kilda Saints':               WP('St_Kilda_FC_logo_2008.svg'),
+  'Sydney Swans':                  WP('Sydney_Swans_logo_2020.svg'),
+  'West Coast Eagles':             WP('West_Coast_Eagles_logo_2017.svg'),
+  'Western Bulldogs':              WP('Western_Bulldogs_logo.svg'),
+}
+
+function logoUrlFor(teamName?: string): string | null {
+  if (!teamName) return null
+  return TEAM_LOGOS[teamName] ?? null
+}
+
+function Crest({ primary, secondary, abbr, teamName, className = 'crest' }: {
+  primary: string; secondary: string; abbr: string;
+  teamName?: string; className?: string
+}) {
   const p = safeCol(primary, '#4da6ff')
   const s = safeCol(secondary, darken(p, 0.6))
+  const [imgFailed, setImgFailed] = useState(false)
+  const logoUrl = logoUrlFor(teamName)
+
+  if (logoUrl && !imgFailed) {
+    return (
+      <div className={className} style={{
+        display: 'grid', placeItems: 'center', overflow: 'hidden',
+      }}>
+        <img
+          src={logoUrl}
+          alt={teamName ?? abbr}
+          referrerPolicy="no-referrer"
+          onError={() => setImgFailed(true)}
+          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
+        />
+      </div>
+    )
+  }
+
   return (
     <svg className={className} viewBox="0 0 100 100" fill="none">
       <path d="M50 6 L88 20 V52 C88 74 70 88 50 95 C30 88 12 74 12 52 V20 Z"
@@ -657,12 +732,12 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
               </div>
               <div className="r2">
                 <div className="sd">
-                  <Crest primary={e.home_color} secondary={e.home_secondary_color} abbr={e.home_abbr} className="cr" />
+                  <Crest primary={e.home_color} secondary={e.home_secondary_color} abbr={e.home_abbr} teamName={e.home_team} className="cr" />
                   <span className="ab">{e.home_abbr}</span>
                 </div>
                 <span className="vs">VS</span>
                 <div className="sd r">
-                  <Crest primary={e.away_color} secondary={e.away_secondary_color} abbr={e.away_abbr} className="cr" />
+                  <Crest primary={e.away_color} secondary={e.away_secondary_color} abbr={e.away_abbr} teamName={e.away_team} className="cr" />
                   <span className="ab">{e.away_abbr}</span>
                 </div>
               </div>
@@ -698,7 +773,7 @@ function Hero({ md }: { md: EventDetail }) {
         `radial-gradient(140% 170% at 105% 50%, ${ap}66 0%, ${ad} 22%, #0f0a1e 52%, transparent 72%), #0a0f19`,
     }}>
       <div className="st">
-        <Crest primary={hp} secondary={hd} abbr={home.abbr} />
+        <Crest primary={hp} secondary={hd} abbr={home.abbr} teamName={home.name} />
         <div>
           <div className="city">{hn.city}</div>
           <div className="tn">{hn.short.toUpperCase()}</div>
@@ -722,7 +797,7 @@ function Hero({ md }: { md: EventDetail }) {
         {!md.weather && <div className="wd" style={{ marginTop: 6 }}>Weather pending</div>}
       </div>
       <div className="st aw">
-        <Crest primary={ap} secondary={ad} abbr={away.abbr} />
+        <Crest primary={ap} secondary={ad} abbr={away.abbr} teamName={away.name} />
         <div>
           <div className="city">{an.city}</div>
           <div className="tn">{an.short.toUpperCase()}</div>
@@ -829,11 +904,11 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
         <div className="ph"><span className="pt">AI Line</span><span className="q">?</span></div>
         <div className="pb">
           <div className="lc">
-            <Crest primary={hp} secondary={darken(hp)} abbr={home.abbr} className="mc" />
+            <Crest primary={hp} secondary={darken(hp)} abbr={home.abbr} teamName={home.name} className="mc" />
             <div className="v mono" style={{ color: hp }}>{sgn(mu)}</div>
             <div className="lb">AI LINE</div>
             <div className="v mono" style={{ color: ap }}>{sgn(-mu)}</div>
-            <Crest primary={ap} secondary={darken(ap)} abbr={away.abbr} className="mc" />
+            <Crest primary={ap} secondary={darken(ap)} abbr={away.abbr} teamName={away.name} className="mc" />
           </div>
           <div className="cr2">
             <span className="l">LINE CONF</span>
@@ -1220,7 +1295,7 @@ function TeamNews({ md }: { md: EventDetail }) {
         position: 'relative', overflow: 'hidden',
       }}>
         <div className="mascot-bg" style={{ opacity: 0.14 }}>
-          <Crest primary={p} secondary={d} abbr={t.abbr} className="mascot-crest" />
+          <Crest primary={p} secondary={d} abbr={t.abbr} teamName={t.name} className="mascot-crest" />
         </div>
         <div style={{ position: 'relative', zIndex: 1 }}>
           <h4 style={{ color: p }}>{name.city} {name.short.toUpperCase()}</h4>
