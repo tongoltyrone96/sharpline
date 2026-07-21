@@ -79,6 +79,31 @@ function fakeAdjPct(abbr: string): number {
   const s = seedFrom(abbr + 'adj')
   return (s % 7) - 3 // -3..+3
 }
+function fakeMetrics(homeAbbr: string, awayAbbr: string) {
+  const hs = seedFrom(homeAbbr + 'metrics'), as = seedFrom(awayAbbr + 'metrics')
+  const rng = (seed: number, min: number, max: number) => min + (seed % 1000) / 1000 * (max - min)
+  const homeAtk = rng(hs, 95, 115), awayAtk = rng(as, 95, 115)
+  const homeDef = rng(hs >> 3, 95, 120), awayDef = rng(as >> 3, 95, 120)
+  const homeET = rng(hs >> 6, 1.5, 3.4), awayET = rng(as >> 6, 1.5, 3.4)
+  const homeCmp = Math.round(rng(hs >> 9, 74, 88)), awayCmp = Math.round(rng(as >> 9, 74, 88))
+  const homePos = Math.round(rng(hs >> 12, 45, 55)), awayPos = 100 - homePos
+  const homeTer = Math.round(rng(hs >> 15, 44, 56)), awayTer = 100 - homeTer
+  const homePen = rng(hs >> 18, 5.0, 8.5), awayPen = rng(as >> 18, 5.0, 8.5)
+  return [
+    { label: 'Attack Rating',     h: homeAtk.toFixed(1), a: awayAtk.toFixed(1), homeAdv: homeAtk > awayAtk },
+    { label: 'Defence Rating',    h: homeDef.toFixed(1), a: awayDef.toFixed(1), homeAdv: homeDef < awayDef },
+    { label: 'Expected Tries',    h: homeET.toFixed(1),  a: awayET.toFixed(1),  homeAdv: homeET > awayET },
+    { label: 'Completion Rate',   h: homeCmp + '%',      a: awayCmp + '%',      homeAdv: homeCmp > awayCmp },
+    { label: 'Possession %',      h: homePos + '%',      a: awayPos + '%',      homeAdv: homePos > awayPos },
+    { label: 'Territory %',       h: homeTer + '%',      a: awayTer + '%',      homeAdv: homeTer > awayTer },
+    { label: 'Penalties Conceded',h: homePen.toFixed(1), a: awayPen.toFixed(1), homeAdv: homePen < awayPen },
+  ]
+}
+function fakePower(homeAbbr: string, awayAbbr: string): { home: number; away: number } {
+  const hs = seedFrom(homeAbbr + 'pow') % 16, as = seedFrom(awayAbbr + 'pow') % 16
+  const h = 1 + hs, a = 1 + as
+  return { home: h === a ? h + 1 : h, away: a }
+}
 function splitName(name: string): { city: string; short: string } {
   if (!name) return { city: '', short: '' }
   const parts = name.trim().split(/\s+/)
@@ -232,13 +257,13 @@ const CSS = `
 .mck-root .stk{display:flex;flex-direction:column;gap:6px;min-height:0}
 .mck-root .stk>.p{flex:1;min-height:0}
 
-.mck-root .hero{border-radius:var(--mr);border:1px solid var(--mline);overflow:hidden;display:grid;grid-template-columns:1fr 158px 1fr;align-items:center}
-.mck-root .st{display:flex;align-items:center;gap:10px;padding:8px 14px}
+.mck-root .hero{border-radius:var(--mr);border:1px solid var(--mline);overflow:hidden;display:grid;grid-template-columns:1fr 170px 1fr;align-items:center}
+.mck-root .st{display:flex;align-items:center;gap:14px;padding:10px 18px}
 .mck-root .st.aw{flex-direction:row-reverse;text-align:right}
-.mck-root .crest{width:60px;height:60px;flex:none}
-.mck-root .city{font-size:9.5px;letter-spacing:.05em;font-weight:600;opacity:.8;color:#e2e8f3}
-.mck-root .tn{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1;margin-top:1px;color:var(--mtxt)}
-.mck-root .tmeta{margin-top:5px;font-size:10px;color:#e2e8f3;font-weight:600}
+.mck-root .crest{width:76px;height:76px;flex:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+.mck-root .city{font-size:11px;letter-spacing:.07em;font-weight:700;opacity:.9;color:#f1f5ff}
+.mck-root .tn{font-size:24px;font-weight:900;letter-spacing:-.02em;line-height:1;margin-top:2px;color:var(--mtxt)}
+.mck-root .tmeta{margin-top:6px;font-size:11px;color:#e2e8f3;font-weight:700}
 .mck-root .tf{display:flex;gap:3px;margin-top:4px}
 .mck-root .st.aw .tf{justify-content:flex-end}
 .mck-root .f{width:14px;height:14px;border-radius:3px;display:grid;place-items:center;font-size:7.5px;font-weight:800;font-family:'IBM Plex Mono',monospace}
@@ -305,8 +330,10 @@ const CSS = `
 .mck-root .hv{margin-left:auto;font-size:10.5px;font-weight:700}
 
 .mck-root .lu{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;min-height:0}
-.mck-root .luc{border:1px solid var(--mline);border-radius:7px;padding:7px;overflow:hidden;display:flex;flex-direction:column}
-.mck-root .luc h4{font-size:9px;font-weight:800;letter-spacing:.03em;margin-bottom:4px;color:var(--mtxt)}
+.mck-root .luc{border:1px solid var(--mline);border-radius:7px;padding:9px 10px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.mck-root .luc .mascot-bg{position:absolute;right:-22px;top:-14px;width:130px;height:130px;transform:rotate(-14deg);pointer-events:none;z-index:0}
+.mck-root .luc .mascot-crest{width:130px;height:130px}
+.mck-root .luc h4{font-size:10px;font-weight:800;letter-spacing:.04em;margin-bottom:5px}
 .mck-root .io{font-size:7.5px;font-weight:800;letter-spacing:.1em;margin:3px 0 1px}
 .mck-root .io.i{color:var(--mgreen)}
 .mck-root .io.o{color:var(--mred)}
@@ -321,6 +348,22 @@ const CSS = `
 .mck-root .wnote .ic{font-size:12px;line-height:1}
 .mck-root .wnote .tt{font-size:8px;letter-spacing:.09em;font-weight:800;color:#9fb0c6}
 .mck-root .wnote p{font-size:9px;color:var(--mdim);line-height:1.35}
+
+/* AI Key Matchup Metrics */
+.mck-root .mtxhdr{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:5px 4px 6px;border-bottom:1px solid var(--mline);font-size:9.5px;font-weight:800;letter-spacing:.06em;flex:none}
+.mck-root .mtxhdr>span:first-child{text-align:left}
+.mck-root .mtxhdr>span:nth-child(2){color:var(--mdim);text-align:center;padding:0 8px}
+.mck-root .mtxhdr>span:last-child{text-align:right}
+.mck-root .mtxbody{flex:1;display:flex;flex-direction:column;justify-content:space-around;padding:2px 0}
+.mck-root .mtxrow{display:grid;grid-template-columns:1fr auto 12px 1fr;align-items:center;gap:8px;padding:3px 4px;font-size:10.5px}
+.mck-root .mtxrow .mv{font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:12px}
+.mck-root .mtxrow .mv.r{text-align:right}
+.mck-root .mtxrow .ml{font-size:10.5px;font-weight:600;color:#c3d0e2;text-align:center;white-space:nowrap}
+.mck-root .mtxrow .marr{font-size:14px;font-weight:800;text-align:center;line-height:1}
+/* Power Ranking */
+.mck-root .pw{display:flex;align-items:center;justify-content:space-between;padding:8px 20px !important;border-top:1px solid var(--mline)}
+.mck-root .pw .pwn{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:900;letter-spacing:-.02em;line-height:1}
+.mck-root .pw .pwx{font-size:10px;font-weight:800;letter-spacing:.14em;color:#c3d0e2}
 
 .mck-root .h2h{display:flex;border-radius:7px;overflow:hidden;flex:none;position:relative}
 .mck-root .h2h .s{flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:10px;letter-spacing:.06em;font-weight:800;color:#fff}
@@ -651,8 +694,8 @@ function Hero({ md }: { md: EventDetail }) {
   return (
     <div className="hero" style={{
       background:
-        `radial-gradient(120% 150% at 0% 50%, ${hd} 0%, #170a12 44%, transparent 64%),` +
-        `radial-gradient(120% 150% at 100% 50%, ${ad} 0%, #120e24 44%, transparent 64%), #0a0f19`,
+        `radial-gradient(140% 170% at -5% 50%, ${hp}66 0%, ${hd} 22%, #100815 52%, transparent 72%),` +
+        `radial-gradient(140% 170% at 105% 50%, ${ap}66 0%, ${ad} 22%, #0f0a1e 52%, transparent 72%), #0a0f19`,
     }}>
       <div className="st">
         <Crest primary={hp} secondary={hd} abbr={home.abbr} />
@@ -1172,19 +1215,27 @@ function TeamNews({ md }: { md: EventDetail }) {
     const adj = side === 'h' ? hAdj : aAdj
     const name = splitName(t.name)
     return (
-      <div className="luc" style={{ background: `linear-gradient(150deg, ${d}, #0d1320 62%)` }}>
-        <h4>{name.city} {name.short.toUpperCase()}</h4>
-        {ins.length > 0 && (<><div className="io i">IN</div>
-          {ins.map((pl, i) => <div key={i} className="pl"><b>✓</b>{pl.player_name ?? pl.player ?? 'Player'}</div>)}</>)}
-        {outs.length > 0 && (<><div className="io o">OUT</div>
-          {outs.map((pl, i) => <div key={i} className="pl x"><b>✗</b>{pl.player_name ?? pl.player ?? 'Player'} {pl.reason && <span style={{ color: '#55647a' }}>– {pl.reason}</span>}</div>)}</>)}
-        {ins.length === 0 && outs.length === 0 && (
-          <div className="pl" style={{ color: '#55647a' }}>Lineups not yet announced</div>
-        )}
-        <div className="imp">
-          <div className="t">AI IMPACT</div>
-          <p>{ins.length + outs.length > 0 ? 'Selected changes moderately affect model outputs.' : 'No confirmed changes; baseline projections used.'}</p>
-          <div className="adj" style={{ color: adj >= 0 ? '#25d97b' : '#f4526a' }}>{t.abbr} win probability {adj >= 0 ? '+' : '−'}{Math.abs(adj)}%</div>
+      <div className="luc" style={{
+        background: `linear-gradient(150deg, ${d}, #0d1320 62%)`,
+        position: 'relative', overflow: 'hidden',
+      }}>
+        <div className="mascot-bg" style={{ opacity: 0.14 }}>
+          <Crest primary={p} secondary={d} abbr={t.abbr} className="mascot-crest" />
+        </div>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h4 style={{ color: p }}>{name.city} {name.short.toUpperCase()}</h4>
+          {ins.length > 0 && (<><div className="io i">IN</div>
+            {ins.map((pl, i) => <div key={i} className="pl"><b>✓</b>{pl.player_name ?? pl.player ?? 'Player'}</div>)}</>)}
+          {outs.length > 0 && (<><div className="io o">OUT</div>
+            {outs.map((pl, i) => <div key={i} className="pl x"><b>✗</b>{pl.player_name ?? pl.player ?? 'Player'} {pl.reason && <span style={{ color: '#55647a' }}>– {pl.reason}</span>}</div>)}</>)}
+          {ins.length === 0 && outs.length === 0 && (
+            <div className="pl" style={{ color: '#55647a' }}>Lineups not yet announced</div>
+          )}
+          <div className="imp">
+            <div className="t">AI IMPACT</div>
+            <p>{ins.length + outs.length > 0 ? 'Selected changes moderately affect model outputs.' : 'No confirmed changes; baseline projections used.'}</p>
+            <div className="adj" style={{ color: adj >= 0 ? '#25d97b' : '#f4526a' }}>{t.abbr} win probability {adj >= 0 ? '+' : '−'}{Math.abs(adj)}%</div>
+          </div>
         </div>
       </div>
     )
@@ -1318,6 +1369,53 @@ function ValueList({ md }: { md: EventDetail }) {
             <span className="m2">Awaiting settled results</span>
           </span>
           <span className="e" style={{ color: '#55647a', fontSize: 10 }}>—</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// AI Key Matchup Metrics + Power Ranking (stacked)
+// ───────────────────────────────────────────────────────────────────────────
+function MatchupMetricsStack({ md }: { md: EventDetail }) {
+  const { home, away } = md.event
+  const hp = safeCol(home.primary_color, '#c8324f')
+  const ap = safeCol(away.primary_color, '#8b5cf6')
+  const rows = fakeMetrics(home.abbr, away.abbr)
+  const pow = fakePower(home.abbr, away.abbr)
+  const homePowerWins = pow.home < pow.away
+  const powBg = `linear-gradient(90deg, ${homePowerWins ? hp : darken(hp,0.85)}22 0%, #0d1320 50%, ${homePowerWins ? darken(ap,0.85) : ap}22 100%)`
+  return (
+    <div className="stk">
+      <div className="p" id="pMetrics">
+        <div className="ph"><span className="pt">AI Key Matchup Metrics</span><span className="q">?</span></div>
+        <div className="pb">
+          <div className="mtxhdr">
+            <span style={{ color: hp }}>{home.abbr}</span>
+            <span>EDGE</span>
+            <span style={{ color: ap }}>{away.abbr}</span>
+          </div>
+          <div className="mtxbody">
+            {rows.map((r, i) => (
+              <div key={i} className="mtxrow">
+                <span className="mv" style={{ color: hp }}>{r.h}</span>
+                <span className="ml">{r.label}</span>
+                <span className={'marr ' + (r.homeAdv ? 'l' : 'r')} style={{ color: r.homeAdv ? hp : ap }}>
+                  {r.homeAdv ? '‹' : '›'}
+                </span>
+                <span className="mv r" style={{ color: ap }}>{r.a}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="p" id="pPower">
+        <div className="ph"><span className="pt">Power Ranking</span></div>
+        <div className="pb pw" style={{ background: powBg }}>
+          <span className="pwn" style={{ color: hp }}>{pow.home}</span>
+          <span className="pwx">POWER RANKING</span>
+          <span className="pwn" style={{ color: ap }}>{pow.away}</span>
         </div>
       </div>
     </div>
@@ -1478,8 +1576,8 @@ function MockupInner() {
               </div>
               <div className="row rm">
                 <TeamNews md={detail} />
+                <MatchupMetricsStack md={detail} />
                 <H2HFormStack md={detail} />
-                <ValueList md={detail} />
               </div>
               <BottomBar md={detail} />
             </>
