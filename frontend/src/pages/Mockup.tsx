@@ -216,6 +216,10 @@ const CSS = `
   background:var(--mbg); color:var(--mtxt);
   font-family:Inter,system-ui,sans-serif; -webkit-font-smoothing:antialiased;
   padding:6px; display:flex; gap:6px; min-height:100vh;
+  /* Prevent Chrome for Android from inflating text and blowing the layout */
+  -webkit-text-size-adjust:100%; text-size-adjust:100%;
+  /* Never let a stray child cause the whole page to scroll sideways */
+  max-width:100vw; overflow-x:hidden;
 }
 .mck-root .mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
 .mck-root a{text-decoration:none;color:inherit}
@@ -226,8 +230,12 @@ const CSS = `
 .mck-root .ph{display:flex;align-items:center;gap:6px;padding:6px 9px 4px;flex:none}
 .mck-root .pt{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#c3d0e2;white-space:nowrap}
 .mck-root .q{width:11px;height:11px;border-radius:50%;border:1px solid var(--mline);color:var(--mdim2);font-size:7.5px;display:grid;place-items:center;flex:none}
-.mck-root .pb{padding:0 9px 8px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.mck-root .pb{padding:0 9px 8px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 .mck-root svg.ch{flex:1;min-height:0;width:100%;height:100%}
+/* Wrap tables so they scroll horizontally on narrow phones rather than
+   being clipped by the panel's overflow: hidden. */
+.mck-root .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0}
+.mck-root .tblwrap table{min-width:100%}
 
 .mck-root .side{width:116px;flex:none;background:var(--mpanel);border:1px solid var(--mline);border-radius:var(--mr);display:flex;flex-direction:column;padding:8px 0 6px;overflow:hidden}
 .mck-root .brand{display:grid;place-items:center;padding-bottom:6px}
@@ -488,8 +496,18 @@ const CSS = `
   .mck-root .gi .ab{font-size:10px}
   .mck-root .hero{padding:0}
   .mck-root .crest{width:56px;height:56px}
-  .mck-root .tn{font-size:18px}
+  .mck-root .tn{font-size:18px;word-break:break-word;overflow-wrap:anywhere}
   .mck-root .tmeta{font-size:9.5px}
+  /* AI Key Matchup Metrics label needs room to wrap on narrow phones
+     because 'Penalties Conceded' and 'Completion Rate' are long. */
+  .mck-root .mtxrow{grid-template-columns:1fr auto 14px 1fr;gap:6px;padding:3px 2px}
+  .mck-root .mtxrow .ml{font-size:9.5px;white-space:normal;line-height:1.2}
+  .mck-root .mtxrow .mv{font-size:11px}
+  .mck-root .pw .pwn{font-size:26px}
+  .mck-root .pw .pwx{font-size:9px}
+  /* Mascot overlay tames itself on phones so it doesn't dominate the card */
+  .mck-root .luc .mascot-bg{width:100px;height:100px;right:-14px;top:-8px;opacity:.11}
+  .mck-root .luc .mascot-crest{width:100px;height:100px}
   .mck-root .pred{padding:9px 10px}
   .mck-root .pred .tm2{font-size:15px}
   .mck-root .score .n{font-size:22px}
@@ -1080,6 +1098,7 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
   const rows = md.markets?.h2h ?? []
   const fH = md.model?.fair_home_price, fA = md.model?.fair_away_price
   return <>
+    <div className="tblwrap">
     <table className="mono">
       <thead><tr><th>BOOKMAKER</th><th>{home.abbr}</th><th>{away.abbr}</th><th>AI FAIR</th><th>VALUE</th></tr></thead>
       <tbody>
@@ -1108,12 +1127,14 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
         })}
       </tbody>
     </table>
+    </div>
     <div className="foot"><span className="dot"></span>Prices update every 30 seconds</div>
   </>
 }
 function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[]; home: EventDetail['event']['home']; away: EventDetail['event']['away'] }) {
   const rows = md.markets?.spreads ?? []
   return <>
+    <div className="tblwrap">
     <table className="mono">
       <thead><tr><th>BOOKMAKER</th><th>LINE</th><th>PRICE</th><th>AI FAIR</th><th>VALUE</th></tr></thead>
       <tbody>
@@ -1137,12 +1158,14 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
         })}
       </tbody>
     </table>
+    </div>
     <div className="note8">Every book priced <b>at its own line</b> — never averaged.</div>
   </>
 }
 function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
   const rows = md.markets?.totals ?? []
   return <>
+    <div className="tblwrap">
     <table className="mono">
       <thead><tr><th>BOOKMAKER</th><th>TOTAL</th><th>OVER</th><th>UNDER</th><th>VALUE</th></tr></thead>
       <tbody>
@@ -1164,6 +1187,7 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
         })}
       </tbody>
     </table>
+    </div>
     <div className="note8">Same rule on totals — <b>each line priced separately</b>.</div>
   </>
 }
