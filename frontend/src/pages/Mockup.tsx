@@ -487,50 +487,52 @@ const CSS = `
 // ───────────────────────────────────────────────────────────────────────────
 // Wikipedia Commons Special:FilePath — redirects to the current file location
 // so the URL stays stable even when the underlying file is re-uploaded.
-const WP = (filename: string) => `https://en.wikipedia.org/wiki/Special:FilePath/${filename}`
+// Filenames verified 200 OK against en.wikipedia.org before being added.
+const WP = (filename: string) =>
+  `https://en.wikipedia.org/wiki/Special:FilePath/${encodeURIComponent(filename).replace(/%20/g, '_')}`
 
 const TEAM_LOGOS: Record<string, string> = {
-  // NRL
-  'Brisbane Broncos':              WP('Brisbane_Broncos_logo.svg'),
-  'Canberra Raiders':              WP('Canberra_Raiders_logo.svg'),
-  'Canterbury Bulldogs':           WP('Canterbury-Bankstown_Bulldogs_logo.svg'),
-  'Cronulla Sutherland Sharks':    WP('Cronulla-Sutherland_Sharks_logo.svg'),
-  'Cronulla Sharks':               WP('Cronulla-Sutherland_Sharks_logo.svg'),
-  'Dolphins':                      WP('Dolphins_NRL_logo.svg'),
-  'Gold Coast Titans':             WP('Gold_Coast_Titans_logo.svg'),
-  'Manly Warringah Sea Eagles':    WP('Manly-Warringah_Sea_Eagles_logo.svg'),
-  'Manly Sea Eagles':              WP('Manly-Warringah_Sea_Eagles_logo.svg'),
-  'Melbourne Storm':               WP('Melbourne_Storm_logo.svg'),
-  'New Zealand Warriors':          WP('New_Zealand_Warriors_logo.svg'),
-  'Newcastle Knights':             WP('Newcastle_Knights_logo.svg'),
-  'North Queensland Cowboys':      WP('North_Queensland_Cowboys_logo.svg'),
-  'Parramatta Eels':               WP('Parramatta_Eels_logo.svg'),
-  'Penrith Panthers':              WP('Penrith_Panthers_logo.svg'),
-  'South Sydney Rabbitohs':        WP('South_Sydney_Rabbitohs_logo.svg'),
-  'St George Illawarra Dragons':   WP('St_George_Illawarra_Dragons_logo.svg'),
-  'Sydney Roosters':               WP('Sydney_Roosters_logo.svg'),
-  'Wests Tigers':                  WP('Wests_Tigers_logo.svg'),
+  // NRL — all 17 confirmed
+  'Brisbane Broncos':               WP('Brisbane Broncos Logo 2026.svg'),
+  'Canberra Raiders':               WP('Canberra Raiders Logo.svg'),
+  'Canterbury Bulldogs':            WP('Bulldogs 1935 Logo.svg'),
+  'Cronulla Sutherland Sharks':     WP('Cronulla-Sutherland Sharks logo.svg'),
+  'Cronulla Sharks':                WP('Cronulla-Sutherland Sharks logo.svg'),
+  'Dolphins':                       WP('Dolphins (NRL) Logo.svg'),
+  'Gold Coast Titans':              WP('Gold Coast Titans logo.svg'),
+  'Manly Warringah Sea Eagles':     WP('Manly-Warringah Sea Eagles logo.svg'),
+  'Manly Sea Eagles':               WP('Manly-Warringah Sea Eagles logo.svg'),
+  'Melbourne Storm':                WP('MelbourneStorm2018logo.svg'),
+  'New Zealand Warriors':           WP('Warriors (NRL) Logo.svg'),
+  'Newcastle Knights':              WP('Newcastle Knights logo.svg'),
+  'North Queensland Cowboys':       WP('North Queensland Cowboys logo.svg'),
+  'Parramatta Eels':                WP('Parramatta Eels logo.svg'),
+  'Penrith Panthers':               WP('Penrith_Panthers_logo.svg'),
+  'South Sydney Rabbitohs':         WP('South Sydney Rabbitohs Logo.svg'),
+  'St George Illawarra Dragons':    WP('St._George_Illawarra_Dragons_logo.svg'),
+  'Sydney Roosters':                WP('Sydney_Roosters_logo.svg'),
+  'Wests Tigers':                   WP('Wests Tigers 2022 Logo.svg'),
 
-  // AFL
-  'Adelaide Crows':                WP('Adelaide_Football_Club_logo.svg'),
-  'Brisbane Lions':                WP('Brisbane_Lions_logo_2010.svg'),
-  'Carlton Blues':                 WP('Carlton_FC_Logo_2020.svg'),
-  'Collingwood Magpies':           WP('Collingwood_Football_Club_Logo_(2017).svg'),
-  'Essendon Bombers':              WP('Essendon_FC_logo_2010.svg'),
-  'Fremantle Dockers':             WP('Fremantle_FC_logo.svg'),
-  'Geelong Cats':                  WP('Geelong_Cats_logo.svg'),
-  'Gold Coast Suns':               WP('Gold_Coast_Suns_logo_2010.svg'),
-  'Greater Western Sydney Giants': WP('Greater_Western_Sydney_Giants_logo.svg'),
-  'GWS Giants':                    WP('Greater_Western_Sydney_Giants_logo.svg'),
-  'Hawthorn Hawks':                WP('Hawthorn_Hawks_logo_2008.svg'),
-  'Melbourne Demons':              WP('Melbourne_Football_Club_logo.svg'),
-  'North Melbourne Kangaroos':     WP('North_Melbourne_FC_logo.svg'),
-  'Port Adelaide Power':           WP('Port_Adelaide_Football_Club_logo.svg'),
-  'Richmond Tigers':               WP('Richmond_Tigers_logo_2016.svg'),
-  'St Kilda Saints':               WP('St_Kilda_FC_logo_2008.svg'),
-  'Sydney Swans':                  WP('Sydney_Swans_logo_2020.svg'),
-  'West Coast Eagles':             WP('West_Coast_Eagles_logo_2017.svg'),
-  'Western Bulldogs':              WP('Western_Bulldogs_logo.svg'),
+  // AFL — 17 of 18 confirmed (North Melbourne falls back to shield)
+  'Adelaide Crows':                 WP('Adelaide Crows Logo 2024.svg'),
+  'Brisbane Lions':                 WP('Brisbane Lions logo 2010.svg'),
+  'Carlton Blues':                  WP('Carlton FC Logo 2020.svg'),
+  'Collingwood Magpies':            WP('Collingwood Football Club Logo (2017–present).svg'),
+  'Essendon Bombers':               WP('Essendon_FC_logo.svg'),
+  'Fremantle Dockers':              WP('Fremantle_FC_logo.svg'),
+  'Geelong Cats':                   WP('Geelong_Cats_logo.svg'),
+  'Gold Coast Suns':                WP('Gold_Coast_Suns_logo_(introduced_late_2024).svg'),
+  'Greater Western Sydney Giants':  WP('GWS_Giants_logo.svg'),
+  'GWS Giants':                     WP('GWS_Giants_logo.svg'),
+  'Hawthorn Hawks':                 WP('Hawthorn-football-club-brand.svg'),
+  'Melbourne Demons':               WP('Melbournefc.svg'),
+  'Port Adelaide Power':            WP('Port_Adelaide_Football_Club_logo.svg'),
+  'Richmond Tigers':                WP('Richmond_Tigers_logo.svg'),
+  'St Kilda Saints':                WP('St Kilda FC logo.svg'),
+  'Sydney Swans':                   WP('Sydney_Swans_Logo_2020.svg'),
+  'West Coast Eagles':              WP('West_Coast_Eagles_logo_2017.svg'),
+  'Western Bulldogs':               WP('Western Bulldogs logo.svg'),
+  // North Melbourne Kangaroos — no reliable SVG on Wikipedia, shield fallback
 }
 
 function logoUrlFor(teamName?: string): string | null {
