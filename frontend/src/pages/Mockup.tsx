@@ -122,7 +122,52 @@ function darken(hex: string, amt = 0.65): string {
   const r = parseInt(h.slice(0,2), 16), g = parseInt(h.slice(2,4), 16), b = parseInt(h.slice(4,6), 16)
   return `rgb(${Math.round(r*(1-amt))}, ${Math.round(g*(1-amt))}, ${Math.round(b*(1-amt))})`
 }
-function venueFor(sport: string): string {
+const VENUE_BY_HOME_TEAM: Record<string, string> = {
+  // NRL
+  'Brisbane Broncos':               'Suncorp Stadium',
+  'Canberra Raiders':               'GIO Stadium',
+  'Canterbury Bulldogs':            'Accor Stadium',
+  'Cronulla Sutherland Sharks':     'PointsBet Stadium',
+  'Cronulla Sharks':                'PointsBet Stadium',
+  'Dolphins':                       'Kayo Stadium',
+  'Gold Coast Titans':              'Cbus Super Stadium',
+  'Manly Warringah Sea Eagles':     '4 Pines Park',
+  'Manly Sea Eagles':               '4 Pines Park',
+  'Melbourne Storm':                'AAMI Park',
+  'New Zealand Warriors':           'Go Media Stadium',
+  'Newcastle Knights':              'McDonald Jones Stadium',
+  'North Queensland Cowboys':       'Queensland Country Bank Stadium',
+  'Parramatta Eels':                'CommBank Stadium',
+  'Penrith Panthers':               'BlueBet Stadium',
+  'South Sydney Rabbitohs':         'Accor Stadium',
+  'St George Illawarra Dragons':    'WIN Stadium',
+  'Sydney Roosters':                'Allianz Stadium',
+  'Wests Tigers':                   'Leichhardt Oval',
+  // AFL
+  'Adelaide Crows':                 'Adelaide Oval',
+  'Brisbane Lions':                 'The Gabba',
+  'Carlton Blues':                  'MCG',
+  'Collingwood Magpies':            'MCG',
+  'Essendon Bombers':               'Marvel Stadium',
+  'Fremantle Dockers':              'Optus Stadium',
+  'Geelong Cats':                   'GMHBA Stadium',
+  'Gold Coast Suns':                'People First Stadium',
+  'Greater Western Sydney Giants':  'GIANTS Stadium',
+  'GWS Giants':                     'GIANTS Stadium',
+  'Hawthorn Hawks':                 'MCG',
+  'Melbourne Demons':               'MCG',
+  'North Melbourne Kangaroos':      'Marvel Stadium',
+  'Port Adelaide Power':            'Adelaide Oval',
+  'Richmond Tigers':                'MCG',
+  'St Kilda Saints':                'Marvel Stadium',
+  'Sydney Swans':                   'SCG',
+  'West Coast Eagles':              'Optus Stadium',
+  'Western Bulldogs':               'Marvel Stadium',
+}
+function venueFor(sport: string, homeTeamName?: string): string {
+  if (homeTeamName && VENUE_BY_HOME_TEAM[homeTeamName]) {
+    return VENUE_BY_HOME_TEAM[homeTeamName].toUpperCase()
+  }
   const s = (sport || '').toUpperCase()
   if (s === 'NRL') return 'HOME GROUND'
   if (s === 'AFL') return 'HOME GROUND'
@@ -597,17 +642,24 @@ function weatherIconKind(w: EventDetail['weather']): string {
 // ───────────────────────────────────────────────────────────────────────────
 // Sidebar
 // ───────────────────────────────────────────────────────────────────────────
-function Sidebar({ activeSection, onNavigate, roundConf }: {
-  activeSection: string; onNavigate: (s: string) => void; roundConf: number
+function Sidebar({ onNavigate, roundConf }: {
+  onNavigate: (s: string) => void; roundConf: number
 }) {
   const label = roundConf >= 82 ? 'HIGH' : roundConf >= 65 ? 'MEDIUM' : 'LOW'
   const dash = (roundConf / 100) * 251
-  const NAV: Array<[string, string, string]> = [
-    ['strip','Fixtures','M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z'],
-    ['pOdds','Odds','M5 20V10M10 20V4M15 20v-8M20 20v-5'],
-    ['pMove','Movement','M4 18 L10 11 L14 15 L20 6 M20 11V6h-5'],
-    ['pNews','Team News','M4 6h16M4 12h16M4 18h10'],
-    ['pValue','Value','M12 3v18M3 12h18'],
+  const NAV: Array<[string, string, string, string]> = [
+    ['strip',   'Dashboard',       'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z', 'active'],
+    ['pOdds',   'Match Centre',    'M12 2v20M2 12h20', 'active'],
+    ['pMove',   'AI Predictions',  'M12 3l3 6 6 1-4.5 4.5 1 6L12 17l-5.5 3.5 1-6L3 10l6-1 3-6z', 'active'],
+    ['pMove',   'Line Movement',   'M4 18 L10 11 L14 15 L20 6 M20 11V6h-5', 'active'],
+    ['dummy',   'Stats Centre',    'M5 20V10M10 20V4M15 20v-8M20 20v-5', 'soon'],
+    ['dummy',   'H2H Analysis',    'M8 12h8M8 8l-4 4 4 4M16 8l4 4-4 4', 'soon'],
+    ['pNews',   'Team News',       'M4 6h16M4 12h16M4 18h10', 'active'],
+    ['dummy',   'Injuries',        'M12 2v20M2 12h20M6 6l12 12M18 6L6 18', 'soon'],
+    ['dummy',   'Power Rankings',  'M12 3l-8 11h6l-2 7 8-11h-6l2-7z', 'soon'],
+    ['dummy',   'My Bets',         'M3 4h18v16H3zM3 10h18M7 15h4', 'soon'],
+    ['dummy',   'Alerts',          'M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9z', 'soon'],
+    ['dummy',   'Settings',        'M12 8v8M8 12h8', 'soon'],
   ]
   return (
     <aside className="side">
@@ -618,15 +670,18 @@ function Sidebar({ activeSection, onNavigate, roundConf }: {
         </svg>
       </div>
       <nav className="nav">
-        {NAV.map(([id, label, d]) => (
-          <a key={id} className={activeSection === id ? 'on' : ''} onClick={() => onNavigate(id)}>
+        {NAV.map(([id, label, d, kind], i) => (
+          <a
+            key={label}
+            className={
+              (i === 0 ? 'on ' : '') +
+              (kind === 'soon' ? 'soon' : '')
+            }
+            onClick={() => kind === 'active' && onNavigate(id)}
+          >
             <svg viewBox="0 0 24 24"><path d={d} /></svg>{label}
           </a>
         ))}
-        <div className="navsep">COMING SOON</div>
-        <a className="soon"><svg viewBox="0 0 24 24"><path d="M3 15l4-4 4 3 5-7 5 4M3 20h18" /></svg>Model Health</a>
-        <a className="soon"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9z" /></svg>Alerts</a>
-        <a className="soon"><svg viewBox="0 0 24 24"><circle cx={12} cy={12} r={3} /><path d="M12 3v3M12 18v3M3 12h3M18 12h3" /></svg>Settings</a>
       </nav>
       <div className="cc">
         <div className="l">ROUND CONFIDENCE</div>
@@ -696,6 +751,14 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
   const stripRef = useRef<HTMLDivElement | null>(null)
   const filtered = useMemo(() => {
     let list = events.slice()
+    // Only show fixtures where BOTH teams are real, named, and have a real logo
+    // in the TEAM_LOGOS map. Filters out TBD-placeholder fixtures (finals
+    // brackets) and clubs we don't have a logo file for (e.g. North Melbourne).
+    list = list.filter(e =>
+      e.home_team && e.away_team &&
+      e.home_team.toUpperCase() !== 'TBD' && e.away_team.toUpperCase() !== 'TBD' &&
+      TEAM_LOGOS[e.home_team] && TEAM_LOGOS[e.away_team]
+    )
     if (filter.sport && filter.sport !== 'ALL') list = list.filter(e => (e.sport_title || '').toUpperCase() === filter.sport)
     const q = filter.search.trim().toLowerCase()
     if (q) list = list.filter(e =>
@@ -786,7 +849,7 @@ function Hero({ md }: { md: EventDetail }) {
         </div>
       </div>
       <div className="hmid">
-        <div className="vn">{venueFor(md.event.sport)}</div>
+        <div className="vn">{venueFor(md.event.sport, home.name)}</div>
         <div className="wh">{day} · {time}</div>
         {md.weather && !md.weather.is_indoor && (
           <>
@@ -1327,6 +1390,13 @@ function TeamNews({ md }: { md: EventDetail }) {
           <div className="ic">{wIcon}</div>
           <div><div className="tt">WEATHER IMPACT</div><p>{wText}</p></div>
         </div>
+        <div className="wnote">
+          <div className="ic">🧠</div>
+          <div>
+            <div className="tt">AI MODEL FACTORS</div>
+            <p>Injuries, H2H, Form, Line Movement, Weather, Venue, Rest Days, Power Ratings &amp; 120+ more.</p>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -1584,12 +1654,19 @@ function MockupInner() {
     return ['ALL', ...list]
   }, [events])
 
-  // Auto-pick first fixture that matches current sport filter
+  // Auto-pick first fixture that matches current sport filter AND has real
+  // logos for both teams (so the hero panel doesn't open on a shield fallback).
   const [selectedId, setSelectedId] = useState<string | null>(null)
   useEffect(() => {
     if (!events.length) return
-    const match = (sport === 'ALL' ? events : events.filter(e => (e.sport_title || '').toUpperCase() === sport))[0]
-    if (match && (!selectedId || !events.find(e => e.id === selectedId))) setSelectedId(match.id)
+    const eligible = events.filter(e =>
+      e.home_team && e.away_team &&
+      e.home_team.toUpperCase() !== 'TBD' && e.away_team.toUpperCase() !== 'TBD' &&
+      TEAM_LOGOS[e.home_team] && TEAM_LOGOS[e.away_team]
+    )
+    const scoped = sport === 'ALL' ? eligible : eligible.filter(e => (e.sport_title || '').toUpperCase() === sport)
+    const match = scoped[0]
+    if (match && (!selectedId || !eligible.find(e => e.id === selectedId))) setSelectedId(match.id)
   }, [events, sport, selectedId])
 
   // Load detail for selected fixture
@@ -1616,7 +1693,7 @@ function MockupInner() {
     <>
       <style>{CSS}</style>
       <div className="mck-root">
-        <Sidebar activeSection={activeSection} onNavigate={setActiveSection} roundConf={roundConf} />
+        <Sidebar onNavigate={setActiveSection} roundConf={roundConf} />
         <main>
           <TopBar
             sport={sport}
