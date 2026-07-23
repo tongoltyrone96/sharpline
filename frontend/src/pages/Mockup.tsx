@@ -271,6 +271,12 @@ const CSS = `
 .mck-root .tg.on .sw::after{left:13px;background:var(--mgreen)}
 .mck-root .livep{display:flex;align-items:center;gap:5px;background:#0d2a1a;border:1px solid #1b6b3f;border-radius:7px;padding:5px 9px;
  color:var(--mgreen);letter-spacing:.09em;font-size:9px;font-weight:800;white-space:nowrap}
+.mck-root .round-picker{position:relative;display:inline-flex;align-items:center}
+.mck-root .round-picker select{padding:6px 32px 6px 12px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#e7eef8;background:var(--mpanel);border:1px solid var(--mline);border-radius:7px;cursor:pointer;appearance:none;-webkit-appearance:none}
+.mck-root .round-picker .rp-cal{position:absolute;right:8px;pointer-events:none;font-size:11px;opacity:.7}
+.mck-root .sharebtn{display:flex;align-items:center;gap:5px;background:var(--mpanel);border:1px solid var(--mline);border-radius:7px;padding:6px 12px;color:#c3d0e2;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.02em}
+.mck-root .sharebtn:hover{border-color:#2f4666}
+.mck-root .bellbtn{width:32px;height:30px;background:var(--mpanel);border:1px solid var(--mline);border-radius:7px;display:grid;place-items:center;color:#c3d0e2;cursor:pointer;font-size:13px}
 .mck-root .dot{width:5px;height:5px;border-radius:50%;background:var(--mgreen);box-shadow:0 0 6px var(--mgreen);animation:mck-pl 2s infinite}
 @keyframes mck-pl{50%{opacity:.35}}
 .mck-root .mockp{font-size:7.5px;letter-spacing:.12em;font-weight:800;color:#7a6320;background:#1c1604;border:1px solid #3a2f0e;border-radius:5px;padding:4px 6px;white-space:nowrap}
@@ -393,14 +399,21 @@ const CSS = `
 .mck-root .io{font-size:7.5px;font-weight:800;letter-spacing:.1em;margin:3px 0 1px}
 .mck-root .io.i{color:var(--mgreen)}
 .mck-root .io.o{color:var(--mred)}
-.mck-root .pl{font-size:9.5px;color:#c3d0e2;display:flex;gap:4px;padding:1px 0;line-height:1.25}
+.mck-root .pl{font-size:9.5px;color:#c3d0e2;display:flex;align-items:center;gap:4px;padding:1px 0;line-height:1.25}
 .mck-root .pl b{color:var(--mgreen);font-weight:700}
 .mck-root .pl.x b{color:var(--mred)}
-.mck-root .imp{margin-top:auto;border-top:1px solid var(--msoft);padding-top:5px}
-.mck-root .imp .t{font-size:7.5px;letter-spacing:.1em;color:var(--mdim);font-weight:700;margin-bottom:2px}
-.mck-root .imp p{font-size:9px;color:#a9b6c8;line-height:1.35}
-.mck-root .imp .adj{font-size:9px;font-weight:600;margin-top:1px}
-.mck-root .wnote{display:flex;gap:6px;align-items:flex-start;background:var(--mpanel2);border:1px solid var(--mline);border-radius:7px;padding:5px 7px;margin-top:5px;flex:none}
+.mck-root .pl .pos{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;color:#7b8ba3;background:rgba(255,255,255,.05);border:1px solid var(--msoft);border-radius:3px;padding:1px 4px;letter-spacing:.06em}
+.mck-root .aiimp{margin-top:6px;background:var(--mpanel2);border:1px solid var(--mline);border-radius:7px;padding:7px 8px}
+.mck-root .aiimp-hdr{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.mck-root .aiimp .ai-badge{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:3px;background:#25d97b;color:#04140f;font-size:7px;font-weight:800}
+.mck-root .aiimp-title{font-size:8.5px;font-weight:800;letter-spacing:.11em;color:#c3d0e2}
+.mck-root .aiimp-body{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mck-root .aiimp-side{display:flex;flex-direction:column;gap:2px}
+.mck-root .aiimp-team{font-size:9px;font-weight:800;letter-spacing:.08em}
+.mck-root .aiimp-side p{font-size:9px;color:#a9b6c8;line-height:1.35;margin:0}
+.mck-root .aiimp-adj{font-size:9px;font-weight:700;margin-top:2px}
+.mck-root .wgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:5px}
+.mck-root .wnote{display:flex;gap:6px;align-items:flex-start;background:var(--mpanel2);border:1px solid var(--mline);border-radius:7px;padding:5px 7px;flex:none}
 .mck-root .wnote .ic{font-size:12px;line-height:1}
 .mck-root .wnote .tt{font-size:8px;letter-spacing:.09em;font-weight:800;color:#9fb0c6}
 .mck-root .wnote p{font-size:9px;color:var(--mdim);line-height:1.35}
@@ -420,6 +433,13 @@ const CSS = `
 .mck-root .pw{display:flex;align-items:center;justify-content:space-between;padding:8px 20px !important;border-top:1px solid var(--mline)}
 .mck-root .pw .pwn{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:900;letter-spacing:-.02em;line-height:1}
 .mck-root .pw .pwx{font-size:10px;font-weight:800;letter-spacing:.14em;color:#c3d0e2}
+.mck-root .prbar{display:flex;align-items:center;gap:10px;padding:4px 2px}
+.mck-root .prside{display:flex;align-items:center;gap:6px;flex:none}
+.mck-root .prside.r{justify-content:flex-end}
+.mck-root .prabbr{font-size:11px;font-weight:800;letter-spacing:.06em}
+.mck-root .prnum{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:900;letter-spacing:-.02em}
+.mck-root .prtrack{flex:1;height:8px;background:var(--mpanel2);border:1px solid var(--msoft);border-radius:5px;overflow:hidden;position:relative}
+.mck-root .prfill{height:100%;border-radius:5px 0 0 5px;transition:width .3s ease}
 
 .mck-root .h2h{display:flex;border-radius:7px;overflow:hidden;flex:none;position:relative}
 .mck-root .h2h .s{flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:10px;letter-spacing:.06em;font-weight:800;color:#fff}
@@ -429,11 +449,13 @@ const CSS = `
 .mck-root .chips{display:flex;gap:4px;justify-content:space-between;margin-top:7px}
 .mck-root .chip{flex:1;aspect-ratio:1;max-width:24px;border-radius:5px;display:grid;place-items:center;font-size:10px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:#fff}
 .mck-root .fg{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;min-height:0}
-.mck-root .fgc{background:var(--mpanel2);border:1px solid var(--mline);border-radius:7px;padding:8px 9px;display:flex;flex-direction:column;justify-content:center}
-.mck-root .fgc h5{font-size:9.5px;font-weight:800;margin-bottom:7px;letter-spacing:.02em}
-.mck-root .fgc .row5{display:flex;gap:4px}
+.mck-root .fgc{background:var(--mpanel2);border:1px solid var(--mline);border-radius:7px;overflow:hidden;display:flex;flex-direction:column}
+.mck-root .fgc .fghdr{display:flex;align-items:center;justify-content:space-between;padding:5px 9px;font-size:9.5px;letter-spacing:.02em}
+.mck-root .fgc .fghdr-abbr{font-size:10px;font-weight:800;letter-spacing:.06em}
+.mck-root .fgc .fghdr-lad{font-family:'IBM Plex Mono',monospace;font-size:8.5px;font-weight:700;color:#c3d0e2;letter-spacing:.04em}
+.mck-root .fgc .row5{display:flex;gap:4px;padding:7px 9px 0}
 .mck-root .fgc .row5 .f{width:22px;height:22px;border-radius:5px;font-size:11px}
-.mck-root .fgc .fs{font-size:9px;color:var(--mdim2);letter-spacing:.08em;font-weight:700;margin-top:7px;display:flex;justify-content:space-between}
+.mck-root .fgc .fs{font-size:9px;color:var(--mdim2);letter-spacing:.08em;font-weight:700;padding:6px 9px 8px;display:flex;justify-content:space-between}
 .mck-root .fgc .fs .mono{color:#c3d0e2;font-size:10px}
 
 .mck-root .vf{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--msoft)}
@@ -525,6 +547,8 @@ const CSS = `
   .mck-root .luc h4{font-size:9.5px}
   .mck-root .pl{font-size:10px}
   .mck-root .lu{grid-template-columns:1fr;gap:8px}
+  .mck-root .aiimp-body{grid-template-columns:1fr;gap:8px}
+  .mck-root .wgrid{grid-template-columns:1fr;gap:6px}
   .mck-root .h2h .s{padding:7px 10px;font-size:9.5px}
   .mck-root .h2h .s .n{font-size:12px;padding:3px 7px}
   .mck-root .chip{max-width:22px;font-size:9.5px}
@@ -722,13 +746,11 @@ function Sidebar({ onNavigate, roundConf }: {
 // ───────────────────────────────────────────────────────────────────────────
 // Top bar
 // ───────────────────────────────────────────────────────────────────────────
-function TopBar({ sport, sports, onSport, matches, selectedId, onSelect, valueOnly, onValueOnly }: {
-  sport: string; sports: string[];
-  onSport: (s: string) => void;
+function TopBar({ sport, matches, selectedId, onSelect }: {
+  sport: string;
   matches: DashboardEvent[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  valueOnly: boolean; onValueOnly: () => void;
 }) {
   return (
     <div className="top">
@@ -737,24 +759,27 @@ function TopBar({ sport, sports, onSport, matches, selectedId, onSelect, valueOn
         <div className="sb">AI POWERED PREDICTIONS &amp; ANALYTICS</div>
       </div>
       <div className="ctl">
-        <select value={sport} onChange={e => onSport(e.target.value)}>
-          {sports.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select value={selectedId ?? ''} onChange={e => onSelect(e.target.value)}>
-          {matches.length === 0 && <option value="">— No matches —</option>}
-          {matches.map(m => {
-            const dt = fmtDayTime(m.commence_time)
-            return (
-              <option key={m.id} value={m.id}>
-                {m.home_abbr} vs {m.away_abbr} · {dt.day} {dt.time}
-              </option>
-            )
-          })}
-        </select>
-        <div className={'tg' + (valueOnly ? ' on' : '')} onClick={onValueOnly}>
-          <span className="lb">VALUE ONLY</span><span className="sw"></span>
+        <div className="round-picker">
+          <select value={selectedId ?? ''} onChange={e => onSelect(e.target.value)}>
+            {matches.length === 0 && <option value="">— No matches —</option>}
+            {matches.map(m => {
+              const dt = fmtDayTime(m.commence_time)
+              return (
+                <option key={m.id} value={m.id}>
+                  {m.home_abbr} vs {m.away_abbr} · {dt.day} {dt.time}
+                </option>
+              )
+            })}
+          </select>
+          <span className="rp-cal">📅</span>
         </div>
-        <div className="livep"><span className="dot"></span>LIVE · 30s</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#7b8ba3', whiteSpace: 'nowrap' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#25d97b' }} />
+          Last Updated: <b style={{ color: '#c3d0e2', fontWeight: 600 }}>2 mins ago</b>
+        </div>
+        <div className="livep"><span className="dot"></span>LIVE</div>
+        <button className="sharebtn" type="button">↑ SHARE</button>
+        <button className="bellbtn" type="button">🔔</button>
         <div className="mockp">MOCKUP</div>
       </div>
     </div>
@@ -863,10 +888,8 @@ function Hero({ md }: { md: EventDetail }) {
         <div>
           <div className="city">{hn.city}</div>
           <div className="tn">{hn.short.toUpperCase()}</div>
-          <div className="tmeta">{fakeLadder(home.abbr)} · <span className="mono">{fakeRecord(home.abbr)}</span></div>
-          <div className="tf">
-            {fakeForm(home.abbr).map((f, i) => <span key={i} className={'f ' + f.toLowerCase()}>{f}</span>)}
-          </div>
+          <div className="tmeta" style={{ color: safeCol(home.primary_color, '#4da6ff'), fontWeight: 800 }}>{fakeLadder(home.abbr)}</div>
+          <div className="tmeta mono" style={{ fontSize: 11, marginTop: 2 }}>{fakeRecord(home.abbr)}</div>
         </div>
       </div>
       <div className="hmid">
@@ -887,10 +910,8 @@ function Hero({ md }: { md: EventDetail }) {
         <div>
           <div className="city">{an.city}</div>
           <div className="tn">{an.short.toUpperCase()}</div>
-          <div className="tmeta">{fakeLadder(away.abbr)} · <span className="mono">{fakeRecord(away.abbr)}</span></div>
-          <div className="tf">
-            {fakeForm(away.abbr).map((f, i) => <span key={i} className={'f ' + f.toLowerCase()}>{f}</span>)}
-          </div>
+          <div className="tmeta" style={{ color: safeCol(away.primary_color, '#8b5cf6'), fontWeight: 800 }}>{fakeLadder(away.abbr)}</div>
+          <div className="tmeta mono" style={{ fontSize: 11, marginTop: 2 }}>{fakeRecord(away.abbr)}</div>
         </div>
       </div>
     </div>
@@ -959,22 +980,10 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
   const lineConf = Math.max(30, confPct - 4)
   const totConf = Math.max(30, confPct - 8)
 
-  // AI over/under recommendation: compare projected total to the average
-  // bookmaker total line. Positive gap ≥ 0.75 → OVER, negative ≤ -0.75 → UNDER,
-  // otherwise LEAN toward whichever side.
   const totalLines = (md.markets?.totals ?? [])
     .filter(r => r.outcome.toLowerCase() === 'over' && r.point != null)
     .map(r => r.point as number)
   const avgLine = totalLines.length ? totalLines.reduce((s, v) => s + v, 0) / totalLines.length : null
-  let ouLabel: string | null = null, ouColor = '#7b8ba3'
-  if (tot != null && avgLine != null) {
-    const gap = tot - avgLine
-    if (gap >= 0.75) { ouLabel = 'AI RECOMMENDS OVER'; ouColor = '#25d97b' }
-    else if (gap <= -0.75) { ouLabel = 'AI RECOMMENDS UNDER'; ouColor = '#f4526a' }
-    else if (gap > 0)      { ouLabel = 'LEAN OVER';           ouColor = '#a8d472' }
-    else if (gap < 0)      { ouLabel = 'LEAN UNDER';          ouColor = '#e58a97' }
-    else                    { ouLabel = 'ON THE LINE';         ouColor = '#7b8ba3' }
-  }
 
   return (
     <div className="row r3g">
@@ -1029,13 +1038,6 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
         <div className="ph">
           <span className="pt">AI Total Points</span>
           <span className="q">?</span>
-          {ouLabel && (
-            <span style={{
-              marginLeft: 'auto', fontSize: 8.5, fontWeight: 800, letterSpacing: '.08em',
-              color: ouColor, background: `${ouColor}22`, border: `1px solid ${ouColor}55`,
-              padding: '3px 8px', borderRadius: 5, whiteSpace: 'nowrap',
-            }}>{ouLabel}</span>
-          )}
         </div>
         <div className="pb">
           <div className="tc">
@@ -1122,7 +1124,7 @@ function OddsComparison({ md }: { md: EventDetail }) {
       ...(md.markets?.spreads ?? []).map(r => r.bookmaker),
       ...(md.markets?.totals ?? []).map(r => r.bookmaker),
     ])
-    return Array.from(all).slice(0, 6)
+    return Array.from(all).slice(0, 4)
   }, [md])
   return (
     <div className="p" id="pOdds">
@@ -1306,20 +1308,20 @@ function WinProbMovement({ md }: { md: EventDetail }) {
           <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
             {[0,1,2,3,4].map(i => { const y = 30 + i * 62.5; return <line key={i} x1={34} y1={y} x2={326} y2={y} /> })}
           </g>
-          <g fontFamily="IBM Plex Mono" fontSize={16} fill="#7b8ba3" textAnchor="end" fontWeight={500}>
-            {[0,1,2,3,4].map(i => { const y = 30 + i * 62.5; const v = Math.round(hi - (hi - lo) * i / 4); return <text key={i} x={30} y={y + 5}>{v}%</text> })}
+          <g fontFamily="IBM Plex Mono" fontSize={11} fill="#7b8ba3" textAnchor="end" fontWeight={500}>
+            {[0,1,2,3,4].map(i => { const y = 30 + i * 62.5; const v = Math.round(hi - (hi - lo) * i / 4); return <text key={i} x={30} y={y + 4}>{v}%</text> })}
           </g>
           <polyline points={poly(hS, 40, 318, 30, 280, lo, hi)} fill="none" stroke={hp} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           <polyline points={poly(aS, 40, 318, 30, 280, lo, hi)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           {dotList(hS, 40, 318, 30, 280, lo, hi, hp)}
           {dotList(aS, 40, 318, 30, 280, lo, hi, ap)}
-          <circle cx={318} cy={(280 - (hLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={5} fill={hp} />
-          <circle cx={318} cy={(280 - (aLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={5} fill={ap} />
-          <text x={352} y={(280 - (hLast - lo) / (hi - lo || 1) * 250 + 6).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={18} fontWeight={800} fill={hp} textAnchor="end">{Math.round(hLast)}%</text>
-          <text x={352} y={(280 - (aLast - lo) / (hi - lo || 1) * 250 + 6).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={18} fontWeight={800} fill={ap} textAnchor="end">{Math.round(aLast)}%</text>
-          <g fontFamily="IBM Plex Mono" fontSize={14} fill="#7b8ba3" textAnchor="middle" fontWeight={500}>
-            <text x={40}  y={315}>-24h</text><text x={110} y={315}>-12h</text><text x={175} y={315}>-6h</text>
-            <text x={240} y={315}>-3h</text><text x={285} y={315}>-1h</text><text x={318} y={315}>Now</text>
+          <circle cx={318} cy={(280 - (hLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={4} fill={hp} />
+          <circle cx={318} cy={(280 - (aLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={4} fill={ap} />
+          <text x={352} y={(280 - (hLast - lo) / (hi - lo || 1) * 250 + 5).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={12} fontWeight={800} fill={hp} textAnchor="end">{Math.round(hLast)}%</text>
+          <text x={352} y={(280 - (aLast - lo) / (hi - lo || 1) * 250 + 5).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={12} fontWeight={800} fill={ap} textAnchor="end">{Math.round(aLast)}%</text>
+          <g fontFamily="IBM Plex Mono" fontSize={10} fill="#7b8ba3" textAnchor="middle" fontWeight={500}>
+            <text x={40}  y={310}>-24h</text><text x={110} y={310}>-12h</text><text x={175} y={310}>-6h</text>
+            <text x={240} y={310}>-3h</text><text x={285} y={310}>-1h</text><text x={318} y={310}>Now</text>
           </g>
         </svg>
       </div>
@@ -1350,15 +1352,15 @@ function LineTotalStack({ md }: { md: EventDetail }) {
             <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
               {[0,1,2,3].map(i => { const y = 18 + i * 47; return <line key={i} x1={38} y1={y} x2={326} y2={y} /> })}
             </g>
-            <g fontFamily="IBM Plex Mono" fontSize={13} fill="#7b8ba3" textAnchor="end" fontWeight={500}>
-              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = lhi - (lhi - llo) * i / 3; return <text key={i} x={34} y={y + 4}>{v.toFixed(1)}</text> })}
+            <g fontFamily="IBM Plex Mono" fontSize={9} fill="#7b8ba3" textAnchor="end" fontWeight={500}>
+              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = lhi - (lhi - llo) * i / 3; return <text key={i} x={34} y={y + 3}>{v.toFixed(1)}</text> })}
             </g>
-            <polyline points={poly(lS, 42, 308, 18, 159, llo, lhi)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            <polyline points={poly(lS, 42, 308, 18, 159, llo, lhi)} fill="none" stroke={ap} strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
             {dotList(lS, 42, 308, 18, 159, llo, lhi, ap)}
-            <circle cx={308} cy={(159 - (lLast - llo) / (lhi - llo || 1) * 141).toFixed(1) as unknown as number} r={4} fill={ap} />
-            <g fontFamily="IBM Plex Mono" fontSize={12} fill="#7b8ba3" textAnchor="middle" fontWeight={500}>
-              <text x={42} y={188}>-24h</text><text x={104} y={188}>-12h</text><text x={166} y={188}>-6h</text>
-              <text x={228} y={188}>-3h</text><text x={278} y={188}>-1h</text><text x={310} y={188}>Now</text>
+            <circle cx={308} cy={(159 - (lLast - llo) / (lhi - llo || 1) * 141).toFixed(1) as unknown as number} r={3.5} fill={ap} />
+            <g fontFamily="IBM Plex Mono" fontSize={9} fill="#7b8ba3" textAnchor="middle" fontWeight={500}>
+              <text x={42} y={184}>-24h</text><text x={104} y={184}>-12h</text><text x={166} y={184}>-6h</text>
+              <text x={228} y={184}>-3h</text><text x={278} y={184}>-1h</text><text x={310} y={184}>Now</text>
             </g>
           </svg>
         </div>
@@ -1376,16 +1378,16 @@ function LineTotalStack({ md }: { md: EventDetail }) {
             <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
               {[0,1,2,3].map(i => { const y = 18 + i * 47; return <line key={i} x1={38} y1={y} x2={326} y2={y} /> })}
             </g>
-            <g fontFamily="IBM Plex Mono" fontSize={13} fill="#7b8ba3" textAnchor="end" fontWeight={500}>
-              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = thi - (thi - tlo) * i / 3; return <text key={i} x={34} y={y + 4}>{v.toFixed(1)}</text> })}
+            <g fontFamily="IBM Plex Mono" fontSize={9} fill="#7b8ba3" textAnchor="end" fontWeight={500}>
+              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = thi - (thi - tlo) * i / 3; return <text key={i} x={34} y={y + 3}>{v.toFixed(1)}</text> })}
             </g>
             <polygon points={poly(tS, 42, 308, 18, 159, tlo, thi) + ' 308,163 42,163'} fill="url(#mck-gt2)" />
-            <polyline points={poly(tS, 42, 308, 18, 159, tlo, thi)} fill="none" stroke="#25d97b" strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            <polyline points={poly(tS, 42, 308, 18, 159, tlo, thi)} fill="none" stroke="#25d97b" strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
             {dotList(tS, 42, 308, 18, 159, tlo, thi, '#25d97b')}
-            <circle cx={308} cy={(159 - (tLast - tlo) / (thi - tlo || 1) * 141).toFixed(1) as unknown as number} r={4} fill="#25d97b" />
-            <g fontFamily="IBM Plex Mono" fontSize={12} fill="#7b8ba3" textAnchor="middle" fontWeight={500}>
-              <text x={42} y={188}>-24h</text><text x={104} y={188}>-12h</text><text x={166} y={188}>-6h</text>
-              <text x={228} y={188}>-3h</text><text x={278} y={188}>-1h</text><text x={310} y={188}>Now</text>
+            <circle cx={308} cy={(159 - (tLast - tlo) / (thi - tlo || 1) * 141).toFixed(1) as unknown as number} r={3.5} fill="#25d97b" />
+            <g fontFamily="IBM Plex Mono" fontSize={9} fill="#7b8ba3" textAnchor="middle" fontWeight={500}>
+              <text x={42} y={184}>-24h</text><text x={104} y={184}>-12h</text><text x={166} y={184}>-6h</text>
+              <text x={228} y={184}>-3h</text><text x={278} y={184}>-1h</text><text x={310} y={184}>Now</text>
             </g>
           </svg>
         </div>
@@ -1418,13 +1420,17 @@ function TeamNews({ md }: { md: EventDetail }) {
     ? 'Strong wind. Kicking game affected; total shaded down 1.8 points.'
     : 'Settled conditions. No material adjustment to the projected total.'
 
+  const posFor = (name: string): string => {
+    const positions = ['HK','FB','WG','CE','FE','HB','PR','SR','LK']
+    return positions[seedFrom(name) % positions.length]
+  }
+
   const column = (side: 'h' | 'a') => {
     const t = side === 'h' ? home : away
     const p = side === 'h' ? hp : ap
     const d = side === 'h' ? hd : ad
     const ins = side === 'h' ? hIn : aIn
     const outs = side === 'h' ? hOut : aOut
-    const adj = side === 'h' ? hAdj : aAdj
     const name = splitName(t.name)
     return (
       <div className="luc" style={{
@@ -1437,17 +1443,29 @@ function TeamNews({ md }: { md: EventDetail }) {
         <div style={{ position: 'relative', zIndex: 1 }}>
           <h4 style={{ color: p }}>{name.city} {name.short.toUpperCase()}</h4>
           {ins.length > 0 && (<><div className="io i">IN</div>
-            {ins.map((pl, i) => <div key={i} className="pl"><b>✓</b>{pl.player_name ?? pl.player ?? 'Player'}</div>)}</>)}
+            {ins.map((pl, i) => {
+              const pn = pl.player_name ?? pl.player ?? 'Player'
+              return (
+                <div key={i} className="pl">
+                  <b>✓</b>{pn}
+                  <span className="pos">{posFor(pn)}</span>
+                </div>
+              )
+            })}</>)}
           {outs.length > 0 && (<><div className="io o">OUT</div>
-            {outs.map((pl, i) => <div key={i} className="pl x"><b>✗</b>{pl.player_name ?? pl.player ?? 'Player'} {pl.reason && <span style={{ color: '#55647a' }}>– {pl.reason}</span>}</div>)}</>)}
+            {outs.map((pl, i) => {
+              const pn = pl.player_name ?? pl.player ?? 'Player'
+              return (
+                <div key={i} className="pl x">
+                  <b>✗</b>{pn}
+                  <span className="pos">{posFor(pn)}</span>
+                  {pl.reason && <span style={{ color: '#55647a', marginLeft: 4 }}>– {pl.reason}</span>}
+                </div>
+              )
+            })}</>)}
           {ins.length === 0 && outs.length === 0 && (
             <div className="pl" style={{ color: '#55647a' }}>Lineups not yet announced</div>
           )}
-          <div className="imp">
-            <div className="t">AI IMPACT</div>
-            <p>{ins.length + outs.length > 0 ? 'Selected changes moderately affect model outputs.' : 'No confirmed changes; baseline projections used.'}</p>
-            <div className="adj" style={{ color: adj >= 0 ? '#25d97b' : '#f4526a' }}>{t.abbr} win probability {adj >= 0 ? '+' : '−'}{Math.abs(adj)}%</div>
-          </div>
         </div>
       </div>
     )
@@ -1458,15 +1476,43 @@ function TeamNews({ md }: { md: EventDetail }) {
       <div className="ph"><span className="pt">Team News &amp; Lineups</span><span className="q">?</span></div>
       <div className="pb">
         <div className="lu">{column('h')}{column('a')}</div>
-        <div className="wnote">
-          <div className="ic">{wIcon}</div>
-          <div><div className="tt">WEATHER IMPACT</div><p>{wText}</p></div>
+
+        {/* Unified AI IMPACT — one title, two side descriptions */}
+        <div className="aiimp">
+          <div className="aiimp-hdr">
+            <span className="ai-badge">AI</span>
+            <span className="aiimp-title">AI IMPACT</span>
+          </div>
+          <div className="aiimp-body">
+            <div className="aiimp-side">
+              <div className="aiimp-team" style={{ color: hp }}>{home.abbr}</div>
+              <p>{hIn.length + hOut.length > 0 ? 'Selected changes moderately affect model outputs.' : 'No confirmed changes; baseline projections used.'}</p>
+              <div className="aiimp-adj" style={{ color: hAdj >= 0 ? '#25d97b' : '#f4526a' }}>
+                {home.abbr} win probability {hAdj >= 0 ? '+' : '−'}{Math.abs(hAdj)}%
+              </div>
+            </div>
+            <div className="aiimp-side">
+              <div className="aiimp-team" style={{ color: ap }}>{away.abbr}</div>
+              <p>{aIn.length + aOut.length > 0 ? 'Selected changes moderately affect model outputs.' : 'No confirmed changes; baseline projections used.'}</p>
+              <div className="aiimp-adj" style={{ color: aAdj >= 0 ? '#25d97b' : '#f4526a' }}>
+                {away.abbr} win probability {aAdj >= 0 ? '+' : '−'}{Math.abs(aAdj)}%
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="wnote">
-          <div className="ic">🧠</div>
-          <div>
-            <div className="tt">AI MODEL FACTORS</div>
-            <p>Injuries, H2H, Form, Line Movement, Weather, Venue, Rest Days, Power Ratings &amp; 120+ more.</p>
+
+        {/* Weather + Factors side-by-side */}
+        <div className="wgrid">
+          <div className="wnote">
+            <div className="ic">{wIcon}</div>
+            <div><div className="tt">WEATHER IMPACT</div><p>{wText}</p></div>
+          </div>
+          <div className="wnote">
+            <div className="ic">🧠</div>
+            <div>
+              <div className="tt">AI MODEL FACTORS</div>
+              <p>Injuries, H2H, Form, Line Movement, Weather, Venue, Rest Days, Power Ratings &amp; 120+ more.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1514,11 +1560,15 @@ function H2HFormStack({ md }: { md: EventDetail }) {
             {(['home', 'away'] as const).map(k => {
               const t = k === 'home' ? home : away
               const col = k === 'home' ? hp : ap
+              const dcol = k === 'home' ? hd : ad
               const form = fakeForm(t.abbr)
               const pts = form.filter(f => f === 'W').length * 2
               return (
-                <div key={k} className="fgc">
-                  <h5 style={{ color: col }}>{t.abbr} ({fakeLadder(t.abbr)})</h5>
+                <div key={k} className="fgc" style={{ borderColor: `${col}33` }}>
+                  <div className="fghdr" style={{ background: `linear-gradient(90deg, ${dcol}, ${dcol}44)`, borderBottom: `1px solid ${col}55` }}>
+                    <span className="fghdr-abbr" style={{ color: col }}>{t.abbr}</span>
+                    <span className="fghdr-lad">{fakeLadder(t.abbr)}</span>
+                  </div>
                   <div className="row5">
                     {form.map((f, i) => <span key={i} className={'f ' + f.toLowerCase()}>{f}</span>)}
                   </div>
@@ -1631,10 +1681,23 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
       </div>
       <div className="p" id="pPower">
         <div className="ph"><span className="pt">Power Ranking</span></div>
-        <div className="pb pw" style={{ background: powBg }}>
-          <span className="pwn" style={{ color: hp }}>{pow.home}</span>
-          <span className="pwx">POWER RANKING</span>
-          <span className="pwn" style={{ color: ap }}>{pow.away}</span>
+        <div className="pb">
+          <div className="prbar">
+            <div className="prside l">
+              <span className="prabbr" style={{ color: hp }}>{home.abbr}</span>
+              <span className="prnum" style={{ color: hp }}>#{pow.home}</span>
+            </div>
+            <div className="prtrack">
+              <div className="prfill" style={{
+                width: `${homePowerWins ? 60 : 40}%`,
+                background: `linear-gradient(90deg, ${hp}, ${homePowerWins ? hp : ap})`,
+              }} />
+            </div>
+            <div className="prside r">
+              <span className="prnum" style={{ color: ap }}>#{pow.away}</span>
+              <span className="prabbr" style={{ color: ap }}>{away.abbr}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1782,13 +1845,9 @@ function MockupInner() {
         <main>
           <TopBar
             sport={sport}
-            sports={availableSports}
-            onSport={setSport}
             matches={matchList}
             selectedId={selectedId}
             onSelect={setSelectedId}
-            valueOnly={valueOnly}
-            onValueOnly={() => setValueOnly(v => !v)}
           />
           <FixturesStrip
             events={events}
