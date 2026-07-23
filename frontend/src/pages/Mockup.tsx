@@ -316,10 +316,10 @@ const CSS = `
 .mck-root .mcol{display:flex;flex-direction:column;gap:6px;min-width:0}
 .mck-root .mcol>.p{flex:none}
 /* Right column: Line + Total grow to fill space; H2H + Recent Form stay compact and bottom-attached */
-.mck-root .mcol-r>#pLineMv,.mck-root .mcol-r>#pTotMv{flex:1 1 0;min-height:200px}
+.mck-root .mcol-r>#pLineMv,.mck-root .mcol-r>#pTotMv{flex:1 1 0;min-height:175px}
 /* Left / middle columns: OddsComparison, WinProbMovement, Matchup grow to fill matching height */
 .mck-root .mcol>#pOdds,.mck-root .mcol>#pNews,.mck-root .mcol>#pMove,.mck-root .mcol>#pMetrics{flex:1 1 auto}
-.mck-root .mcol>#pMove .pb{height:auto;min-height:260px;flex:1}
+.mck-root .mcol>#pMove .pb{height:auto;min-height:235px;flex:1}
 .mck-root .stk{display:flex;flex-direction:column;gap:6px}
 .mck-root .stk>.p{flex:none}
 .mck-root .ch{display:block;width:100%;height:auto}
@@ -336,8 +336,8 @@ const CSS = `
 .mck-root .chg-dot{position:absolute;left:0;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 2px #0d1320;pointer-events:none;z-index:2}
 .mck-root .chg-end{position:absolute;right:2px;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:800;line-height:1;pointer-events:none;white-space:nowrap}
 .mck-root .chg-xaxis{grid-column:2;grid-row:2;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#9fb0c6;padding:4px 2px 0;line-height:1}
-.mck-root #pMove .pb{height:260px;padding:6px 12px 8px}
-.mck-root #pLineMv .pb,.mck-root #pTotMv .pb{min-height:150px;padding:6px 12px 8px;flex:1}
+.mck-root #pMove .pb{height:235px;padding:6px 12px 8px}
+.mck-root #pLineMv .pb,.mck-root #pTotMv .pb{min-height:130px;padding:6px 12px 8px;flex:1}
 
 .mck-root .hero{border-radius:var(--mr);border:1px solid var(--mline);overflow:hidden;display:grid;grid-template-columns:1fr 170px 1fr;align-items:center}
 .mck-root .st{display:flex;align-items:center;gap:14px;padding:10px 18px}
