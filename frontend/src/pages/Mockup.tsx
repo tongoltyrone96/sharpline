@@ -229,6 +229,19 @@ const CSS = `
 .mck-root .ph{display:flex;align-items:center;gap:6px;padding:6px 9px 4px;flex:none}
 .mck-root .pt{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#c3d0e2;white-space:nowrap}
 .mck-root .q{width:11px;height:11px;border-radius:50%;border:1px solid var(--mline);color:var(--mdim2);font-size:7.5px;display:grid;place-items:center;flex:none}
+.mck-root .aicall{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:5px;border:1px solid;white-space:nowrap;text-transform:uppercase;font-family:'IBM Plex Mono',monospace}
+
+/* AI Recommended Bets */
+.mck-root .recbets{display:flex;flex-direction:column;gap:5px;padding:2px 0}
+.mck-root .rbrow{display:grid;grid-template-columns:52px 1.4fr 60px 1.2fr 90px 60px;align-items:center;gap:10px;padding:8px 10px;background:var(--mpanel2);border:1px solid var(--mline);border-radius:6px;font-size:12px}
+.mck-root .rbrow:hover{border-color:#2a3a5a}
+.mck-root .rbmkt{font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:800;letter-spacing:.09em;text-align:center;padding:3px 6px;background:rgba(255,255,255,.04);border-radius:4px}
+.mck-root .rbsel{font-weight:700;color:#e7eef8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mck-root .rbprice{font-weight:800;color:#25d97b;font-size:13.5px;text-align:right}
+.mck-root .rbbk{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#c3d0e2;white-space:nowrap;overflow:hidden}
+.mck-root .rbbk i{width:16px;height:16px;border-radius:4px;display:grid;place-items:center;font-size:7px;font-weight:800;font-style:normal;flex:none}
+.mck-root .rbfair{font-size:10.5px;color:#7b8ba3;text-align:right}
+.mck-root .rbedge{font-size:12px;font-weight:800;color:#25d97b;text-align:right;background:rgba(37,217,123,.14);padding:3px 6px;border-radius:4px;border:1px solid rgba(37,217,123,.35)}
 .mck-root .pb{padding:0 9px 8px;flex:1;display:flex;flex-direction:column;min-width:0}
 .mck-root svg.ch{flex:1;min-height:0;width:100%;height:100%}
 /* Wrap tables so they scroll horizontally on narrow phones rather than
@@ -551,6 +564,17 @@ const CSS = `
   /* Bottom summary bar stacks */
   .mck-root .bottom{grid-template-columns:1fr;gap:10px}
   .mck-root .bc,.mck-root .bc:first-child,.mck-root .bc:last-child{justify-content:center;flex-wrap:wrap}
+
+  /* Recommended Bets rows collapse to compact layout */
+  .mck-root .rbrow{grid-template-columns:44px 1fr 60px;grid-template-rows:auto auto;gap:6px 8px;padding:7px 8px;font-size:11px}
+  .mck-root .rbmkt{grid-column:1;grid-row:1;font-size:9px}
+  .mck-root .rbsel{grid-column:2;grid-row:1}
+  .mck-root .rbprice{grid-column:3;grid-row:1;font-size:12.5px}
+  .mck-root .rbbk{grid-column:1/span 2;grid-row:2;font-size:10px}
+  .mck-root .rbfair{grid-column:3;grid-row:2;font-size:9.5px}
+  .mck-root .rbedge{display:none}
+  /* AI call badge — smaller on phone so it doesn't wrap the header */
+  .mck-root .aicall{font-size:8px;padding:2px 6px}
 }
 
 /* Phone */
@@ -1028,6 +1052,36 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
     .map(r => r.point as number)
   const avgLine = totalLines.length ? totalLines.reduce((s, v) => s + v, 0) / totalLines.length : null
 
+  // AI OVER/UNDER call for total points
+  let ouCall: { label: string; color: string; bg: string; delta: string } | null = null
+  if (tot != null && avgLine != null) {
+    const gap = tot - avgLine
+    if (Math.abs(gap) < 0.25) {
+      ouCall = { label: 'ON THE LINE', color: '#7b8ba3', bg: 'rgba(123,139,163,.15)', delta: gap.toFixed(1) }
+    } else if (gap > 0) {
+      ouCall = { label: `AI: OVER ${avgLine.toFixed(1)}`, color: '#25d97b', bg: 'rgba(37,217,123,.18)', delta: `+${gap.toFixed(1)}` }
+    } else {
+      ouCall = { label: `AI: UNDER ${avgLine.toFixed(1)}`, color: '#f4526a', bg: 'rgba(244,82,106,.18)', delta: gap.toFixed(1) }
+    }
+  }
+
+  // AI COVER call for line
+  const spreadLines = (md.markets?.spreads ?? [])
+    .filter(r => r.outcome === home.name && r.point != null)
+    .map(r => r.point as number)
+  const avgSpread = spreadLines.length ? spreadLines.reduce((s, v) => s + v, 0) / spreadLines.length : null
+  let coverCall: { label: string; color: string; bg: string } | null = null
+  if (avgSpread != null) {
+    const covers = mu > avgSpread
+    const favCol = covers ? hp : ap
+    const favAbbr = covers ? home.abbr : away.abbr
+    coverCall = {
+      label: `AI: ${favAbbr} COVERS ${covers ? sgn(avgSpread) : sgn(-avgSpread)}`,
+      color: favCol,
+      bg: `${favCol}22`,
+    }
+  }
+
   return (
     <div className="row r3g">
       {/* Win Probability */}
@@ -1059,7 +1113,15 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
 
       {/* AI Line */}
       <div className="p">
-        <div className="ph"><span className="pt">AI Line</span><span className="q">?</span></div>
+        <div className="ph">
+          <span className="pt">AI Line</span>
+          <span className="q">?</span>
+          {coverCall && (
+            <span className="aicall" style={{ color: coverCall.color, background: coverCall.bg, borderColor: `${coverCall.color}55` }}>
+              {coverCall.label}
+            </span>
+          )}
+        </div>
         <div className="pb">
           <div className="lc">
             <Crest primary={hp} secondary={darken(hp)} abbr={home.abbr} teamName={home.name} className="mc" />
@@ -1081,6 +1143,11 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
         <div className="ph">
           <span className="pt">AI Total Points</span>
           <span className="q">?</span>
+          {ouCall && (
+            <span className="aicall" style={{ color: ouCall.color, background: ouCall.bg, borderColor: `${ouCall.color}55` }}>
+              {ouCall.label}
+            </span>
+          )}
         </div>
         <div className="pb">
           <div className="tc">
@@ -1122,7 +1189,10 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
               })()}
             </div>
           </div>
-          <div className="tcou"><span>OVER</span><span>UNDER</span></div>
+          <div className="tcou">
+            <span style={ouCall && ouCall.label.includes('OVER') ? { color: '#25d97b', fontWeight: 900 } : undefined}>▲ OVER</span>
+            <span style={ouCall && ouCall.label.includes('UNDER') ? { color: '#f4526a', fontWeight: 900 } : undefined}>▼ UNDER</span>
+          </div>
           <div className="cr2">
             <span className="l">TOTAL CONF</span>
             <span className="tk"><i style={{ width: `${totConf}%` }} /></span>
@@ -1769,6 +1839,101 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
 // ───────────────────────────────────────────────────────────────────────────
 // Bottom status bar
 // ───────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────────────────
+// AI Recommended Bets — ranked list across all markets
+// ───────────────────────────────────────────────────────────────────────────
+function RecommendedBets({ md }: { md: EventDetail }) {
+  const { home, away } = md.event
+
+  interface Pick {
+    edge: number
+    price: number
+    fair: number | null
+    bookmaker: string
+    market: 'H2H' | 'LINE' | 'TOTAL'
+    selection: string
+    teamColor?: string
+  }
+  const picks: Pick[] = []
+
+  for (const r of md.markets?.h2h ?? []) {
+    if (r.edge_pct != null && r.edge_pct >= 1 && r.edge_pct < 25) {
+      const isHome = r.outcome === home.name
+      const abbr = isHome ? home.abbr : away.abbr
+      picks.push({
+        edge: r.edge_pct, price: r.price, fair: r.fair_price ?? null,
+        bookmaker: r.bookmaker, market: 'H2H',
+        selection: `${abbr} to win`,
+        teamColor: isHome ? safeCol(home.primary_color, '#4da6ff') : safeCol(away.primary_color, '#8b5cf6'),
+      })
+    }
+  }
+  for (const r of md.markets?.spreads ?? []) {
+    if (r.edge_pct != null && r.edge_pct >= 1 && r.edge_pct < 25 && r.point != null) {
+      const isHome = r.outcome === home.name
+      const abbr = isHome ? home.abbr : away.abbr
+      picks.push({
+        edge: r.edge_pct, price: r.price, fair: r.fair_price ?? null,
+        bookmaker: r.bookmaker, market: 'LINE',
+        selection: `${abbr} ${sgn(r.point)}`,
+        teamColor: isHome ? safeCol(home.primary_color, '#4da6ff') : safeCol(away.primary_color, '#8b5cf6'),
+      })
+    }
+  }
+  for (const r of md.markets?.totals ?? []) {
+    if (r.edge_pct != null && r.edge_pct >= 1 && r.edge_pct < 25 && r.point != null) {
+      picks.push({
+        edge: r.edge_pct, price: r.price, fair: r.fair_price ?? null,
+        bookmaker: r.bookmaker, market: 'TOTAL',
+        selection: `${r.outcome} ${r.point.toFixed(1)}`,
+        teamColor: r.outcome.toLowerCase() === 'over' ? '#25d97b' : '#f4526a',
+      })
+    }
+  }
+  picks.sort((a, b) => b.edge - a.edge)
+  const top = picks.slice(0, 6)
+
+  return (
+    <div className="p" id="pRecBets">
+      <div className="ph">
+        <span className="pt">AI Recommended Bets</span>
+        <span className="q">?</span>
+        <span style={{ marginLeft: 'auto', fontSize: 9, color: '#7b8ba3', fontWeight: 600, letterSpacing: '.04em' }}>
+          {top.length ? `${top.length} pick${top.length === 1 ? '' : 's'} with edge above 1%` : 'No edges detected'}
+        </span>
+      </div>
+      <div className="pb">
+        {top.length === 0 ? (
+          <div style={{ padding: '20px 12px', textAlign: 'center', color: '#7b8ba3', fontSize: 11 }}>
+            Market prices are in line with the model. No recommended bets right now.
+          </div>
+        ) : (
+          <div className="recbets">
+            {top.map((p, i) => {
+              const ic = iconFor(p.bookmaker)
+              return (
+                <div key={i} className="rbrow">
+                  <span className="rbmkt" style={{ color: p.teamColor ?? '#c3d0e2' }}>{p.market}</span>
+                  <span className="rbsel">{p.selection}</span>
+                  <span className="rbprice mono">${p.price.toFixed(2)}</span>
+                  <span className="rbbk">
+                    <i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>
+                    {p.bookmaker}
+                  </span>
+                  <span className="rbfair mono">
+                    fair {p.fair != null ? '$' + p.fair.toFixed(2) : '—'}
+                  </span>
+                  <span className="rbedge mono">+{p.edge.toFixed(1)}%</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function BottomBar({ md }: { md: EventDetail }) {
   const m = md.model
   if (!m) return null
@@ -1942,6 +2107,7 @@ function MockupInner() {
                   <H2HFormStack md={detail} />
                 </div>
               </div>
+              <RecommendedBets md={detail} />
               <BottomBar md={detail} />
             </>
           )}
