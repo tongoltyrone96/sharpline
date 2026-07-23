@@ -1771,6 +1771,12 @@ function MockupInner() {
             valueOnly={valueOnly}
             onValueOnly={() => setValueOnly(v => !v)}
           />
+          <FixturesStrip
+            events={events}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            filter={{ search: '', valueOnly, sort: 'time', sport }}
+          />
           {!detail ? (
             <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: '#7b8ba3' }}>
               {events.length === 0 ? 'Loading fixtures…' : 'Loading match detail…'}
