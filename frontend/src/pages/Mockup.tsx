@@ -315,6 +315,7 @@ const CSS = `
 .mck-root .rm{grid-template-columns:1.06fr 1fr .84fr;flex:1 1 0}
 .mck-root .stk{display:flex;flex-direction:column;gap:6px;min-height:0}
 .mck-root .stk>.p{flex:1;min-height:0}
+.mck-root .ch{display:block;width:100%;height:auto}
 
 .mck-root .hero{border-radius:var(--mr);border:1px solid var(--mline);overflow:hidden;display:grid;grid-template-columns:1fr 170px 1fr;align-items:center}
 .mck-root .st{display:flex;align-items:center;gap:14px;padding:10px 18px}
@@ -433,13 +434,6 @@ const CSS = `
 .mck-root .pw{display:flex;align-items:center;justify-content:space-between;padding:8px 20px !important;border-top:1px solid var(--mline)}
 .mck-root .pw .pwn{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:900;letter-spacing:-.02em;line-height:1}
 .mck-root .pw .pwx{font-size:10px;font-weight:800;letter-spacing:.14em;color:#c3d0e2}
-.mck-root .prbar{display:flex;align-items:center;gap:10px;padding:4px 2px}
-.mck-root .prside{display:flex;align-items:center;gap:6px;flex:none}
-.mck-root .prside.r{justify-content:flex-end}
-.mck-root .prabbr{font-size:11px;font-weight:800;letter-spacing:.06em}
-.mck-root .prnum{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:900;letter-spacing:-.02em}
-.mck-root .prtrack{flex:1;height:8px;background:var(--mpanel2);border:1px solid var(--msoft);border-radius:5px;overflow:hidden;position:relative}
-.mck-root .prfill{height:100%;border-radius:5px 0 0 5px;transition:width .3s ease}
 
 .mck-root .h2h{display:flex;border-radius:7px;overflow:hidden;flex:none;position:relative}
 .mck-root .h2h .s{flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:10px;letter-spacing:.06em;font-weight:800;color:#fff}
@@ -1050,7 +1044,7 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
               )}
             </div>
             <div className="tcchart">
-              <svg viewBox="0 0 240 60" preserveAspectRatio="none" style={{ width: '100%', height: '100%', maxHeight: 60 }}>
+              <svg viewBox="0 0 240 60" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%', maxHeight: 60 }}>
                 <defs>
                   <linearGradient id="mck-gt" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#25d97b" stopOpacity=".45" />
@@ -1304,7 +1298,7 @@ function WinProbMovement({ md }: { md: EventDetail }) {
         <span><i className="key" style={{ background: ap }} />{away.abbr}</span>
       </div>
       <div className="pb">
-        <svg className="ch" viewBox="0 0 360 340" preserveAspectRatio="none">
+        <svg className="ch" viewBox="0 0 360 340" preserveAspectRatio="xMidYMid meet">
           <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
             {[0,1,2,3,4].map(i => { const y = 30 + i * 62.5; return <line key={i} x1={34} y1={y} x2={326} y2={y} /> })}
           </g>
@@ -1348,7 +1342,7 @@ function LineTotalStack({ md }: { md: EventDetail }) {
       <div className="p">
         <div className="ph"><span className="pt">Line Movement</span><span className="hv mono" style={{ color: ap }}>{sgn(mu)}</span></div>
         <div className="pb">
-          <svg className="ch" viewBox="0 0 360 200" preserveAspectRatio="none">
+          <svg className="ch" viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet">
             <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
               {[0,1,2,3].map(i => { const y = 18 + i * 47; return <line key={i} x1={38} y1={y} x2={326} y2={y} /> })}
             </g>
@@ -1368,7 +1362,7 @@ function LineTotalStack({ md }: { md: EventDetail }) {
       <div className="p">
         <div className="ph"><span className="pt">Total Points Movement</span><span className="hv mono" style={{ color: '#25d97b' }}>{tot.toFixed(1)}</span></div>
         <div className="pb">
-          <svg className="ch" viewBox="0 0 360 200" preserveAspectRatio="none">
+          <svg className="ch" viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="mck-gt2" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#25d97b" stopOpacity=".3" />
@@ -1681,23 +1675,10 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
       </div>
       <div className="p" id="pPower">
         <div className="ph"><span className="pt">Power Ranking</span></div>
-        <div className="pb">
-          <div className="prbar">
-            <div className="prside l">
-              <span className="prabbr" style={{ color: hp }}>{home.abbr}</span>
-              <span className="prnum" style={{ color: hp }}>#{pow.home}</span>
-            </div>
-            <div className="prtrack">
-              <div className="prfill" style={{
-                width: `${homePowerWins ? 60 : 40}%`,
-                background: `linear-gradient(90deg, ${hp}, ${homePowerWins ? hp : ap})`,
-              }} />
-            </div>
-            <div className="prside r">
-              <span className="prnum" style={{ color: ap }}>#{pow.away}</span>
-              <span className="prabbr" style={{ color: ap }}>{away.abbr}</span>
-            </div>
-          </div>
+        <div className="pb pw" style={{ background: powBg }}>
+          <span className="pwn" style={{ color: hp }}>{pow.home}</span>
+          <span className="pwx">POWER RANKING</span>
+          <span className="pwn" style={{ color: ap }}>{pow.away}</span>
         </div>
       </div>
     </div>
