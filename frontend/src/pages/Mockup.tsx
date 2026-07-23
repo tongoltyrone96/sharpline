@@ -318,15 +318,18 @@ const CSS = `
 .mck-root .ch{display:block;width:100%;height:auto}
 
 /* Movement chart with HTML axis labels (SVG only stretches the line) */
-.mck-root .chg{display:grid;grid-template-columns:38px 1fr 34px;grid-template-rows:1fr 16px;column-gap:6px;row-gap:4px;height:100%;min-height:0;padding:2px 0 2px 2px}
-.mck-root .chg-yaxis{grid-column:1;grid-row:1;display:flex;flex-direction:column;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#c3d0e2;text-align:right;padding-right:2px;line-height:1}
-.mck-root .chg-plot{grid-column:2/span 2;grid-row:1;position:relative;min-height:0}
-.mck-root .chg-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.mck-root .chg-dot{position:absolute;right:32px;width:8px;height:8px;border-radius:50%;transform:translate(50%,-50%);box-shadow:0 0 0 2px #0d1320}
-.mck-root .chg-end{position:absolute;right:0;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:800;line-height:1;pointer-events:none}
-.mck-root .chg-xaxis{grid-column:2/span 2;grid-row:2;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#9fb0c6;padding:0 2px;line-height:1}
-.mck-root #pMove .pb{min-height:220px}
-.mck-root .stk .pb{min-height:100px}
+.mck-root .chg{display:grid;grid-template-columns:42px 1fr 44px;grid-template-rows:14px 1fr 18px;column-gap:6px;row-gap:0;height:100%;min-height:0;padding:4px 4px 4px 2px}
+.mck-root .chg-yaxis{grid-column:1;grid-row:2;display:flex;flex-direction:column;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#c3d0e2;text-align:right;padding-right:4px;line-height:1}
+.mck-root .chg-yaxis>span:first-child{margin-top:-4px}
+.mck-root .chg-yaxis>span:last-child{margin-bottom:-4px}
+.mck-root .chg-plot{grid-column:2/span 2;grid-row:2;position:relative;min-height:0;padding:0 44px 0 0}
+.mck-root .chg-svg{position:absolute;left:0;right:44px;top:0;bottom:0;width:calc(100% - 44px);height:100%;display:block}
+.mck-root .chg-dot{position:absolute;right:44px;width:8px;height:8px;border-radius:50%;transform:translate(50%,-50%);box-shadow:0 0 0 2px #0d1320;pointer-events:none}
+.mck-root .chg-end{position:absolute;right:2px;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:800;line-height:1;pointer-events:none;white-space:nowrap}
+.mck-root .chg-xaxis{grid-column:2/span 2;grid-row:3;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#9fb0c6;padding:4px 44px 0 2px;line-height:1}
+.mck-root #pMove{min-height:300px}
+.mck-root #pMove .pb{min-height:240px;padding:6px 12px 8px}
+.mck-root .stk .pb{min-height:130px;padding:6px 12px 8px}
 
 .mck-root .hero{border-radius:var(--mr);border:1px solid var(--mline);overflow:hidden;display:grid;grid-template-columns:1fr 170px 1fr;align-items:center}
 .mck-root .st{display:flex;align-items:center;gap:14px;padding:10px 18px}
@@ -442,7 +445,7 @@ const CSS = `
 .mck-root .mtxrow .ml{font-size:10.5px;font-weight:600;color:#c3d0e2;text-align:center;white-space:nowrap}
 .mck-root .mtxrow .marr{font-size:14px;font-weight:800;text-align:center;line-height:1}
 /* Power Ranking */
-.mck-root .pw{display:flex;align-items:center;justify-content:space-between;padding:8px 20px !important;border-top:1px solid var(--mline)}
+.mck-root .pw{display:flex !important;flex-direction:row !important;align-items:center;justify-content:space-between;padding:8px 20px !important;border-top:1px solid var(--mline)}
 .mck-root .pw .pwn{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:900;letter-spacing:-.02em;line-height:1}
 .mck-root .pw .pwx{font-size:10px;font-weight:800;letter-spacing:.14em;color:#c3d0e2}
 
