@@ -317,15 +317,17 @@ const CSS = `
 .mck-root .ch{display:block;width:100%;height:auto}
 
 /* Movement chart with HTML axis labels (SVG only stretches the line) */
-.mck-root .chg{display:grid;grid-template-columns:42px 1fr 44px;grid-template-rows:1fr 18px;column-gap:6px;row-gap:0;height:100%;padding:4px 4px 4px 2px}
-.mck-root .chg-yaxis{grid-column:1;grid-row:1;display:flex;flex-direction:column;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#c3d0e2;text-align:right;padding-right:4px;line-height:1}
+.mck-root .chg{display:grid;grid-template-columns:42px 1fr 44px;grid-template-rows:1fr 18px;column-gap:0;row-gap:0;height:100%;padding:4px 4px 4px 2px}
+.mck-root .chg-yaxis{grid-column:1;grid-row:1;display:flex;flex-direction:column;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#c3d0e2;text-align:right;padding-right:6px;line-height:1}
 .mck-root .chg-yaxis>span:first-child{margin-top:-4px}
 .mck-root .chg-yaxis>span:last-child{margin-bottom:-4px}
-.mck-root .chg-plot{grid-column:2/span 2;grid-row:1;position:relative;padding:0 44px 0 0}
-.mck-root .chg-svg{position:absolute;left:0;right:44px;top:0;bottom:0;width:calc(100% - 44px);height:100%;display:block}
-.mck-root .chg-dot{position:absolute;right:44px;width:8px;height:8px;border-radius:50%;transform:translate(50%,-50%);box-shadow:0 0 0 2px #0d1320;pointer-events:none}
+.mck-root .chg-plot{grid-column:2;grid-row:1;position:relative}
+.mck-root .chg-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.mck-root .chg-mkr{position:absolute;width:6px;height:6px;border-radius:50%;background:#0a0f19;border:1.5px solid #25d97b;transform:translate(-50%,-50%);pointer-events:none;box-sizing:border-box;z-index:1}
+.mck-root .chg-endcol{grid-column:3;grid-row:1;position:relative}
+.mck-root .chg-dot{position:absolute;left:0;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 2px #0d1320;pointer-events:none;z-index:2}
 .mck-root .chg-end{position:absolute;right:2px;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:800;line-height:1;pointer-events:none;white-space:nowrap}
-.mck-root .chg-xaxis{grid-column:2/span 2;grid-row:2;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#9fb0c6;padding:4px 44px 0 2px;line-height:1}
+.mck-root .chg-xaxis{grid-column:2;grid-row:2;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#9fb0c6;padding:4px 2px 0;line-height:1}
 .mck-root #pMove .pb{height:260px;padding:6px 12px 8px}
 .mck-root #pLineMv .pb,.mck-root #pTotMv .pb{height:150px;padding:6px 12px 8px}
 
@@ -374,11 +376,12 @@ const CSS = `
 .mck-root .cr2 .tk{flex:1;height:7px;background:#1a2333;border-radius:4px;overflow:hidden}
 .mck-root .cr2 .tk i{display:block;height:100%;background:linear-gradient(90deg,#0f8f4d,var(--mgreen));border-radius:4px}
 .mck-root .cr2 .n{font-size:11px;font-weight:800;color:var(--mgreen);font-family:'IBM Plex Mono',monospace}
-.mck-root .tc{display:flex;align-items:stretch;gap:10px;flex:1;min-height:0;min-width:0}
+.mck-root .tc{display:flex;align-items:stretch;gap:10px;flex:1;min-width:0}
 .mck-root .tc .tcleft{display:flex;flex-direction:column;justify-content:center;flex:none}
 .mck-root .tc .big{font-size:34px;font-weight:800;letter-spacing:-.03em;color:var(--mtxt);line-height:1}
-.mck-root .tc .tcchart{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
-.mck-root .tcou{display:flex;justify-content:space-between;font-size:8.5px;letter-spacing:.11em;color:var(--mdim);font-weight:800;margin-top:2px}
+.mck-root .tc .tcchart{flex:1;min-width:0;position:relative;height:56px;align-self:center}
+.mck-root .tcou{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.11em;color:#c3d0e2;font-weight:800;margin-top:6px;padding:0 2px}
+.mck-root .chg-mkr{position:absolute;width:6px;height:6px;border-radius:50%;background:#0a0f19;border:1.5px solid #25d97b;transform:translate(-50%,-50%);pointer-events:none;box-sizing:border-box}
 
 .mck-root .tabs{display:flex;gap:3px;margin-left:auto}
 .mck-root .tab{font-size:8px;font-weight:700;letter-spacing:.04em;padding:4px 7px;border-radius:5px;color:var(--mdim);cursor:pointer;border:1px solid transparent;background:none;font-family:inherit;white-space:nowrap}
@@ -1056,42 +1059,36 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
               )}
             </div>
             <div className="tcchart">
-              <svg viewBox="0 0 240 60" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%', maxHeight: 60 }}>
-                <defs>
-                  <linearGradient id="mck-gt" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#25d97b" stopOpacity=".45" />
-                    <stop offset="100%" stopColor="#25d97b" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                {(() => {
-                  const base = tot ?? 40
-                  const pts = Array.from({ length: 15 }, (_, i) => {
-                    const t = i / 14
-                    return base - 2.5 + (1 - Math.pow(1 - t, 1.6)) * 2.5 + Math.sin(i * 1.6) * 0.5
-                  })
-                  const w = 240, h = 60, xL = 4, xR = 236, yT = 6, yB = 50
-                  const min = Math.min(...pts) - 0.6, max = Math.max(...pts) + 0.6
-                  const coords = pts.map((v, i) => {
-                    const x = xL + (xR - xL) * i / (pts.length - 1)
-                    const y = yB - (v - min) / (max - min) * (yB - yT)
-                    return [x, y] as [number, number]
-                  })
-                  const linePoints = coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
-                  const areaPoints = `${xL},${yB} ${linePoints} ${xR},${yB}`
-                  const lastY = coords[coords.length - 1][1]
-                  return <>
+              {(() => {
+                const base = tot ?? 40
+                const pts = Array.from({ length: 15 }, (_, i) => {
+                  const t = i / 14
+                  return base - 2.5 + (1 - Math.pow(1 - t, 1.6)) * 2.5 + Math.sin(i * 1.6) * 0.5
+                })
+                const min = Math.min(...pts) - 0.6, max = Math.max(...pts) + 0.6
+                const xPct = (i: number) => i / (pts.length - 1) * 100
+                const yPct = (v: number) => (1 - (v - min) / (max - min || 1)) * 100
+                const linePoints = pts.map((v, i) => `${xPct(i).toFixed(2)},${yPct(v).toFixed(2)}`).join(' ')
+                const areaPoints = `0,100 ${linePoints} 100,100`
+                return <>
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+                    <defs>
+                      <linearGradient id="mck-gt" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#25d97b" stopOpacity=".45" />
+                        <stop offset="100%" stopColor="#25d97b" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
                     <polygon points={areaPoints} fill="url(#mck-gt)" />
                     <polyline points={linePoints} fill="none" stroke="#25d97b" strokeWidth={1.8} vectorEffect="non-scaling-stroke" />
-                    {coords.map(([x, y], i) => (
-                      <circle key={i} cx={x} cy={+y.toFixed(1)} r={1.6} fill="#0a0f19" stroke="#25d97b" strokeWidth={1.2} />
-                    ))}
-                    <circle cx={xR} cy={+lastY.toFixed(1)} r={3} fill="#25d97b" />
-                  </>
-                })()}
-              </svg>
-              <div className="tcou"><span>OVER</span><span>UNDER</span></div>
+                  </svg>
+                  {pts.map((v, i) => (
+                    <span key={i} className="chg-mkr" style={{ left: `${xPct(i)}%`, top: `${yPct(v)}%` }} />
+                  ))}
+                </>
+              })()}
             </div>
           </div>
+          <div className="tcou"><span>OVER</span><span>UNDER</span></div>
           <div className="cr2">
             <span className="l">TOTAL CONF</span>
             <span className="tk"><i style={{ width: `${totConf}%` }} /></span>
@@ -1327,6 +1324,14 @@ function WinProbMovement({ md }: { md: EventDetail }) {
               <polyline points={pts(hS)} fill="none" stroke={hp} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
               <polyline points={pts(aS)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
             </svg>
+            {hS.map((v, i) => (
+              <span key={'h'+i} className="chg-mkr" style={{ left: `${(i / (hS.length - 1) * 100)}%`, top: `${yPct(v)}%`, borderColor: hp }} />
+            ))}
+            {aS.map((v, i) => (
+              <span key={'a'+i} className="chg-mkr" style={{ left: `${(i / (aS.length - 1) * 100)}%`, top: `${yPct(v)}%`, borderColor: ap }} />
+            ))}
+          </div>
+          <div className="chg-endcol">
             <span className="chg-dot" style={{ top: `${yPct(hLast)}%`, background: hp }} />
             <span className="chg-dot" style={{ top: `${yPct(aLast)}%`, background: ap }} />
             <span className="chg-end" style={{ top: `${yPct(hLast)}%`, color: hp }}>{Math.round(hLast)}%</span>
@@ -1381,6 +1386,11 @@ function LineTotalStack({ md }: { md: EventDetail }) {
                 </g>
                 <polyline points={lPts} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
               </svg>
+              {lS.map((v, i) => (
+                <span key={i} className="chg-mkr" style={{ left: `${(i / (lS.length - 1) * 100)}%`, top: `${lYPct(v)}%`, borderColor: ap }} />
+              ))}
+            </div>
+            <div className="chg-endcol">
               <span className="chg-dot" style={{ top: `${lYPct(lLast)}%`, background: ap }} />
             </div>
             <div className="chg-xaxis">
@@ -1410,6 +1420,11 @@ function LineTotalStack({ md }: { md: EventDetail }) {
                 <polygon points={`${tPts} 100,100 0,100`} fill="url(#mck-gt2)" />
                 <polyline points={tPts} fill="none" stroke="#25d97b" strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
               </svg>
+              {tS.map((v, i) => (
+                <span key={i} className="chg-mkr" style={{ left: `${(i / (tS.length - 1) * 100)}%`, top: `${tYPct(v)}%`, borderColor: '#25d97b' }} />
+              ))}
+            </div>
+            <div className="chg-endcol">
               <span className="chg-dot" style={{ top: `${tYPct(tLast)}%`, background: '#25d97b' }} />
             </div>
             <div className="chg-xaxis">
