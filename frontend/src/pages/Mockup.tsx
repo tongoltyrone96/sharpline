@@ -312,6 +312,11 @@ const CSS = `
 .mck-root .rh{grid-template-columns:1fr 286px}
 .mck-root .r3g{grid-template-columns:1fr 1fr 1fr}
 .mck-root .rm{grid-template-columns:1.06fr 1fr .84fr;align-items:stretch}
+.mck-root .rmega{grid-template-columns:1.06fr 1fr .84fr;align-items:stretch}
+.mck-root .mcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.mck-root .mcol>.p{flex:none}
+/* Right column: Line + Total grow to fill space; H2H + Recent Form stay compact and bottom-attached */
+.mck-root .mcol-r>#pLineMv,.mck-root .mcol-r>#pTotMv{flex:1 1 0;min-height:200px}
 .mck-root .stk{display:flex;flex-direction:column;gap:6px}
 .mck-root .stk>.p{flex:none}
 .mck-root .ch{display:block;width:100%;height:auto}
@@ -329,7 +334,7 @@ const CSS = `
 .mck-root .chg-end{position:absolute;right:2px;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:800;line-height:1;pointer-events:none;white-space:nowrap}
 .mck-root .chg-xaxis{grid-column:2;grid-row:2;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#9fb0c6;padding:4px 2px 0;line-height:1}
 .mck-root #pMove .pb{height:260px;padding:6px 12px 8px}
-.mck-root #pLineMv .pb,.mck-root #pTotMv .pb{height:150px;padding:6px 12px 8px}
+.mck-root #pLineMv .pb,.mck-root #pTotMv .pb{min-height:150px;padding:6px 12px 8px;flex:1}
 
 .mck-root .hero{border-radius:var(--mr);border:1px solid var(--mline);overflow:hidden;display:grid;grid-template-columns:1fr 170px 1fr;align-items:center}
 .mck-root .st{display:flex;align-items:center;gap:14px;padding:10px 18px}
@@ -1371,7 +1376,7 @@ function LineTotalStack({ md }: { md: EventDetail }) {
   const tYLabels = [0, 1, 2, 3].map(i => (thi - (thi - tlo) * i / 3).toFixed(1))
 
   return (
-    <div className="stk">
+    <>
       <div className="p" id="pLineMv">
         <div className="ph"><span className="pt">Line Movement</span><span className="hv mono" style={{ color: ap }}>{sgn(mu)}</span></div>
         <div className="pb">
@@ -1433,7 +1438,7 @@ function LineTotalStack({ md }: { md: EventDetail }) {
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -1570,8 +1575,8 @@ function H2HFormStack({ md }: { md: EventDetail }) {
   const hd = darken(hp, 0.7), ad = darken(ap, 0.7)
   const h2h = fakeH2H(md.event.id)
   return (
-    <div className="stk">
-      <div className="p">
+    <>
+      <div className="p" id="pH2h">
         <div className="ph"><span className="pt">H2H History (Last 10)</span></div>
         <div className="pb">
           <div className="h2h">
@@ -1594,7 +1599,7 @@ function H2HFormStack({ md }: { md: EventDetail }) {
           </div>
         </div>
       </div>
-      <div className="p">
+      <div className="p" id="pForm">
         <div className="ph"><span className="pt">Recent Form</span></div>
         <div className="pb">
           <div className="fg">
@@ -1620,7 +1625,7 @@ function H2HFormStack({ md }: { md: EventDetail }) {
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -1697,7 +1702,7 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
   const homePowerWins = pow.home < pow.away
   const powBg = `linear-gradient(90deg, ${homePowerWins ? hp : darken(hp,0.85)}22 0%, #0d1320 50%, ${homePowerWins ? darken(ap,0.85) : ap}22 100%)`
   return (
-    <div className="stk">
+    <>
       <div className="p" id="pMetrics">
         <div className="ph"><span className="pt">AI Key Matchup Metrics</span><span className="q">?</span></div>
         <div className="pb">
@@ -1728,7 +1733,7 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
           <span className="pwn" style={{ color: ap }}>{pow.away}</span>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -1894,15 +1899,19 @@ function MockupInner() {
                 <Prediction md={detail} />
               </div>
               <ThreeMetrics md={detail} />
-              <div className="row rm">
-                <OddsComparison md={detail} />
-                <WinProbMovement md={detail} />
-                <LineTotalStack md={detail} />
-              </div>
-              <div className="row rm">
-                <TeamNews md={detail} />
-                <MatchupMetricsStack md={detail} />
-                <H2HFormStack md={detail} />
+              <div className="row rmega">
+                <div className="mcol">
+                  <OddsComparison md={detail} />
+                  <TeamNews md={detail} />
+                </div>
+                <div className="mcol">
+                  <WinProbMovement md={detail} />
+                  <MatchupMetricsStack md={detail} />
+                </div>
+                <div className="mcol mcol-r">
+                  <LineTotalStack md={detail} />
+                  <H2HFormStack md={detail} />
+                </div>
               </div>
               <BottomBar md={detail} />
             </>
