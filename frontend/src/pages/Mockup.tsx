@@ -216,9 +216,8 @@ const CSS = `
   background:var(--mbg); color:var(--mtxt);
   font-family:Inter,system-ui,sans-serif; -webkit-font-smoothing:antialiased;
   padding:6px; display:flex; gap:6px; min-height:100vh;
-  /* Prevent Chrome for Android from inflating text and blowing the layout */
+  align-items:flex-start;
   -webkit-text-size-adjust:100%; text-size-adjust:100%;
-  /* Never let a stray child cause the whole page to scroll sideways */
   max-width:100vw; overflow-x:hidden;
 }
 .mck-root .mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
@@ -226,11 +225,11 @@ const CSS = `
 .mck-root ::-webkit-scrollbar{height:5px;width:5px}
 .mck-root ::-webkit-scrollbar-thumb{background:#1e2b3f;border-radius:3px}
 
-.mck-root .p{background:var(--mpanel);border:1px solid var(--mline);border-radius:var(--mr);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.mck-root .p{background:var(--mpanel);border:1px solid var(--mline);border-radius:var(--mr);display:flex;flex-direction:column;overflow:hidden}
 .mck-root .ph{display:flex;align-items:center;gap:6px;padding:6px 9px 4px;flex:none}
 .mck-root .pt{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#c3d0e2;white-space:nowrap}
 .mck-root .q{width:11px;height:11px;border-radius:50%;border:1px solid var(--mline);color:var(--mdim2);font-size:7.5px;display:grid;place-items:center;flex:none}
-.mck-root .pb{padding:0 9px 8px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.mck-root .pb{padding:0 9px 8px;flex:1;display:flex;flex-direction:column;min-width:0}
 .mck-root svg.ch{flex:1;min-height:0;width:100%;height:100%}
 /* Wrap tables so they scroll horizontally on narrow phones rather than
    being clipped by the panel's overflow: hidden. */
@@ -251,7 +250,7 @@ const CSS = `
 .mck-root .cc .vh{font-size:8.5px;font-weight:800;color:var(--mgreen);margin-top:2px}
 .mck-root .cc .s{font-size:7px;color:var(--mdim2);line-height:1.3;margin-top:1px}
 
-.mck-root main{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;gap:6px}
+.mck-root main{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
 .mck-root .top{display:flex;align-items:center;gap:7px;flex:none;flex-wrap:nowrap}
 .mck-root .top h1{font-size:14px;font-weight:800;letter-spacing:-.01em;line-height:1.1;white-space:nowrap;color:var(--mtxt)}
 .mck-root .top .sb{font-size:7px;letter-spacing:.13em;color:var(--mdim);font-weight:600}
@@ -309,27 +308,26 @@ const CSS = `
 .mck-root .gi .r3 .sp{margin-left:auto}
 .mck-root .empty{display:grid;place-items:center;width:100%;color:var(--mdim2);font-size:11px}
 
-.mck-root .row{display:grid;gap:6px;min-height:0}
-.mck-root .rh{grid-template-columns:1fr 286px;flex:0 0 118px}
-.mck-root .r3g{grid-template-columns:1fr 1fr 1fr;flex:0 0 138px}
-.mck-root .rm{grid-template-columns:1.06fr 1fr .84fr;flex:1 1 0}
-.mck-root .stk{display:flex;flex-direction:column;gap:6px;min-height:0}
-.mck-root .stk>.p{flex:1;min-height:0}
+.mck-root .row{display:grid;gap:6px}
+.mck-root .rh{grid-template-columns:1fr 286px}
+.mck-root .r3g{grid-template-columns:1fr 1fr 1fr}
+.mck-root .rm{grid-template-columns:1.06fr 1fr .84fr;align-items:stretch}
+.mck-root .stk{display:flex;flex-direction:column;gap:6px}
+.mck-root .stk>.p{flex:1}
 .mck-root .ch{display:block;width:100%;height:auto}
 
 /* Movement chart with HTML axis labels (SVG only stretches the line) */
-.mck-root .chg{display:grid;grid-template-columns:42px 1fr 44px;grid-template-rows:14px 1fr 18px;column-gap:6px;row-gap:0;height:100%;min-height:0;padding:4px 4px 4px 2px}
-.mck-root .chg-yaxis{grid-column:1;grid-row:2;display:flex;flex-direction:column;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#c3d0e2;text-align:right;padding-right:4px;line-height:1}
+.mck-root .chg{display:grid;grid-template-columns:42px 1fr 44px;grid-template-rows:1fr 18px;column-gap:6px;row-gap:0;height:100%;padding:4px 4px 4px 2px}
+.mck-root .chg-yaxis{grid-column:1;grid-row:1;display:flex;flex-direction:column;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#c3d0e2;text-align:right;padding-right:4px;line-height:1}
 .mck-root .chg-yaxis>span:first-child{margin-top:-4px}
 .mck-root .chg-yaxis>span:last-child{margin-bottom:-4px}
-.mck-root .chg-plot{grid-column:2/span 2;grid-row:2;position:relative;min-height:0;padding:0 44px 0 0}
+.mck-root .chg-plot{grid-column:2/span 2;grid-row:1;position:relative;padding:0 44px 0 0}
 .mck-root .chg-svg{position:absolute;left:0;right:44px;top:0;bottom:0;width:calc(100% - 44px);height:100%;display:block}
 .mck-root .chg-dot{position:absolute;right:44px;width:8px;height:8px;border-radius:50%;transform:translate(50%,-50%);box-shadow:0 0 0 2px #0d1320;pointer-events:none}
 .mck-root .chg-end{position:absolute;right:2px;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:800;line-height:1;pointer-events:none;white-space:nowrap}
-.mck-root .chg-xaxis{grid-column:2/span 2;grid-row:3;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#9fb0c6;padding:4px 44px 0 2px;line-height:1}
-.mck-root #pMove{min-height:300px}
-.mck-root #pMove .pb{min-height:240px;padding:6px 12px 8px}
-.mck-root .stk .pb{min-height:130px;padding:6px 12px 8px}
+.mck-root .chg-xaxis{grid-column:2/span 2;grid-row:2;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#9fb0c6;padding:4px 44px 0 2px;line-height:1}
+.mck-root #pMove .pb{height:260px;padding:6px 12px 8px}
+.mck-root #pLineMv .pb,.mck-root #pTotMv .pb{height:150px;padding:6px 12px 8px}
 
 .mck-root .hero{border-radius:var(--mr);border:1px solid var(--mline);overflow:hidden;display:grid;grid-template-columns:1fr 170px 1fr;align-items:center}
 .mck-root .st{display:flex;align-items:center;gap:14px;padding:10px 18px}
@@ -1369,7 +1367,7 @@ function LineTotalStack({ md }: { md: EventDetail }) {
 
   return (
     <div className="stk">
-      <div className="p">
+      <div className="p" id="pLineMv">
         <div className="ph"><span className="pt">Line Movement</span><span className="hv mono" style={{ color: ap }}>{sgn(mu)}</span></div>
         <div className="pb">
           <div className="chg">
@@ -1391,7 +1389,7 @@ function LineTotalStack({ md }: { md: EventDetail }) {
           </div>
         </div>
       </div>
-      <div className="p">
+      <div className="p" id="pTotMv">
         <div className="ph"><span className="pt">Total Points Movement</span><span className="hv mono" style={{ color: '#25d97b' }}>{tot.toFixed(1)}</span></div>
         <div className="pb">
           <div className="chg">
