@@ -719,11 +719,12 @@ function Sidebar({ onNavigate, roundConf }: {
 // ───────────────────────────────────────────────────────────────────────────
 // Top bar
 // ───────────────────────────────────────────────────────────────────────────
-function TopBar({ sport, sports, onSport, sort, onSort, search, onSearch, valueOnly, onValueOnly }: {
+function TopBar({ sport, sports, onSport, matches, selectedId, onSelect, valueOnly, onValueOnly }: {
   sport: string; sports: string[];
   onSport: (s: string) => void;
-  sort: string; onSort: (s: string) => void;
-  search: string; onSearch: (s: string) => void;
+  matches: DashboardEvent[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
   valueOnly: boolean; onValueOnly: () => void;
 }) {
   return (
@@ -736,18 +737,17 @@ function TopBar({ sport, sports, onSport, sort, onSort, search, onSearch, valueO
         <select value={sport} onChange={e => onSport(e.target.value)}>
           {sports.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
-        <select defaultValue="Round 15">
-          <option>Round 15</option><option>Round 16</option><option>Round 17</option>
+        <select value={selectedId ?? ''} onChange={e => onSelect(e.target.value)}>
+          {matches.length === 0 && <option value="">— No matches —</option>}
+          {matches.map(m => {
+            const dt = fmtDayTime(m.commence_time)
+            return (
+              <option key={m.id} value={m.id}>
+                {m.home_abbr} vs {m.away_abbr} · {dt.day} {dt.time}
+              </option>
+            )
+          })}
         </select>
-        <select value={sort} onChange={e => onSort(e.target.value)}>
-          <option value="time">Sort: Kick-off</option>
-          <option value="edge">Sort: Best edge</option>
-          <option value="conf">Sort: Confidence</option>
-        </select>
-        <div className="srchw">
-          <svg viewBox="0 0 24 24"><circle cx={11} cy={11} r={7} /><path d="M20 20l-4-4" /></svg>
-          <input className="srch" value={search} onChange={e => onSearch(e.target.value)} placeholder="Search team…" autoComplete="off" />
-        </div>
         <div className={'tg' + (valueOnly ? ' on' : '')} onClick={onValueOnly}>
           <span className="lb">VALUE ONLY</span><span className="sw"></span>
         </div>
@@ -956,6 +956,23 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
   const lineConf = Math.max(30, confPct - 4)
   const totConf = Math.max(30, confPct - 8)
 
+  // AI over/under recommendation: compare projected total to the average
+  // bookmaker total line. Positive gap ≥ 0.75 → OVER, negative ≤ -0.75 → UNDER,
+  // otherwise LEAN toward whichever side.
+  const totalLines = (md.markets?.totals ?? [])
+    .filter(r => r.outcome.toLowerCase() === 'over' && r.point != null)
+    .map(r => r.point as number)
+  const avgLine = totalLines.length ? totalLines.reduce((s, v) => s + v, 0) / totalLines.length : null
+  let ouLabel: string | null = null, ouColor = '#7b8ba3'
+  if (tot != null && avgLine != null) {
+    const gap = tot - avgLine
+    if (gap >= 0.75) { ouLabel = 'AI RECOMMENDS OVER'; ouColor = '#25d97b' }
+    else if (gap <= -0.75) { ouLabel = 'AI RECOMMENDS UNDER'; ouColor = '#f4526a' }
+    else if (gap > 0)      { ouLabel = 'LEAN OVER';           ouColor = '#a8d472' }
+    else if (gap < 0)      { ouLabel = 'LEAN UNDER';          ouColor = '#e58a97' }
+    else                    { ouLabel = 'ON THE LINE';         ouColor = '#7b8ba3' }
+  }
+
   return (
     <div className="row r3g">
       {/* Win Probability */}
@@ -1003,12 +1020,24 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
 
       {/* AI Total Points */}
       <div className="p">
-        <div className="ph"><span className="pt">AI Total Points</span><span className="q">?</span></div>
+        <div className="ph">
+          <span className="pt">AI Total Points</span>
+          <span className="q">?</span>
+          {ouLabel && (
+            <span style={{
+              marginLeft: 'auto', fontSize: 8.5, fontWeight: 800, letterSpacing: '.08em',
+              color: ouColor, background: `${ouColor}22`, border: `1px solid ${ouColor}55`,
+              padding: '3px 7px', borderRadius: 5, whiteSpace: 'nowrap',
+            }}>{ouLabel}</span>
+          )}
+        </div>
         <div className="pb">
           <div className="tc">
             <div>
               <div className="big mono">{tot != null ? tot.toFixed(1) : '–'}</div>
-              <div style={{ fontSize: 7, letterSpacing: '.1em', color: '#7b8ba3', fontWeight: 700 }}>OVER / UNDER</div>
+              <div style={{ fontSize: 7, letterSpacing: '.1em', color: '#7b8ba3', fontWeight: 700 }}>
+                {avgLine != null ? `LINE ${avgLine.toFixed(1)}` : 'OVER / UNDER'}
+              </div>
             </div>
             <svg className="ch" viewBox="0 0 240 42" preserveAspectRatio="xMidYMid meet">
               <defs>
@@ -1666,10 +1695,8 @@ function MockupInner() {
 
   // Global filter state
   const [sport, setSport] = useState<string>('ALL')
-  const [sort, setSort] = useState('time')
-  const [search, setSearch] = useState('')
   const [valueOnly, setValueOnly] = useState(false)
-  const [activeSection, setActiveSection] = useState('strip')
+  const [, setActiveSection] = useState('strip')
 
   const availableSports = useMemo(() => {
     const set = new Set<string>()
@@ -1713,6 +1740,21 @@ function MockupInner() {
     return Math.round(avg * 100)
   }, [events, sport])
 
+  // Matches for the match-picker dropdown — same eligibility rules as the
+  // auto-select above (no TBD, real logos both sides), optionally filtered
+  // to value-only, sorted by kickoff.
+  const matchList = useMemo(() => {
+    let list = events.filter(e =>
+      e.home_team && e.away_team &&
+      e.home_team.toUpperCase() !== 'TBD' && e.away_team.toUpperCase() !== 'TBD' &&
+      TEAM_LOGOS[e.home_team] && TEAM_LOGOS[e.away_team]
+    )
+    if (sport !== 'ALL') list = list.filter(e => (e.sport_title || '').toUpperCase() === sport)
+    if (valueOnly) list = list.filter(e => (e.best_edge_pct ?? 0) >= 2)
+    list.sort((a, b) => new Date(a.commence_time).getTime() - new Date(b.commence_time).getTime())
+    return list
+  }, [events, sport, valueOnly])
+
   return (
     <>
       <style>{CSS}</style>
@@ -1723,18 +1765,11 @@ function MockupInner() {
             sport={sport}
             sports={availableSports}
             onSport={setSport}
-            sort={sort}
-            onSort={setSort}
-            search={search}
-            onSearch={setSearch}
-            valueOnly={valueOnly}
-            onValueOnly={() => setValueOnly(v => !v)}
-          />
-          <FixturesStrip
-            events={events}
+            matches={matchList}
             selectedId={selectedId}
             onSelect={setSelectedId}
-            filter={{ search, valueOnly, sort, sport }}
+            valueOnly={valueOnly}
+            onValueOnly={() => setValueOnly(v => !v)}
           />
           {!detail ? (
             <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: '#7b8ba3' }}>
