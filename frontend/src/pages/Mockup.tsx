@@ -372,15 +372,15 @@ const CSS = `
 .mck-root .tab:hover{color:#c3d0e2}
 .mck-root .tab.on{background:#0f2740;border-color:#1d4a72;color:#5cb3ff}
 .mck-root table{width:100%;border-collapse:collapse}
-.mck-root th{font-size:7px;letter-spacing:.07em;color:var(--mdim2);font-weight:700;text-align:right;padding:3px 3px;border-bottom:1px solid var(--mline)}
+.mck-root th{font-size:9px;letter-spacing:.07em;color:var(--mdim2);font-weight:700;text-align:right;padding:4px 4px;border-bottom:1px solid var(--mline)}
 .mck-root th:first-child{text-align:left}
-.mck-root td{padding:4px 3px;border-bottom:1px solid var(--msoft);font-size:10.5px;text-align:right;color:var(--mtxt)}
+.mck-root td{padding:5px 4px;border-bottom:1px solid var(--msoft);font-size:12px;text-align:right;color:#e7eef8;font-weight:500}
 .mck-root tr:last-child td{border-bottom:0}
 .mck-root td:first-child{text-align:left}
 .mck-root .bk{display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:600;color:#c9d5e5}
 .mck-root .bk i{width:14px;height:14px;border-radius:3px;display:grid;place-items:center;font-size:6px;font-weight:800;font-style:normal;color:#fff;flex:none}
-.mck-root .fair{color:#8fa2bb}
-.mck-root .val{display:flex;flex-direction:column;align-items:flex-end;font-size:9px;font-weight:700;line-height:1.3}
+.mck-root .fair{color:#b6c4d9;font-weight:600}
+.mck-root .val{display:flex;flex-direction:column;align-items:flex-end;font-size:11px;font-weight:700;line-height:1.35}
 .mck-root .up{color:var(--mgreen)}
 .mck-root .dn{color:var(--mred)}
 .mck-root .foot{display:flex;align-items:center;gap:5px;font-size:8px;color:var(--mdim2);padding-top:4px}
@@ -1308,20 +1308,20 @@ function WinProbMovement({ md }: { md: EventDetail }) {
           <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
             {[0,1,2,3,4].map(i => { const y = 30 + i * 62.5; return <line key={i} x1={34} y1={y} x2={326} y2={y} /> })}
           </g>
-          <g fontFamily="IBM Plex Mono" fontSize={11} fill="#7b8ba3" textAnchor="end" fontWeight={500}>
-            {[0,1,2,3,4].map(i => { const y = 30 + i * 62.5; const v = Math.round(hi - (hi - lo) * i / 4); return <text key={i} x={30} y={y + 4}>{v}%</text> })}
+          <g fontFamily="IBM Plex Mono" fontSize={15} fill="#c3d0e2" textAnchor="end" fontWeight={600}>
+            {[0,1,2,3,4].map(i => { const y = 30 + i * 62.5; const v = Math.round(hi - (hi - lo) * i / 4); return <text key={i} x={30} y={y + 5}>{v}%</text> })}
           </g>
           <polyline points={poly(hS, 40, 318, 30, 280, lo, hi)} fill="none" stroke={hp} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           <polyline points={poly(aS, 40, 318, 30, 280, lo, hi)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           {dotList(hS, 40, 318, 30, 280, lo, hi, hp)}
           {dotList(aS, 40, 318, 30, 280, lo, hi, ap)}
-          <circle cx={318} cy={(280 - (hLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={4} fill={hp} />
-          <circle cx={318} cy={(280 - (aLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={4} fill={ap} />
-          <text x={352} y={(280 - (hLast - lo) / (hi - lo || 1) * 250 + 5).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={12} fontWeight={800} fill={hp} textAnchor="end">{Math.round(hLast)}%</text>
-          <text x={352} y={(280 - (aLast - lo) / (hi - lo || 1) * 250 + 5).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={12} fontWeight={800} fill={ap} textAnchor="end">{Math.round(aLast)}%</text>
-          <g fontFamily="IBM Plex Mono" fontSize={10} fill="#7b8ba3" textAnchor="middle" fontWeight={500}>
-            <text x={40}  y={310}>-24h</text><text x={110} y={310}>-12h</text><text x={175} y={310}>-6h</text>
-            <text x={240} y={310}>-3h</text><text x={285} y={310}>-1h</text><text x={318} y={310}>Now</text>
+          <circle cx={318} cy={(280 - (hLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={5} fill={hp} />
+          <circle cx={318} cy={(280 - (aLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={5} fill={ap} />
+          <text x={354} y={(280 - (hLast - lo) / (hi - lo || 1) * 250 + 6).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={17} fontWeight={800} fill={hp} textAnchor="end">{Math.round(hLast)}%</text>
+          <text x={354} y={(280 - (aLast - lo) / (hi - lo || 1) * 250 + 6).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={17} fontWeight={800} fill={ap} textAnchor="end">{Math.round(aLast)}%</text>
+          <g fontFamily="IBM Plex Mono" fontSize={13} fill="#9fb0c6" textAnchor="middle" fontWeight={600}>
+            <text x={40}  y={315}>-24h</text><text x={110} y={315}>-12h</text><text x={175} y={315}>-6h</text>
+            <text x={240} y={315}>-3h</text><text x={285} y={315}>-1h</text><text x={318} y={315}>Now</text>
           </g>
         </svg>
       </div>
@@ -1352,15 +1352,15 @@ function LineTotalStack({ md }: { md: EventDetail }) {
             <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
               {[0,1,2,3].map(i => { const y = 18 + i * 47; return <line key={i} x1={38} y1={y} x2={326} y2={y} /> })}
             </g>
-            <g fontFamily="IBM Plex Mono" fontSize={9} fill="#7b8ba3" textAnchor="end" fontWeight={500}>
-              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = lhi - (lhi - llo) * i / 3; return <text key={i} x={34} y={y + 3}>{v.toFixed(1)}</text> })}
+            <g fontFamily="IBM Plex Mono" fontSize={13} fill="#c3d0e2" textAnchor="end" fontWeight={600}>
+              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = lhi - (lhi - llo) * i / 3; return <text key={i} x={34} y={y + 4}>{v.toFixed(1)}</text> })}
             </g>
-            <polyline points={poly(lS, 42, 308, 18, 159, llo, lhi)} fill="none" stroke={ap} strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            <polyline points={poly(lS, 42, 308, 18, 159, llo, lhi)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
             {dotList(lS, 42, 308, 18, 159, llo, lhi, ap)}
-            <circle cx={308} cy={(159 - (lLast - llo) / (lhi - llo || 1) * 141).toFixed(1) as unknown as number} r={3.5} fill={ap} />
-            <g fontFamily="IBM Plex Mono" fontSize={9} fill="#7b8ba3" textAnchor="middle" fontWeight={500}>
-              <text x={42} y={184}>-24h</text><text x={104} y={184}>-12h</text><text x={166} y={184}>-6h</text>
-              <text x={228} y={184}>-3h</text><text x={278} y={184}>-1h</text><text x={310} y={184}>Now</text>
+            <circle cx={308} cy={(159 - (lLast - llo) / (lhi - llo || 1) * 141).toFixed(1) as unknown as number} r={4} fill={ap} />
+            <g fontFamily="IBM Plex Mono" fontSize={12} fill="#9fb0c6" textAnchor="middle" fontWeight={600}>
+              <text x={42} y={188}>-24h</text><text x={104} y={188}>-12h</text><text x={166} y={188}>-6h</text>
+              <text x={228} y={188}>-3h</text><text x={278} y={188}>-1h</text><text x={310} y={188}>Now</text>
             </g>
           </svg>
         </div>
@@ -1378,16 +1378,16 @@ function LineTotalStack({ md }: { md: EventDetail }) {
             <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
               {[0,1,2,3].map(i => { const y = 18 + i * 47; return <line key={i} x1={38} y1={y} x2={326} y2={y} /> })}
             </g>
-            <g fontFamily="IBM Plex Mono" fontSize={9} fill="#7b8ba3" textAnchor="end" fontWeight={500}>
-              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = thi - (thi - tlo) * i / 3; return <text key={i} x={34} y={y + 3}>{v.toFixed(1)}</text> })}
+            <g fontFamily="IBM Plex Mono" fontSize={13} fill="#c3d0e2" textAnchor="end" fontWeight={600}>
+              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = thi - (thi - tlo) * i / 3; return <text key={i} x={34} y={y + 4}>{v.toFixed(1)}</text> })}
             </g>
             <polygon points={poly(tS, 42, 308, 18, 159, tlo, thi) + ' 308,163 42,163'} fill="url(#mck-gt2)" />
-            <polyline points={poly(tS, 42, 308, 18, 159, tlo, thi)} fill="none" stroke="#25d97b" strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            <polyline points={poly(tS, 42, 308, 18, 159, tlo, thi)} fill="none" stroke="#25d97b" strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
             {dotList(tS, 42, 308, 18, 159, tlo, thi, '#25d97b')}
-            <circle cx={308} cy={(159 - (tLast - tlo) / (thi - tlo || 1) * 141).toFixed(1) as unknown as number} r={3.5} fill="#25d97b" />
-            <g fontFamily="IBM Plex Mono" fontSize={9} fill="#7b8ba3" textAnchor="middle" fontWeight={500}>
-              <text x={42} y={184}>-24h</text><text x={104} y={184}>-12h</text><text x={166} y={184}>-6h</text>
-              <text x={228} y={184}>-3h</text><text x={278} y={184}>-1h</text><text x={310} y={184}>Now</text>
+            <circle cx={308} cy={(159 - (tLast - tlo) / (thi - tlo || 1) * 141).toFixed(1) as unknown as number} r={4} fill="#25d97b" />
+            <g fontFamily="IBM Plex Mono" fontSize={12} fill="#9fb0c6" textAnchor="middle" fontWeight={600}>
+              <text x={42} y={188}>-24h</text><text x={104} y={188}>-12h</text><text x={166} y={188}>-6h</text>
+              <text x={228} y={188}>-3h</text><text x={278} y={188}>-1h</text><text x={310} y={188}>Now</text>
             </g>
           </svg>
         </div>
