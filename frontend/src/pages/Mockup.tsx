@@ -317,6 +317,9 @@ const CSS = `
 .mck-root .mcol>.p{flex:none}
 /* Right column: Line + Total grow to fill space; H2H + Recent Form stay compact and bottom-attached */
 .mck-root .mcol-r>#pLineMv,.mck-root .mcol-r>#pTotMv{flex:1 1 0;min-height:200px}
+/* Left / middle columns: OddsComparison, WinProbMovement, Matchup grow to fill matching height */
+.mck-root .mcol>#pOdds,.mck-root .mcol>#pNews,.mck-root .mcol>#pMove,.mck-root .mcol>#pMetrics{flex:1 1 auto}
+.mck-root .mcol>#pMove .pb{height:auto;min-height:260px;flex:1}
 .mck-root .stk{display:flex;flex-direction:column;gap:6px}
 .mck-root .stk>.p{flex:none}
 .mck-root .ch{display:block;width:100%;height:auto}
