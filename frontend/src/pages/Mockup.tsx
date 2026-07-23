@@ -309,7 +309,7 @@ const CSS = `
 .mck-root .empty{display:grid;place-items:center;width:100%;color:var(--mdim2);font-size:11px}
 
 .mck-root .row{display:grid;gap:6px}
-.mck-root .rh{grid-template-columns:1fr 286px}
+.mck-root .rh{grid-template-columns:1fr 380px}
 .mck-root .r3g{grid-template-columns:1fr 1fr 1fr}
 .mck-root .rm{grid-template-columns:1.06fr 1fr .84fr;align-items:stretch}
 .mck-root .rmega{grid-template-columns:1.06fr 1fr .84fr;align-items:stretch}
