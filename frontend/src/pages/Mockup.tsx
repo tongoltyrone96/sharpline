@@ -313,7 +313,7 @@ const CSS = `
 .mck-root .r3g{grid-template-columns:1fr 1fr 1fr}
 .mck-root .rm{grid-template-columns:1.06fr 1fr .84fr;align-items:stretch}
 .mck-root .stk{display:flex;flex-direction:column;gap:6px}
-.mck-root .stk>.p{flex:1}
+.mck-root .stk>.p{flex:none}
 .mck-root .ch{display:block;width:100%;height:auto}
 
 /* Movement chart with HTML axis labels (SVG only stretches the line) */
@@ -446,9 +446,9 @@ const CSS = `
 .mck-root .mtxrow .ml{font-size:10.5px;font-weight:600;color:#c3d0e2;text-align:center;white-space:nowrap}
 .mck-root .mtxrow .marr{font-size:14px;font-weight:800;text-align:center;line-height:1}
 /* Power Ranking */
-.mck-root .pw{display:flex !important;flex-direction:row !important;align-items:center;justify-content:space-between;padding:8px 20px !important;border-top:1px solid var(--mline)}
-.mck-root .pw .pwn{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:900;letter-spacing:-.02em;line-height:1}
-.mck-root .pw .pwx{font-size:10px;font-weight:800;letter-spacing:.14em;color:#c3d0e2}
+.mck-root .pw{display:flex !important;flex-direction:row !important;align-items:center;justify-content:space-between;padding:4px 16px !important;border-top:1px solid var(--mline)}
+.mck-root .pw .pwn{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:900;letter-spacing:-.02em;line-height:1}
+.mck-root .pw .pwx{font-size:9.5px;font-weight:800;letter-spacing:.14em;color:#c3d0e2}
 
 .mck-root .h2h{display:flex;border-radius:7px;overflow:hidden;flex:none;position:relative}
 .mck-root .h2h .s{flex:1;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:10px;letter-spacing:.06em;font-weight:800;color:#fff}
