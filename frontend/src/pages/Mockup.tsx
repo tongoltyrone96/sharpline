@@ -579,8 +579,14 @@ const CSS = `
   .mck-root .rbbk{grid-column:1/span 2;grid-row:2;font-size:10px}
   .mck-root .rbfair{grid-column:3;grid-row:2;font-size:9.5px}
   .mck-root .rbedge{display:none}
-  /* AI call badge — smaller on phone so it doesn't wrap the header */
-  .mck-root .aicall{font-size:8px;padding:2px 6px}
+  /* AI call badge — wrap onto its own full-width row so it's actually
+     readable on phones. Otherwise it gets squeezed to 8px and vanishes
+     visually next to the card title. */
+  .mck-root .ph{flex-wrap:wrap}
+  .mck-root .aicall{font-size:11px;padding:5px 10px;margin-left:0;margin-top:3px;flex-basis:100%;text-align:center;font-weight:900;letter-spacing:.06em}
+  /* Make OVER / UNDER labels under the total-points sparkline larger on
+     phone so the recommended side actually pops. */
+  .mck-root .tcou{font-size:11px !important;padding:0 6px !important}
 }
 
 /* Phone */
