@@ -305,7 +305,7 @@ const CSS = `
 
 .mck-root .row{display:grid;gap:6px;min-height:0}
 .mck-root .rh{grid-template-columns:1fr 286px;flex:0 0 118px}
-.mck-root .r3g{grid-template-columns:1fr 1fr 1fr;flex:0 0 72px}
+.mck-root .r3g{grid-template-columns:1fr 1fr 1fr;flex:0 0 138px}
 .mck-root .rm{grid-template-columns:1.06fr 1fr .84fr;flex:1 1 0}
 .mck-root .stk{display:flex;flex-direction:column;gap:6px;min-height:0}
 .mck-root .stk>.p{flex:1;min-height:0}
@@ -341,22 +341,25 @@ const CSS = `
 .mck-root .score .n{font-size:24px;font-weight:800;letter-spacing:-.03em}
 .mck-root .by{text-align:center;font-size:9.5px;color:var(--mdim)}
 
-.mck-root .wp{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:1}
-.mck-root .wp .pc{font-size:19px;font-weight:800;letter-spacing:-.02em}
-.mck-root .wp .nm{font-size:7px;letter-spacing:.1em;color:var(--mdim);font-weight:700}
-.mck-root .bar{height:4px;border-radius:3px;background:#1a2333;overflow:hidden;flex:none;margin-top:3px}
-.mck-root .bar i{display:block;height:100%;border-radius:3px}
-.mck-root .lc{display:flex;align-items:center;justify-content:space-between;gap:5px;flex:1}
-.mck-root .lc .v{font-size:19px;font-weight:800;letter-spacing:-.02em}
-.mck-root .lc .lb{font-size:7.5px;letter-spacing:.1em;color:var(--mdim);font-weight:700}
-.mck-root .mc{width:26px;height:26px;flex:none}
-.mck-root .cr2{display:flex;align-items:center;gap:6px;flex:none;margin-top:3px}
-.mck-root .cr2 .l{font-size:7px;letter-spacing:.1em;color:var(--mdim);font-weight:700;white-space:nowrap}
-.mck-root .cr2 .tk{flex:1;height:5px;background:#1a2333;border-radius:3px;overflow:hidden}
-.mck-root .cr2 .tk i{display:block;height:100%;background:linear-gradient(90deg,#0f8f4d,var(--mgreen));border-radius:3px}
-.mck-root .cr2 .n{font-size:9.5px;font-weight:700;color:var(--mgreen)}
-.mck-root .tc{display:flex;align-items:center;gap:9px;flex:1;min-height:0}
-.mck-root .tc .big{font-size:19px;font-weight:800;letter-spacing:-.02em;color:var(--mtxt)}
+.mck-root .wp{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:1;padding:2px 0}
+.mck-root .wp .pc{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.mck-root .wp .nm{font-size:8.5px;letter-spacing:.1em;color:var(--mdim);font-weight:700;margin-top:3px}
+.mck-root .bar{height:7px;border-radius:4px;background:#1a2333;overflow:hidden;flex:none;margin-top:8px;display:flex}
+.mck-root .bar i{display:block;height:100%}
+.mck-root .lc{display:flex;align-items:center;justify-content:space-between;gap:6px;flex:1;padding:4px 0}
+.mck-root .lc .v{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.mck-root .lc .lb{font-size:8.5px;letter-spacing:.11em;color:var(--mdim);font-weight:700;text-align:center}
+.mck-root .mc{width:36px;height:36px;flex:none}
+.mck-root .cr2{display:flex;align-items:center;gap:6px;flex:none;margin-top:8px}
+.mck-root .cr2 .l{font-size:8.5px;letter-spacing:.11em;color:var(--mdim);font-weight:700;white-space:nowrap}
+.mck-root .cr2 .tk{flex:1;height:7px;background:#1a2333;border-radius:4px;overflow:hidden}
+.mck-root .cr2 .tk i{display:block;height:100%;background:linear-gradient(90deg,#0f8f4d,var(--mgreen));border-radius:4px}
+.mck-root .cr2 .n{font-size:11px;font-weight:800;color:var(--mgreen);font-family:'IBM Plex Mono',monospace}
+.mck-root .tc{display:flex;align-items:stretch;gap:10px;flex:1;min-height:0;min-width:0}
+.mck-root .tc .tcleft{display:flex;flex-direction:column;justify-content:center;flex:none}
+.mck-root .tc .big{font-size:34px;font-weight:800;letter-spacing:-.03em;color:var(--mtxt);line-height:1}
+.mck-root .tc .tcchart{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.mck-root .tcou{display:flex;justify-content:space-between;font-size:8.5px;letter-spacing:.11em;color:var(--mdim);font-weight:800;margin-top:2px}
 
 .mck-root .tabs{display:flex;gap:3px;margin-left:auto}
 .mck-root .tab{font-size:8px;font-weight:700;letter-spacing:.04em;padding:4px 7px;border-radius:5px;color:var(--mdim);cursor:pointer;border:1px solid transparent;background:none;font-family:inherit;white-space:nowrap}
@@ -980,22 +983,25 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
         <div className="ph"><span className="pt">AI Win Probability</span><span className="q">?</span></div>
         <div className="pb">
           <div className="wp">
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', flex: 1 }}>
               <div className="pc mono" style={{ color: hp }}>{pH}%</div>
               <div className="nm">{home.abbr}</div>
             </div>
-            <svg width={46} height={46} viewBox="0 0 100 100">
-              <circle cx={50} cy={50} r={38} stroke={hp} strokeWidth={13} fill="none" opacity={0.6} />
+            <svg width={62} height={62} viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
+              <circle cx={50} cy={50} r={38} stroke={hp} strokeWidth={13} fill="none" opacity={0.7} />
               <circle cx={50} cy={50} r={38} stroke={ap} strokeWidth={13} fill="none" strokeLinecap="round"
                       strokeDasharray={`${(pA * 2.388).toFixed(0)} 239`} transform="rotate(-90 50 50)" />
-              <text x={50} y={57} textAnchor="middle" fontFamily="Inter" fontSize={22} fontWeight={800} fill="#e7eef8">{pA}%</text>
+              <text x={50} y={58} textAnchor="middle" fontFamily="Inter" fontSize={22} fontWeight={800} fill="#e7eef8">{pA}%</text>
             </svg>
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', flex: 1 }}>
               <div className="pc mono" style={{ color: ap }}>{pA}%</div>
               <div className="nm">{away.abbr}</div>
             </div>
           </div>
-          <div className="bar"><i style={{ width: `${pH}%`, background: hp }} /></div>
+          <div className="bar">
+            <i style={{ width: `${pH}%`, background: hp }} />
+            <i style={{ width: `${pA}%`, background: ap }} />
+          </div>
         </div>
       </div>
 
@@ -1027,43 +1033,56 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
             <span style={{
               marginLeft: 'auto', fontSize: 8.5, fontWeight: 800, letterSpacing: '.08em',
               color: ouColor, background: `${ouColor}22`, border: `1px solid ${ouColor}55`,
-              padding: '3px 7px', borderRadius: 5, whiteSpace: 'nowrap',
+              padding: '3px 8px', borderRadius: 5, whiteSpace: 'nowrap',
             }}>{ouLabel}</span>
           )}
         </div>
         <div className="pb">
           <div className="tc">
-            <div>
+            <div className="tcleft">
               <div className="big mono">{tot != null ? tot.toFixed(1) : '–'}</div>
-              <div style={{ fontSize: 7, letterSpacing: '.1em', color: '#7b8ba3', fontWeight: 700 }}>
-                {avgLine != null ? `LINE ${avgLine.toFixed(1)}` : 'OVER / UNDER'}
-              </div>
+              {avgLine != null && (
+                <div style={{ fontSize: 8.5, letterSpacing: '.08em', color: '#7b8ba3', fontWeight: 700, marginTop: 4 }}>
+                  LINE {avgLine.toFixed(1)}
+                </div>
+              )}
             </div>
-            <svg className="ch" viewBox="0 0 240 42" preserveAspectRatio="xMidYMid meet">
-              <defs>
-                <linearGradient id="mck-gt" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#25d97b" stopOpacity=".4" />
-                  <stop offset="100%" stopColor="#25d97b" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              {(() => {
-                const base = tot ?? 40
-                const pts = Array.from({ length: 13 }, (_, i) => base - 3 + (1 - Math.pow(1 - i / 12, 1.7)) * 3 + Math.sin(i * 1.9) * 0.35)
-                const w = 240, h = 42, xL = 6, xR = 232, yT = 6, yB = 34
-                const min = Math.min(...pts) - 0.5, max = Math.max(...pts) + 0.5
-                const poly = pts.map((v, i) => {
-                  const x = xL + (xR - xL) * i / (pts.length - 1)
-                  const y = yB - (v - min) / (max - min) * (yB - yT)
-                  return `${x.toFixed(1)},${y.toFixed(1)}`
-                }).join(' ')
-                const last = pts[pts.length - 1]
-                const ly = yB - (last - min) / (max - min) * (yB - yT)
-                return <>
-                  <polyline points={poly} fill="none" stroke="#25d97b" strokeWidth={1.7} />
-                  <circle cx={xR} cy={ly.toFixed(1) as unknown as number} r={2.6} fill="#25d97b" />
-                </>
-              })()}
-            </svg>
+            <div className="tcchart">
+              <svg viewBox="0 0 240 60" preserveAspectRatio="none" style={{ width: '100%', height: '100%', maxHeight: 60 }}>
+                <defs>
+                  <linearGradient id="mck-gt" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#25d97b" stopOpacity=".45" />
+                    <stop offset="100%" stopColor="#25d97b" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                {(() => {
+                  const base = tot ?? 40
+                  const pts = Array.from({ length: 15 }, (_, i) => {
+                    const t = i / 14
+                    return base - 2.5 + (1 - Math.pow(1 - t, 1.6)) * 2.5 + Math.sin(i * 1.6) * 0.5
+                  })
+                  const w = 240, h = 60, xL = 4, xR = 236, yT = 6, yB = 50
+                  const min = Math.min(...pts) - 0.6, max = Math.max(...pts) + 0.6
+                  const coords = pts.map((v, i) => {
+                    const x = xL + (xR - xL) * i / (pts.length - 1)
+                    const y = yB - (v - min) / (max - min) * (yB - yT)
+                    return [x, y] as [number, number]
+                  })
+                  const linePoints = coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
+                  const areaPoints = `${xL},${yB} ${linePoints} ${xR},${yB}`
+                  const lastY = coords[coords.length - 1][1]
+                  return <>
+                    <polygon points={areaPoints} fill="url(#mck-gt)" />
+                    <polyline points={linePoints} fill="none" stroke="#25d97b" strokeWidth={1.8} vectorEffect="non-scaling-stroke" />
+                    {coords.map(([x, y], i) => (
+                      <circle key={i} cx={x} cy={+y.toFixed(1)} r={1.6} fill="#0a0f19" stroke="#25d97b" strokeWidth={1.2} />
+                    ))}
+                    <circle cx={xR} cy={+lastY.toFixed(1)} r={3} fill="#25d97b" />
+                  </>
+                })()}
+              </svg>
+              <div className="tcou"><span>OVER</span><span>UNDER</span></div>
+            </div>
           </div>
           <div className="cr2">
             <span className="l">TOTAL CONF</span>
