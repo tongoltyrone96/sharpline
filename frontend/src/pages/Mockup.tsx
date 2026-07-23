@@ -496,35 +496,61 @@ const CSS = `
 
 @media(max-width:1240px){ .mck-root .rm{grid-template-columns:1fr 1fr} .mck-root .rh{grid-template-columns:1fr} .mck-root .srch{width:104px} }
 
-/* Tablet-ish */
+/* Tablet-ish + Phone (≤900px) — sidebar hidden, single column stack */
 @media(max-width:900px){
-  .mck-root{flex-direction:column;padding:7px;height:auto;min-height:100vh;overflow:visible}
-  .mck-root main{overflow:visible}
-  .mck-root .side{width:auto;flex-direction:row;align-items:center;overflow-x:auto;overflow-y:hidden;padding:6px 8px;gap:6px}
-  .mck-root .brand{padding:0 6px 0 0;border-right:1px solid var(--mline);margin-right:4px}
-  .mck-root .nav{flex-direction:row;flex:1;min-width:0}
-  .mck-root .navsep{display:none}
-  .mck-root .nav a{border-left:0;border-bottom:2px solid transparent;white-space:nowrap;padding:6px 8px}
-  .mck-root .nav a.on{border-left:0;border-bottom-color:var(--mblue);background:transparent}
-  .mck-root .cc{display:none}
+  /* Root: column stack, no viewport-height traps */
+  .mck-root{flex-direction:column;padding:6px;gap:6px;height:auto;min-height:auto;overflow-x:hidden;align-items:stretch}
+  /* Sidebar completely hidden on phone (user request) */
+  .mck-root .side{display:none !important}
+  .mck-root main{width:100%;min-width:0;overflow:visible;display:flex;flex-direction:column;gap:6px}
+
+  /* Every grid row collapses to one column */
+  .mck-root .row,.mck-root .rh,.mck-root .r3g,.mck-root .rm,.mck-root .rmega{
+    display:grid;grid-template-columns:1fr !important;gap:6px;
+  }
+
+  /* mcol stacks like a normal flex column; kill all flex:1 growth on phone
+     so panels take their natural content height */
+  .mck-root .mcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .mck-root .mcol>.p,
+  .mck-root .mcol>#pOdds,
+  .mck-root .mcol>#pNews,
+  .mck-root .mcol>#pMove,
+  .mck-root .mcol>#pMetrics,
+  .mck-root .mcol-r>#pLineMv,
+  .mck-root .mcol-r>#pTotMv{flex:none !important}
+
+  /* Panel bodies use fixed but modest heights on phone — charts stay readable
+     without pushing anything off screen */
+  .mck-root #pMove .pb,
+  .mck-root .mcol>#pMove .pb{height:240px !important;min-height:240px !important;flex:none !important}
+  .mck-root #pLineMv .pb,
+  .mck-root #pTotMv .pb{height:160px !important;min-height:160px !important;flex:none !important}
+
+  /* Stacks used by other components stay column too */
+  .mck-root .stk{flex-direction:column}
+
+  /* Top bar wraps rather than overflowing */
   .mck-root .top{flex-wrap:wrap;gap:6px}
   .mck-root .top>div:first-child{flex:1;min-width:150px}
   .mck-root .ctl{margin-left:0;flex-wrap:wrap;width:100%}
   .mck-root .srch{width:100%;min-width:120px}
   .mck-root .srchw{flex:1}
   .mck-root .stripw{flex:none;height:98px}
-  .mck-root .row,.mck-root .rh,.mck-root .r3g,.mck-root .rm{grid-template-columns:1fr!important;flex:none!important}
-  .mck-root .stk{flex-direction:column}
+
+  /* Hero: teams stack, meta between */
   .mck-root .hero{grid-template-columns:1fr}
   .mck-root .st,.mck-root .st.aw{flex-direction:column;text-align:center;gap:6px;padding:12px}
   .mck-root .st.aw{padding-top:0}
   .mck-root .st.aw .tf{justify-content:center}
   .mck-root .hmid{padding:10px 0;border-top:1px solid var(--msoft);border-bottom:1px solid var(--msoft)}
+
+  /* Team News lineups: keep side-by-side on tablet, stack on phone (600px query) */
   .mck-root .lu{grid-template-columns:1fr 1fr}
+
+  /* Bottom summary bar stacks */
   .mck-root .bottom{grid-template-columns:1fr;gap:10px}
   .mck-root .bc,.mck-root .bc:first-child,.mck-root .bc:last-child{justify-content:center;flex-wrap:wrap}
-  .mck-root .p{min-height:170px}
-  .mck-root .p svg.ch{min-height:150px}
 }
 
 /* Phone */
