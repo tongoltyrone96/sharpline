@@ -317,6 +317,17 @@ const CSS = `
 .mck-root .stk>.p{flex:1;min-height:0}
 .mck-root .ch{display:block;width:100%;height:auto}
 
+/* Movement chart with HTML axis labels (SVG only stretches the line) */
+.mck-root .chg{display:grid;grid-template-columns:38px 1fr 34px;grid-template-rows:1fr 16px;column-gap:6px;row-gap:4px;height:100%;min-height:0;padding:2px 0 2px 2px}
+.mck-root .chg-yaxis{grid-column:1;grid-row:1;display:flex;flex-direction:column;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#c3d0e2;text-align:right;padding-right:2px;line-height:1}
+.mck-root .chg-plot{grid-column:2/span 2;grid-row:1;position:relative;min-height:0}
+.mck-root .chg-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.mck-root .chg-dot{position:absolute;right:32px;width:8px;height:8px;border-radius:50%;transform:translate(50%,-50%);box-shadow:0 0 0 2px #0d1320}
+.mck-root .chg-end{position:absolute;right:0;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:800;line-height:1;pointer-events:none}
+.mck-root .chg-xaxis{grid-column:2/span 2;grid-row:2;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#9fb0c6;padding:0 2px;line-height:1}
+.mck-root #pMove .pb{min-height:220px}
+.mck-root .stk .pb{min-height:100px}
+
 .mck-root .hero{border-radius:var(--mr);border:1px solid var(--mline);overflow:hidden;display:grid;grid-template-columns:1fr 170px 1fr;align-items:center}
 .mck-root .st{display:flex;align-items:center;gap:14px;padding:10px 18px}
 .mck-root .st.aw{flex-direction:row-reverse;text-align:right}
@@ -1290,6 +1301,11 @@ function WinProbMovement({ md }: { md: EventDetail }) {
   const hi = Math.min(100, Math.max(...hS, ...aS) + 10)
   const hLast = hS[hS.length - 1], aLast = aS[aS.length - 1]
 
+  const yPct = (v: number) => (1 - (v - lo) / (hi - lo || 1)) * 100
+  const pts = (vals: number[]) => vals.map((v, i) => `${(i / (vals.length - 1) * 100).toFixed(2)},${yPct(v).toFixed(2)}`).join(' ')
+  const yLabels = [0, 1, 2, 3, 4].map(i => Math.round(hi - (hi - lo) * i / 4))
+  const xLabels = ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
+
   return (
     <div className="p" id="pMove">
       <div className="ph"><span className="pt">Win Probability Movement</span></div>
@@ -1298,26 +1314,27 @@ function WinProbMovement({ md }: { md: EventDetail }) {
         <span><i className="key" style={{ background: ap }} />{away.abbr}</span>
       </div>
       <div className="pb">
-        <svg className="ch" viewBox="0 0 360 340" preserveAspectRatio="xMidYMid meet">
-          <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
-            {[0,1,2,3,4].map(i => { const y = 30 + i * 62.5; return <line key={i} x1={34} y1={y} x2={326} y2={y} /> })}
-          </g>
-          <g fontFamily="IBM Plex Mono" fontSize={15} fill="#c3d0e2" textAnchor="end" fontWeight={600}>
-            {[0,1,2,3,4].map(i => { const y = 30 + i * 62.5; const v = Math.round(hi - (hi - lo) * i / 4); return <text key={i} x={30} y={y + 5}>{v}%</text> })}
-          </g>
-          <polyline points={poly(hS, 40, 318, 30, 280, lo, hi)} fill="none" stroke={hp} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-          <polyline points={poly(aS, 40, 318, 30, 280, lo, hi)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-          {dotList(hS, 40, 318, 30, 280, lo, hi, hp)}
-          {dotList(aS, 40, 318, 30, 280, lo, hi, ap)}
-          <circle cx={318} cy={(280 - (hLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={5} fill={hp} />
-          <circle cx={318} cy={(280 - (aLast - lo) / (hi - lo || 1) * 250).toFixed(1) as unknown as number} r={5} fill={ap} />
-          <text x={354} y={(280 - (hLast - lo) / (hi - lo || 1) * 250 + 6).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={17} fontWeight={800} fill={hp} textAnchor="end">{Math.round(hLast)}%</text>
-          <text x={354} y={(280 - (aLast - lo) / (hi - lo || 1) * 250 + 6).toFixed(1) as unknown as number} fontFamily="IBM Plex Mono" fontSize={17} fontWeight={800} fill={ap} textAnchor="end">{Math.round(aLast)}%</text>
-          <g fontFamily="IBM Plex Mono" fontSize={13} fill="#9fb0c6" textAnchor="middle" fontWeight={600}>
-            <text x={40}  y={315}>-24h</text><text x={110} y={315}>-12h</text><text x={175} y={315}>-6h</text>
-            <text x={240} y={315}>-3h</text><text x={285} y={315}>-1h</text><text x={318} y={315}>Now</text>
-          </g>
-        </svg>
+        <div className="chg">
+          <div className="chg-yaxis">
+            {yLabels.map((v, i) => <span key={i}>{v}%</span>)}
+          </div>
+          <div className="chg-plot">
+            <svg className="chg-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
+                {[0,25,50,75,100].map(y => <line key={y} x1={0} y1={y} x2={100} y2={y} />)}
+              </g>
+              <polyline points={pts(hS)} fill="none" stroke={hp} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+              <polyline points={pts(aS)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            </svg>
+            <span className="chg-dot" style={{ top: `${yPct(hLast)}%`, background: hp }} />
+            <span className="chg-dot" style={{ top: `${yPct(aLast)}%`, background: ap }} />
+            <span className="chg-end" style={{ top: `${yPct(hLast)}%`, color: hp }}>{Math.round(hLast)}%</span>
+            <span className="chg-end" style={{ top: `${yPct(aLast)}%`, color: ap }}>{Math.round(aLast)}%</span>
+          </div>
+          <div className="chg-xaxis">
+            {xLabels.map((l, i) => <span key={i}>{l}</span>)}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -1337,53 +1354,67 @@ function LineTotalStack({ md }: { md: EventDetail }) {
   const tlo = Math.min(...tS) - 2, thi = Math.max(...tS) + 2
   const tLast = tS[tS.length - 1]
 
+  const xLabels = ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
+
+  const lYPct = (v: number) => (1 - (v - llo) / (lhi - llo || 1)) * 100
+  const lPts = lS.map((v, i) => `${(i / (lS.length - 1) * 100).toFixed(2)},${lYPct(v).toFixed(2)}`).join(' ')
+  const lYLabels = [0, 1, 2, 3].map(i => (lhi - (lhi - llo) * i / 3).toFixed(1))
+
+  const tYPct = (v: number) => (1 - (v - tlo) / (thi - tlo || 1)) * 100
+  const tPts = tS.map((v, i) => `${(i / (tS.length - 1) * 100).toFixed(2)},${tYPct(v).toFixed(2)}`).join(' ')
+  const tYLabels = [0, 1, 2, 3].map(i => (thi - (thi - tlo) * i / 3).toFixed(1))
+
   return (
     <div className="stk">
       <div className="p">
         <div className="ph"><span className="pt">Line Movement</span><span className="hv mono" style={{ color: ap }}>{sgn(mu)}</span></div>
         <div className="pb">
-          <svg className="ch" viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet">
-            <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
-              {[0,1,2,3].map(i => { const y = 18 + i * 47; return <line key={i} x1={38} y1={y} x2={326} y2={y} /> })}
-            </g>
-            <g fontFamily="IBM Plex Mono" fontSize={13} fill="#c3d0e2" textAnchor="end" fontWeight={600}>
-              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = lhi - (lhi - llo) * i / 3; return <text key={i} x={34} y={y + 4}>{v.toFixed(1)}</text> })}
-            </g>
-            <polyline points={poly(lS, 42, 308, 18, 159, llo, lhi)} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-            {dotList(lS, 42, 308, 18, 159, llo, lhi, ap)}
-            <circle cx={308} cy={(159 - (lLast - llo) / (lhi - llo || 1) * 141).toFixed(1) as unknown as number} r={4} fill={ap} />
-            <g fontFamily="IBM Plex Mono" fontSize={12} fill="#9fb0c6" textAnchor="middle" fontWeight={600}>
-              <text x={42} y={188}>-24h</text><text x={104} y={188}>-12h</text><text x={166} y={188}>-6h</text>
-              <text x={228} y={188}>-3h</text><text x={278} y={188}>-1h</text><text x={310} y={188}>Now</text>
-            </g>
-          </svg>
+          <div className="chg">
+            <div className="chg-yaxis">
+              {lYLabels.map((v, i) => <span key={i}>{v}</span>)}
+            </div>
+            <div className="chg-plot">
+              <svg className="chg-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
+                  {[0,33,66,100].map(y => <line key={y} x1={0} y1={y} x2={100} y2={y} />)}
+                </g>
+                <polyline points={lPts} fill="none" stroke={ap} strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+              </svg>
+              <span className="chg-dot" style={{ top: `${lYPct(lLast)}%`, background: ap }} />
+            </div>
+            <div className="chg-xaxis">
+              {xLabels.map((l, i) => <span key={i}>{l}</span>)}
+            </div>
+          </div>
         </div>
       </div>
       <div className="p">
         <div className="ph"><span className="pt">Total Points Movement</span><span className="hv mono" style={{ color: '#25d97b' }}>{tot.toFixed(1)}</span></div>
         <div className="pb">
-          <svg className="ch" viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <linearGradient id="mck-gt2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#25d97b" stopOpacity=".3" />
-                <stop offset="100%" stopColor="#25d97b" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
-              {[0,1,2,3].map(i => { const y = 18 + i * 47; return <line key={i} x1={38} y1={y} x2={326} y2={y} /> })}
-            </g>
-            <g fontFamily="IBM Plex Mono" fontSize={13} fill="#c3d0e2" textAnchor="end" fontWeight={600}>
-              {[0,1,2,3].map(i => { const y = 18 + i * 47; const v = thi - (thi - tlo) * i / 3; return <text key={i} x={34} y={y + 4}>{v.toFixed(1)}</text> })}
-            </g>
-            <polygon points={poly(tS, 42, 308, 18, 159, tlo, thi) + ' 308,163 42,163'} fill="url(#mck-gt2)" />
-            <polyline points={poly(tS, 42, 308, 18, 159, tlo, thi)} fill="none" stroke="#25d97b" strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-            {dotList(tS, 42, 308, 18, 159, tlo, thi, '#25d97b')}
-            <circle cx={308} cy={(159 - (tLast - tlo) / (thi - tlo || 1) * 141).toFixed(1) as unknown as number} r={4} fill="#25d97b" />
-            <g fontFamily="IBM Plex Mono" fontSize={12} fill="#9fb0c6" textAnchor="middle" fontWeight={600}>
-              <text x={42} y={188}>-24h</text><text x={104} y={188}>-12h</text><text x={166} y={188}>-6h</text>
-              <text x={228} y={188}>-3h</text><text x={278} y={188}>-1h</text><text x={310} y={188}>Now</text>
-            </g>
-          </svg>
+          <div className="chg">
+            <div className="chg-yaxis">
+              {tYLabels.map((v, i) => <span key={i}>{v}</span>)}
+            </div>
+            <div className="chg-plot">
+              <svg className="chg-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="mck-gt2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#25d97b" stopOpacity=".3" />
+                    <stop offset="100%" stopColor="#25d97b" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
+                  {[0,33,66,100].map(y => <line key={y} x1={0} y1={y} x2={100} y2={y} />)}
+                </g>
+                <polygon points={`${tPts} 100,100 0,100`} fill="url(#mck-gt2)" />
+                <polyline points={tPts} fill="none" stroke="#25d97b" strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+              </svg>
+              <span className="chg-dot" style={{ top: `${tYPct(tLast)}%`, background: '#25d97b' }} />
+            </div>
+            <div className="chg-xaxis">
+              {xLabels.map((l, i) => <span key={i}>{l}</span>)}
+            </div>
+          </div>
         </div>
       </div>
     </div>
