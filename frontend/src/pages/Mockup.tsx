@@ -236,7 +236,7 @@ const CSS = `
 .mck-root .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0}
 .mck-root .tblwrap table{min-width:100%}
 
-.mck-root .side{width:116px;flex:none;background:var(--mpanel);border:1px solid var(--mline);border-radius:var(--mr);display:flex;flex-direction:column;padding:8px 0 6px;overflow:hidden}
+.mck-root .side{width:116px;flex:none;background:var(--mpanel);border:1px solid var(--mline);border-radius:var(--mr);display:flex;flex-direction:column;padding:8px 0 6px;overflow:hidden;position:sticky;top:6px;align-self:flex-start;height:calc(100vh - 12px)}
 .mck-root .brand{display:grid;place-items:center;padding-bottom:6px}
 .mck-root .nav{display:flex;flex-direction:column}
 .mck-root .nav a{display:flex;align-items:center;gap:7px;padding:5px 10px;color:var(--mdim);font-size:10.5px;font-weight:500;border-left:2px solid transparent;cursor:pointer}
