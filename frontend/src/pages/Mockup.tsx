@@ -1202,19 +1202,31 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
             <div className="v mono" style={{ color: ap }}>{sgn(-mu)}</div>
             <Crest primary={ap} secondary={darken(ap)} abbr={away.abbr} teamName={away.name} className="mc" />
           </div>
-          <div className="leanbar">
-            <span className="side" style={{ color: hp }}>
-              <b>{homeCoverPct != null ? Math.round(homeCoverPct) : 50}%</b> {home.abbr}
+          <div className="leanbar" style={{
+            display: 'grid', gridTemplateColumns: 'auto minmax(60px,1fr) auto',
+            alignItems: 'center', gap: 8, marginTop: 10, width: '100%',
+          }}>
+            <span style={{
+              color: hp, fontSize: 12, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace',
+              whiteSpace: 'nowrap', textShadow: '0 1px 2px rgba(0,0,0,.7)', filter: 'brightness(1.4)',
+            }}>
+              <b style={{ fontSize: 14, fontWeight: 900 }}>{homeCoverPct != null ? Math.round(homeCoverPct) : 50}%</b> {home.abbr}
             </span>
-            <div className="track">
+            <div style={{
+              display: 'flex', height: 12, background: '#1a2333', borderRadius: 6,
+              overflow: 'hidden', position: 'relative', minWidth: 0,
+            }}>
               {homeCoverPct != null ? <>
-                <div className="fill" style={{ width: `${homeCoverPct}%`, background: `linear-gradient(90deg, ${darken(hp, 0.6)}, ${hp})` }} />
-                <div className="fill" style={{ width: `${100 - homeCoverPct}%`, background: `linear-gradient(90deg, ${ap}, ${darken(ap, 0.6)})` }} />
-                <div className="tick" />
-              </> : <div className="empty">no line data</div>}
+                <div style={{ width: `${homeCoverPct}%`, background: `linear-gradient(90deg, ${darken(hp, 0.6)}, ${hp})`, height: '100%' }} />
+                <div style={{ width: `${100 - homeCoverPct}%`, background: `linear-gradient(90deg, ${ap}, ${darken(ap, 0.6)})`, height: '100%' }} />
+                <div style={{ position: 'absolute', top: -2, bottom: -2, left: '50%', width: 2, background: 'rgba(255,255,255,.6)', transform: 'translateX(-50%)', zIndex: 1, borderRadius: 1 }} />
+              </> : <div style={{ width: '100%', textAlign: 'center', fontSize: 8, color: '#55647a', lineHeight: '12px' }}>no line data</div>}
             </div>
-            <span className="side r" style={{ color: ap }}>
-              {away.abbr} <b>{homeCoverPct != null ? Math.round(100 - homeCoverPct) : 50}%</b>
+            <span style={{
+              color: ap, fontSize: 12, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace',
+              whiteSpace: 'nowrap', textAlign: 'right', textShadow: '0 1px 2px rgba(0,0,0,.7)', filter: 'brightness(1.4)',
+            }}>
+              {away.abbr} <b style={{ fontSize: 14, fontWeight: 900 }}>{homeCoverPct != null ? Math.round(100 - homeCoverPct) : 50}%</b>
             </span>
           </div>
         </div>
@@ -1271,19 +1283,31 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
               })()}
             </div>
           </div>
-          <div className="leanbar">
-            <span className="side" style={{ color: '#25d97b' }}>
-              <b>{overPct != null ? Math.round(overPct) : 50}%</b> ▲ OVER
+          <div className="leanbar" style={{
+            display: 'grid', gridTemplateColumns: 'auto minmax(60px,1fr) auto',
+            alignItems: 'center', gap: 8, marginTop: 10, width: '100%',
+          }}>
+            <span style={{
+              color: '#25d97b', fontSize: 12, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace',
+              whiteSpace: 'nowrap', textShadow: '0 1px 2px rgba(0,0,0,.7)',
+            }}>
+              <b style={{ fontSize: 14, fontWeight: 900 }}>{overPct != null ? Math.round(overPct) : 50}%</b> ▲ OVER
             </span>
-            <div className="track">
+            <div style={{
+              display: 'flex', height: 12, background: '#1a2333', borderRadius: 6,
+              overflow: 'hidden', position: 'relative', minWidth: 0,
+            }}>
               {overPct != null ? <>
-                <div className="fill" style={{ width: `${overPct}%`, background: 'linear-gradient(90deg, #0f8f4d, #25d97b)' }} />
-                <div className="fill" style={{ width: `${100 - overPct}%`, background: 'linear-gradient(90deg, #f4526a, #c02a44)' }} />
-                <div className="tick" />
-              </> : <div className="empty">no total data</div>}
+                <div style={{ width: `${overPct}%`, background: 'linear-gradient(90deg, #0f8f4d, #25d97b)', height: '100%' }} />
+                <div style={{ width: `${100 - overPct}%`, background: 'linear-gradient(90deg, #f4526a, #c02a44)', height: '100%' }} />
+                <div style={{ position: 'absolute', top: -2, bottom: -2, left: '50%', width: 2, background: 'rgba(255,255,255,.6)', transform: 'translateX(-50%)', zIndex: 1, borderRadius: 1 }} />
+              </> : <div style={{ width: '100%', textAlign: 'center', fontSize: 8, color: '#55647a', lineHeight: '12px' }}>no total data</div>}
             </div>
-            <span className="side r" style={{ color: '#f4526a' }}>
-              UNDER ▼ <b>{overPct != null ? Math.round(100 - overPct) : 50}%</b>
+            <span style={{
+              color: '#f4526a', fontSize: 12, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace',
+              whiteSpace: 'nowrap', textAlign: 'right', textShadow: '0 1px 2px rgba(0,0,0,.7)',
+            }}>
+              UNDER ▼ <b style={{ fontSize: 14, fontWeight: 900 }}>{overPct != null ? Math.round(100 - overPct) : 50}%</b>
             </span>
           </div>
         </div>
