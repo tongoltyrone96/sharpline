@@ -408,7 +408,7 @@ const CSS = `
 .mck-root .leanbar .track .fill{height:100%;transition:width .3s ease}
 .mck-root .leanbar .track .tick{position:absolute;top:-2px;bottom:-2px;left:50%;width:2px;background:rgba(255,255,255,.55);transform:translateX(-50%);z-index:1;border-radius:1px}
 .mck-root .leanbar .track .empty{width:100%;text-align:center;font-size:8px;font-weight:700;color:var(--mdim2);letter-spacing:.09em;line-height:10px;font-family:'IBM Plex Mono',monospace}
-.mck-root .tc{display:flex;align-items:stretch;gap:10px;flex:1;min-width:0}
+.mck-root .tc{display:flex;align-items:stretch;gap:10px;flex:none;min-width:0}
 .mck-root .tc .tcleft{display:flex;flex-direction:column;justify-content:center;flex:none}
 .mck-root .tc .big{font-size:34px;font-weight:800;letter-spacing:-.03em;color:var(--mtxt);line-height:1}
 .mck-root .tc .tcchart{flex:1;min-width:0;position:relative;height:56px;align-self:center}
