@@ -1076,11 +1076,14 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
     .map(r => r.point as number)
   const avgLine = totalLines.length ? totalLines.reduce((s, v) => s + v, 0) / totalLines.length : null
 
-  // Directional lean: 50 = neutral (on the line), 100 = fully OVER, 0 = fully UNDER
+  // Directional lean: 50 = neutral (on the line), 100 = fully OVER, 0 = fully UNDER.
+  // Scale is aggressive on purpose (~2 point gap = full swing) because model
+  // projections often sit within a fraction of a point of the market line —
+  // client complained that everything was reading 50/50.
   let overPct: number | null = null
   if (tot != null && avgLine != null) {
     const gap = tot - avgLine
-    overPct = Math.max(5, Math.min(95, 50 + (gap / 6) * 50))
+    overPct = Math.max(5, Math.min(95, 50 + (gap / 2) * 50))
   }
 
   const homeSpreadPoints = (md.markets?.spreads ?? [])
@@ -1091,7 +1094,7 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
   let homeCoverPct: number | null = null
   if (avgHomeSpread != null) {
     const gap = mu - avgHomeSpread
-    homeCoverPct = Math.max(5, Math.min(95, 50 + (gap / 5) * 50))
+    homeCoverPct = Math.max(5, Math.min(95, 50 + (gap / 2) * 50))
   }
 
   // AI OVER/UNDER call for total points — pick best-value (book, line) combo
