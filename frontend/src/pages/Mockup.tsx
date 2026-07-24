@@ -401,10 +401,10 @@ const CSS = `
 
 /* Directional lean bar (LINE / TOTAL — replaces confidence bar) */
 .mck-root .leanbar{display:flex;align-items:center;gap:8px;flex:none;margin-top:10px}
-.mck-root .leanbar .side{font-size:10px;font-weight:700;letter-spacing:.05em;white-space:nowrap;font-family:'IBM Plex Mono',monospace;min-width:76px;text-align:left}
+.mck-root .leanbar .side{font-size:11px;font-weight:700;letter-spacing:.05em;white-space:nowrap;font-family:'IBM Plex Mono',monospace;min-width:82px;text-align:left}
 .mck-root .leanbar .side.r{text-align:right}
-.mck-root .leanbar .side b{font-weight:900;font-size:12px}
-.mck-root .leanbar .track{flex:1;display:flex;height:10px;background:#1a2333;border-radius:5px;overflow:hidden;position:relative}
+.mck-root .leanbar .side b{font-weight:900;font-size:13px}
+.mck-root .leanbar .track{flex:1;display:flex;height:12px;background:#1a2333;border-radius:6px;overflow:hidden;position:relative}
 .mck-root .leanbar .track .fill{height:100%;transition:width .3s ease}
 .mck-root .leanbar .track .tick{position:absolute;top:-2px;bottom:-2px;left:50%;width:2px;background:rgba(255,255,255,.55);transform:translateX(-50%);z-index:1;border-radius:1px}
 .mck-root .leanbar .track .empty{width:100%;text-align:center;font-size:8px;font-weight:700;color:var(--mdim2);letter-spacing:.09em;line-height:10px;font-family:'IBM Plex Mono',monospace}
@@ -597,11 +597,11 @@ const CSS = `
   /* Make OVER / UNDER labels under the total-points sparkline larger on
      phone so the recommended side actually pops. */
   .mck-root .tcou{font-size:11px !important;padding:0 6px !important}
-  /* Lean bar — compact on phone but still readable */
-  .mck-root .leanbar{gap:6px;margin-top:8px}
-  .mck-root .leanbar .side{font-size:9.5px;min-width:64px}
-  .mck-root .leanbar .side b{font-size:11px}
-  .mck-root .leanbar .track{height:9px}
+  /* Lean bar — bump sizes on phone so labels are actually readable */
+  .mck-root .leanbar{gap:6px;margin-top:10px;flex-wrap:wrap}
+  .mck-root .leanbar .side{font-size:11px;min-width:70px;letter-spacing:.04em}
+  .mck-root .leanbar .side b{font-size:13.5px;font-weight:900}
+  .mck-root .leanbar .track{height:11px}
 }
 
 /* Phone */
