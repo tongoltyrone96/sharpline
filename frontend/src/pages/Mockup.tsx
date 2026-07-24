@@ -231,6 +231,19 @@ const CSS = `
 .mck-root .q{width:11px;height:11px;border-radius:50%;border:1px solid var(--mline);color:var(--mdim2);font-size:7.5px;display:grid;place-items:center;flex:none}
 .mck-root .aicall{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:5px;border:1px solid;white-space:nowrap;text-transform:uppercase;font-family:'IBM Plex Mono',monospace}
 
+/* AI Confidence Picks strip */
+.mck-root .aiconf{background:linear-gradient(135deg,#0d1a2e,#0a0f19);border:1px solid #1e3556;border-radius:9px;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.mck-root .aiconf-hdr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mck-root .aiconf-badge{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;background:#25d97b;color:#04140f;font-size:9.5px;font-weight:900;letter-spacing:.04em}
+.mck-root .aiconf-title{font-size:11px;font-weight:800;letter-spacing:.12em;color:#e7eef8}
+.mck-root .aiconf-sub{font-size:9.5px;color:#7b8ba3;letter-spacing:.03em;font-weight:500}
+.mck-root .aiconf-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.mck-root .aiconf-item{background:var(--mpanel2);border:1px solid var(--mline);border-radius:7px;padding:9px 11px;display:flex;flex-direction:column;gap:3px}
+.mck-root .aiconf-mkt{font-size:8.5px;font-weight:800;letter-spacing:.13em;color:#7b8ba3}
+.mck-root .aiconf-pick{font-size:14px;font-weight:900;letter-spacing:.02em;display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace}
+.mck-root .aiconf-pick .tick{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:4px;background:currentColor;color:#04140f !important;font-size:12px;font-weight:900;flex:none;line-height:1}
+.mck-root .aiconf-detail{font-size:9.5px;color:#9fb0c6;font-family:'IBM Plex Mono',monospace;letter-spacing:.02em}
+
 /* AI Recommended Bets */
 .mck-root .recbets{display:flex;flex-direction:column;gap:5px;padding:2px 0}
 .mck-root .rbrow{display:grid;grid-template-columns:52px 1.4fr 60px 1.2fr 90px 60px;align-items:center;gap:10px;padding:8px 10px;background:var(--mpanel2);border:1px solid var(--mline);border-radius:6px;font-size:12px}
@@ -597,6 +610,12 @@ const CSS = `
   /* Make OVER / UNDER labels under the total-points sparkline larger on
      phone so the recommended side actually pops. */
   .mck-root .tcou{font-size:11px !important;padding:0 6px !important}
+  /* AI Confidence Picks strip — stack items on phone */
+  .mck-root .aiconf{padding:8px 10px}
+  .mck-root .aiconf-body{grid-template-columns:1fr;gap:6px}
+  .mck-root .aiconf-sub{display:none}
+  .mck-root .aiconf-item{padding:8px 10px}
+  .mck-root .aiconf-pick{font-size:13px}
   /* Lean bar — grid guarantees single-row layout on phone */
   .mck-root .leanbar{gap:6px !important;margin-top:12px !important;grid-template-columns:auto minmax(40px,1fr) auto !important}
   .mck-root .leanbar .side{font-size:11px !important;letter-spacing:.04em !important;text-shadow:0 1px 2px rgba(0,0,0,.7);filter:brightness(1.4)}
@@ -1998,7 +2017,102 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
 // Bottom status bar
 // ───────────────────────────────────────────────────────────────────────────
 // ───────────────────────────────────────────────────────────────────────────
-// AI Recommended Bets — ranked list across all markets
+// AI Confidence Picks — model's directional call across all 3 markets
+// (separate from value picks — this is what the AI THINKS will happen)
+// ───────────────────────────────────────────────────────────────────────────
+function AIConfidenceStrip({ md }: { md: EventDetail }) {
+  const m = md.model
+  if (!m) return null
+  const { home, away } = md.event
+  const hp = safeCol(home.primary_color, '#4da6ff')
+  const ap = safeCol(away.primary_color, '#8b5cf6')
+
+  // H2H directional pick
+  const pH = Math.round(m.home_win_prob * 100)
+  const pA = 100 - pH
+  const h2hFav = pH >= pA
+  const h2hAbbr = h2hFav ? home.abbr : away.abbr
+  const h2hColor = h2hFav ? hp : ap
+  const h2hProb = h2hFav ? pH : pA
+
+  // LINE directional pick
+  const mu = m.projected_margin ?? 0
+  const homeSpreadPoints = (md.markets?.spreads ?? [])
+    .filter(r => r.outcome === home.name && r.point != null)
+    .map(r => r.point as number)
+  const avgHomeSpread = homeSpreadPoints.length ? homeSpreadPoints.reduce((a, b) => a + b, 0) / homeSpreadPoints.length : null
+  let linePick: { abbr: string; color: string; detail: string } | null = null
+  if (avgHomeSpread != null) {
+    const homeCovers = mu > avgHomeSpread
+    linePick = {
+      abbr: homeCovers ? home.abbr : away.abbr,
+      color: homeCovers ? hp : ap,
+      detail: `model line ${sgn(homeCovers ? mu : -mu)} vs book ${sgn(homeCovers ? avgHomeSpread : -avgHomeSpread)}`,
+    }
+  } else {
+    linePick = {
+      abbr: mu >= 0 ? home.abbr : away.abbr,
+      color: mu >= 0 ? hp : ap,
+      detail: `model line ${sgn(mu >= 0 ? mu : -mu)}`,
+    }
+  }
+
+  // TOTAL directional pick
+  const tot = m.projected_total
+  const totalLines = (md.markets?.totals ?? [])
+    .filter(r => r.outcome.toLowerCase() === 'over' && r.point != null)
+    .map(r => r.point as number)
+  const avgLine = totalLines.length ? totalLines.reduce((s, v) => s + v, 0) / totalLines.length : null
+  let totalPick: { side: string; color: string; detail: string } | null = null
+  if (tot != null && avgLine != null) {
+    const gap = tot - avgLine
+    if (Math.abs(gap) < 0.25) {
+      totalPick = { side: 'ON THE LINE', color: '#7b8ba3', detail: `proj ${tot.toFixed(1)} = line ${avgLine.toFixed(1)}` }
+    } else if (gap > 0) {
+      totalPick = { side: 'OVER', color: '#25d97b', detail: `proj ${tot.toFixed(1)} > line ${avgLine.toFixed(1)}` }
+    } else {
+      totalPick = { side: 'UNDER', color: '#f4526a', detail: `proj ${tot.toFixed(1)} < line ${avgLine.toFixed(1)}` }
+    }
+  } else if (tot != null) {
+    totalPick = { side: `${tot.toFixed(1)}`, color: '#7b8ba3', detail: 'no book line to compare' }
+  }
+
+  return (
+    <div className="aiconf">
+      <div className="aiconf-hdr">
+        <span className="aiconf-badge">AI</span>
+        <span className="aiconf-title">AI CONFIDENCE PICKS</span>
+        <span className="aiconf-sub">Model's directional call across all 3 bet types — what the AI thinks will happen</span>
+      </div>
+      <div className="aiconf-body">
+        <div className="aiconf-item">
+          <div className="aiconf-mkt">HEAD TO HEAD</div>
+          <div className="aiconf-pick" style={{ color: h2hColor }}>
+            <span className="tick">✓</span> {h2hAbbr} to win
+          </div>
+          <div className="aiconf-detail">{h2hProb}% model probability</div>
+        </div>
+        <div className="aiconf-item">
+          <div className="aiconf-mkt">LINE</div>
+          <div className="aiconf-pick" style={{ color: linePick.color }}>
+            <span className="tick">✓</span> {linePick.abbr} covers
+          </div>
+          <div className="aiconf-detail">{linePick.detail}</div>
+        </div>
+        <div className="aiconf-item">
+          <div className="aiconf-mkt">TOTAL POINTS</div>
+          <div className="aiconf-pick" style={{ color: totalPick?.color ?? '#7b8ba3' }}>
+            <span className="tick">✓</span> {totalPick?.side ?? 'no data'}
+          </div>
+          <div className="aiconf-detail">{totalPick?.detail ?? '—'}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// AI Recommended Bets — ranked list across all markets (value-based)
 // ───────────────────────────────────────────────────────────────────────────
 function RecommendedBets({ md }: { md: EventDetail }) {
   const { home, away } = md.event
@@ -2251,6 +2365,7 @@ function MockupInner() {
                 <Prediction md={detail} />
               </div>
               <ThreeMetrics md={detail} />
+              <AIConfidenceStrip md={detail} />
               <div className="row rmega">
                 <div className="mcol">
                   <OddsComparison md={detail} />
