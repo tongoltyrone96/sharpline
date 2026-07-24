@@ -1186,38 +1186,30 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
     homeCoverPct = Math.max(5, Math.min(95, 50 + (gap / 2) * 50))
   }
 
-  // AI OVER/UNDER call for total points — pick best-value (book, line) combo
+  // AI OVER/UNDER call for total points — direction FIRST (via totalDirection),
+  // then find the best-edge book on THAT side so the badge never contradicts
+  // the AI CONFIDENCE PICKS strip below.
   let ouCall: { label: string; color: string; bg: string } | null = null
-  if (tot != null) {
+  if (tot != null && avgLine != null) {
+    const dir = totalDirection(tot, avgLine, md.weather, home.abbr, away.abbr)
+    const col = dir.side === 'OVER' ? '#25d97b' : '#f4526a'
+    // Look for a bookmaker offering positive edge on the SAME side the AI likes
     const totalRows = md.markets?.totals ?? []
-    interface OuPick { side: 'OVER' | 'UNDER'; line: number; price: number; book: string; edge: number }
-    const picks: OuPick[] = []
+    let best: { line: number; price: number; book: string; edge: number } | null = null
     for (const r of totalRows) {
-      if (r.point == null || r.edge_pct == null) continue
-      const side = r.outcome.toLowerCase() === 'over' ? 'OVER' : 'UNDER'
-      const aiWants = side === 'OVER' ? tot > r.point : tot < r.point
-      if (aiWants && r.edge_pct > 0) {
-        picks.push({ side, line: r.point, price: r.price, book: r.bookmaker, edge: r.edge_pct })
+      if (r.point == null || r.edge_pct == null || r.edge_pct <= 0) continue
+      const rSide = r.outcome.toLowerCase() === 'over' ? 'OVER' : 'UNDER'
+      if (rSide !== dir.side) continue
+      if (!best || r.edge_pct > best.edge) {
+        best = { line: r.point, price: r.price, book: r.bookmaker, edge: r.edge_pct }
       }
     }
-    if (picks.length) {
-      picks.sort((a, b) => b.edge - a.edge)
-      const best = picks[0]
-      const col = best.side === 'OVER' ? '#25d97b' : '#f4526a'
-      ouCall = {
-        label: `AI: ${best.side} ${best.line.toFixed(1)} · ${best.book} +${best.edge.toFixed(1)}%`,
-        color: col,
-        bg: `${col}22`,
-      }
-    } else if (avgLine != null) {
-      // No book-edge — use combined direction (projected/line + weather + matchup)
-      const dir = totalDirection(tot, avgLine, md.weather, home.abbr, away.abbr)
-      const col = dir.side === 'OVER' ? '#25d97b' : '#f4526a'
-      ouCall = {
-        label: `AI: ${dir.side} ${avgLine.toFixed(1)}`,
-        color: col,
-        bg: `${col}22`,
-      }
+    ouCall = {
+      label: best
+        ? `AI: ${dir.side} ${best.line.toFixed(1)} · ${best.book} +${best.edge.toFixed(1)}%`
+        : `AI: ${dir.side} ${avgLine.toFixed(1)}`,
+      color: col,
+      bg: `${col}22`,
     }
   }
 
