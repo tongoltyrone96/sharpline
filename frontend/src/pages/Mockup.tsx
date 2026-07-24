@@ -1106,9 +1106,13 @@ function Prediction({ md }: { md: EventDetail }) {
   const fav = homeIsFav ? md.event.home : md.event.away
   const favCol = safeCol(fav.primary_color, homeIsFav ? '#4da6ff' : '#8b5cf6')
   const favShort = splitName(fav.name).short
-  const conf = Math.round((m.confidence ?? 0) * 100)
+  // Show the favourite's actual win probability — matches the AI WIN PROBABILITY
+  // card below. Previously we surfaced m.confidence here, which is a separate
+  // model-confidence metric and reads as inconsistent to the client.
+  const favProb = homeIsFav ? m.home_win_prob : m.away_win_prob
+  const winPct = Math.round(favProb * 100)
   const score = projectedScore(m.projected_margin, m.projected_total)
-  const dash = (conf / 100) * 251
+  const dash = (winPct / 100) * 251
   return (
     <div className="p pred">
       <div className="pr1">
@@ -1121,12 +1125,12 @@ function Prediction({ md }: { md: EventDetail }) {
           <div className="to">TO WIN</div>
         </div>
         <div>
-          <div className="cap">CONFIDENCE</div>
+          <div className="cap">WIN PROB</div>
           <svg width={54} height={54} viewBox="0 0 100 100">
             <circle cx={50} cy={50} r={40} stroke="#1a2333" strokeWidth={11} fill="none" />
-            <circle cx={50} cy={50} r={40} stroke="#25d97b" strokeWidth={11} fill="none" strokeLinecap="round"
+            <circle cx={50} cy={50} r={40} stroke={favCol} strokeWidth={11} fill="none" strokeLinecap="round"
                     strokeDasharray={`${dash.toFixed(0)} 251`} transform="rotate(-90 50 50)" />
-            <text x={50} y={59} textAnchor="middle" fontFamily="Inter" fontSize={27} fontWeight={800} fill="#e7eef8">{conf}%</text>
+            <text x={50} y={59} textAnchor="middle" fontFamily="Inter" fontSize={27} fontWeight={800} fill="#e7eef8">{winPct}%</text>
           </svg>
         </div>
       </div>
@@ -1213,32 +1217,34 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
     }
   }
 
-  // AI COVER call for line — pick best-value (book, line, side) combo
-  let coverCall: { label: string; color: string; bg: string } | null = null
+  // AI COVER call for line — always shows a directional pick (never null).
+  // Direction = H2H favourite (matches AI CONFIDENCE PICKS strip). If a
+  // bookmaker offers positive edge on that same side, badge includes the
+  // book + edge; otherwise the label falls back to just the favourite +
+  // model line so a call is always visible.
+  const h2hFavForLine = m.home_win_prob >= m.away_win_prob
+  const favAbbrLine = h2hFavForLine ? home.abbr : away.abbr
+  const favColLine = h2hFavForLine ? hp : ap
+  const favLineNum = h2hFavForLine ? mu : -mu
+  let coverCall: { label: string; color: string; bg: string }
   {
     const spreadRows = md.markets?.spreads ?? []
-    interface CovPick { abbr: string; line: number; price: number; book: string; edge: number; col: string }
+    const targetName = h2hFavForLine ? home.name : away.name
+    interface CovPick { line: number; book: string; edge: number }
     const picks: CovPick[] = []
     for (const r of spreadRows) {
       if (r.point == null || r.edge_pct == null || r.edge_pct <= 0) continue
-      const isHome = r.outcome === home.name
-      const aiWants = isHome ? mu > r.point : -mu > r.point
-      if (aiWants) {
-        picks.push({
-          abbr: isHome ? home.abbr : away.abbr,
-          line: r.point, price: r.price, book: r.bookmaker, edge: r.edge_pct,
-          col: isHome ? hp : ap,
-        })
-      }
+      if (r.outcome !== targetName) continue
+      picks.push({ line: r.point, book: r.bookmaker, edge: r.edge_pct })
     }
-    if (picks.length) {
-      picks.sort((a, b) => b.edge - a.edge)
-      const best = picks[0]
-      coverCall = {
-        label: `AI: ${best.abbr} ${sgn(best.line)} · ${best.book} +${best.edge.toFixed(1)}%`,
-        color: best.col,
-        bg: `${best.col}22`,
-      }
+    picks.sort((a, b) => b.edge - a.edge)
+    const best = picks[0]
+    coverCall = {
+      label: best
+        ? `AI: ${favAbbrLine} ${sgn(best.line)} · ${best.book} +${best.edge.toFixed(1)}%`
+        : `AI: ${favAbbrLine} ${sgn(favLineNum)}`,
+      color: favColLine,
+      bg: `${favColLine}22`,
     }
   }
 
@@ -1276,11 +1282,9 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
         <div className="ph">
           <span className="pt">AI Line</span>
           <span className="q">?</span>
-          {coverCall && (
-            <span className="aicall" style={{ color: coverCall.color, background: coverCall.bg, borderColor: `${coverCall.color}55` }}>
-              {coverCall.label}
-            </span>
-          )}
+          <span className="aicall" style={{ color: coverCall.color, background: coverCall.bg, borderColor: `${coverCall.color}55` }}>
+            {coverCall.label}
+          </span>
         </div>
         <div className="pb">
           <div className="lc">
