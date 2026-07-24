@@ -222,18 +222,20 @@ function weatherLean(w: EventDetail['weather']): { score: number; label: string 
 }
 
 // Matchup metrics → total-points lean. Positive = OVER, negative = UNDER.
+// Uses each rating's own midpoint so the OVER / UNDER call isn't systematically
+// biased by the different rating ranges (attack 95-115 vs defence 95-120).
 function matchupLean(homeAbbr: string, awayAbbr: string): { score: number; label: string | null } {
   const m = fakeMetrics(homeAbbr, awayAbbr)
-  // Attack Rating and Expected Tries push OVER; strong Defence Rating pushes UNDER.
   const hAtk = parseFloat(String(m[0].h)) || 0
   const aAtk = parseFloat(String(m[0].a)) || 0
   const hDef = parseFloat(String(m[1].h)) || 0
   const aDef = parseFloat(String(m[1].a)) || 0
-  // Normalised: baseline attack ~= 105, defence ~= 105
-  const atkDelta = ((hAtk - 105) + (aAtk - 105)) / 10
-  const defDelta = ((hDef - 105) + (aDef - 105)) / 10
+  // Attack Rating range 95-115 → midpoint 105
+  // Defence Rating range 95-120 → midpoint 107.5
+  const atkDelta = ((hAtk - 105) + (aAtk - 105)) / 8
+  const defDelta = ((hDef - 107.5) + (aDef - 107.5)) / 8
   const score = atkDelta - defDelta
-  const label = score > 0.3 ? 'attack strong' : score < -0.3 ? 'defence strong' : null
+  const label = score > 0.35 ? 'attack strong' : score < -0.35 ? 'defence strong' : null
   return { score, label }
 }
 
