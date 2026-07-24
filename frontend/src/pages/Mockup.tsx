@@ -325,7 +325,7 @@ const CSS = `
 .mck-root .aiconf-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .mck-root .aiconf-item{background:var(--mpanel2);border:1px solid var(--mline);border-radius:7px;padding:9px 11px;display:flex;flex-direction:column;gap:3px}
 .mck-root .aiconf-mkt{font-size:8.5px;font-weight:800;letter-spacing:.13em;color:#7b8ba3}
-.mck-root .aiconf-pick{font-size:14px;font-weight:900;letter-spacing:.02em;display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace}
+.mck-root .aiconf-pick{font-size:14px;font-weight:900;letter-spacing:.02em;display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;filter:brightness(1.35) saturate(1.15);text-shadow:0 1px 2px rgba(0,0,0,.55)}
 .mck-root .aiconf-pick .tick{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:4px;background:currentColor;color:#04140f !important;font-size:12px;font-weight:900;flex:none;line-height:1}
 .mck-root .aiconf-detail{font-size:9.5px;color:#9fb0c6;font-family:'IBM Plex Mono',monospace;letter-spacing:.02em}
 
