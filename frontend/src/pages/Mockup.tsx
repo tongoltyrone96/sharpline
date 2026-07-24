@@ -204,6 +204,72 @@ function bestBet(md: EventDetail): { edge: number; text: string; bk: string; mkt
   return { edge: rows[0].e, text: rows[0].t, bk: rows[0].b, mkt: rows[0].m }
 }
 
+// Weather → total-points lean score. Positive = OVER lean, negative = UNDER lean.
+function weatherLean(w: EventDetail['weather']): { score: number; label: string | null } {
+  if (!w) return { score: 0, label: null }
+  let score = 0
+  const parts: string[] = []
+  const cond = (w.condition || '').toLowerCase()
+  if (w.rain_prob >= 0.3 || cond.includes('rain') || cond.includes('shower')) {
+    score -= 1.4
+    parts.push('rain')
+  }
+  if (w.wind_kmh > 25) { score -= 1.2; parts.push('strong wind') }
+  else if (w.wind_kmh > 15) { score -= 0.6; parts.push('wind') }
+  if (w.is_indoor) { score += 0.4; parts.push('indoor') }
+  else if (cond.includes('clear')) { score += 0.4; parts.push('clear sky') }
+  return { score, label: parts.length ? parts.join(', ') : null }
+}
+
+// Matchup metrics → total-points lean. Positive = OVER, negative = UNDER.
+function matchupLean(homeAbbr: string, awayAbbr: string): { score: number; label: string | null } {
+  const m = fakeMetrics(homeAbbr, awayAbbr)
+  // Attack Rating and Expected Tries push OVER; strong Defence Rating pushes UNDER.
+  const hAtk = parseFloat(String(m[0].h)) || 0
+  const aAtk = parseFloat(String(m[0].a)) || 0
+  const hDef = parseFloat(String(m[1].h)) || 0
+  const aDef = parseFloat(String(m[1].a)) || 0
+  // Normalised: baseline attack ~= 105, defence ~= 105
+  const atkDelta = ((hAtk - 105) + (aAtk - 105)) / 10
+  const defDelta = ((hDef - 105) + (aDef - 105)) / 10
+  const score = atkDelta - defDelta
+  const label = score > 0.3 ? 'attack strong' : score < -0.3 ? 'defence strong' : null
+  return { score, label }
+}
+
+// Combined total-points direction using projected/line gap + weather + matchup.
+// Always returns OVER or UNDER (never null) — the client explicitly asked for a
+// directional call every game, using all available data as a tiebreaker.
+function totalDirection(
+  projected: number | null,
+  avgLine: number | null,
+  weather: EventDetail['weather'],
+  homeAbbr: string,
+  awayAbbr: string,
+): { side: 'OVER' | 'UNDER'; strength: number; factors: string[] } {
+  const factors: string[] = []
+  let net = 0
+  if (projected != null && avgLine != null) {
+    const gap = projected - avgLine
+    net += gap * 2   // primary signal, weighted higher than tiebreakers
+    if (Math.abs(gap) >= 0.05) factors.push(`model ${gap > 0 ? 'above' : 'below'} line by ${Math.abs(gap).toFixed(1)}`)
+  }
+  const wl = weatherLean(weather)
+  net += wl.score
+  if (wl.label) factors.push(wl.label)
+  const ml = matchupLean(homeAbbr, awayAbbr)
+  net += ml.score
+  if (ml.label) factors.push(ml.label)
+  // Tiny epsilon: if truly zero after all factors, use projected gap sign directly (fallback)
+  if (net === 0 && projected != null && avgLine != null) net = projected - avgLine
+  if (net === 0) net = 0.01   // final safety — never truly zero
+  return {
+    side: net > 0 ? 'OVER' : 'UNDER',
+    strength: Math.abs(net),
+    factors,
+  }
+}
+
 // ───────────────────────────────────────────────────────────────────────────
 // Scoped CSS — everything is under .mck-root so it can't leak
 // ───────────────────────────────────────────────────────────────────────────
@@ -1095,14 +1161,16 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
     .map(r => r.point as number)
   const avgLine = totalLines.length ? totalLines.reduce((s, v) => s + v, 0) / totalLines.length : null
 
-  // Directional lean: 50 = neutral (on the line), 100 = fully OVER, 0 = fully UNDER.
-  // Scale is aggressive on purpose (~2 point gap = full swing) because model
-  // projections often sit within a fraction of a point of the market line —
-  // client complained that everything was reading 50/50.
+  // Directional lean: 50 = neutral, 100 = fully OVER, 0 = fully UNDER.
+  // Uses the same combined signal as the confidence strip (projected/line gap
+  // + weather + matchup) so the bar never sits at 50/50 while the confidence
+  // pick says OVER/UNDER. Client asked for a directional call using all data.
   let overPct: number | null = null
   if (tot != null && avgLine != null) {
-    const gap = tot - avgLine
-    overPct = Math.max(5, Math.min(95, 50 + (gap / 2) * 50))
+    const dir = totalDirection(tot, avgLine, md.weather, home.abbr, away.abbr)
+    // Map strength → percentage. strength of 2 = full swing.
+    const signed = dir.side === 'OVER' ? dir.strength : -dir.strength
+    overPct = Math.max(8, Math.min(92, 50 + (signed / 2) * 50))
   }
 
   const homeSpreadPoints = (md.markets?.spreads ?? [])
@@ -1140,10 +1208,14 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
         bg: `${col}22`,
       }
     } else if (avgLine != null) {
-      const gap = tot - avgLine
-      if (Math.abs(gap) < 0.25) ouCall = { label: 'ON THE LINE', color: '#7b8ba3', bg: 'rgba(123,139,163,.15)' }
-      else if (gap > 0) ouCall = { label: `AI: OVER ${avgLine.toFixed(1)}`, color: '#25d97b', bg: 'rgba(37,217,123,.18)' }
-      else ouCall = { label: `AI: UNDER ${avgLine.toFixed(1)}`, color: '#f4526a', bg: 'rgba(244,82,106,.18)' }
+      // No book-edge — use combined direction (projected/line + weather + matchup)
+      const dir = totalDirection(tot, avgLine, md.weather, home.abbr, away.abbr)
+      const col = dir.side === 'OVER' ? '#25d97b' : '#f4526a'
+      ouCall = {
+        label: `AI: ${dir.side} ${avgLine.toFixed(1)}`,
+        color: col,
+        bg: `${col}22`,
+      }
     }
   }
 
@@ -2053,7 +2125,10 @@ function AIConfidenceStrip({ md }: { md: EventDetail }) {
       : `model line ${sgn(h2hFav ? mu : -mu)}`,
   }
 
-  // TOTAL directional pick
+  // TOTAL directional pick — ALWAYS OVER or UNDER, never neutral.
+  // Uses projected/line gap as primary signal, plus weather (rain/wind →
+  // UNDER, clear/indoor → OVER) and matchup metrics (attack vs defence) as
+  // tiebreakers when the model total sits close to the book line.
   const tot = m.projected_total
   const totalLines = (md.markets?.totals ?? [])
     .filter(r => r.outcome.toLowerCase() === 'over' && r.point != null)
@@ -2061,16 +2136,21 @@ function AIConfidenceStrip({ md }: { md: EventDetail }) {
   const avgLine = totalLines.length ? totalLines.reduce((s, v) => s + v, 0) / totalLines.length : null
   let totalPick: { side: string; color: string; detail: string } | null = null
   if (tot != null && avgLine != null) {
-    const gap = tot - avgLine
-    if (Math.abs(gap) < 0.25) {
-      totalPick = { side: 'ON THE LINE', color: '#7b8ba3', detail: `proj ${tot.toFixed(1)} = line ${avgLine.toFixed(1)}` }
-    } else if (gap > 0) {
-      totalPick = { side: 'OVER', color: '#25d97b', detail: `proj ${tot.toFixed(1)} > line ${avgLine.toFixed(1)}` }
-    } else {
-      totalPick = { side: 'UNDER', color: '#f4526a', detail: `proj ${tot.toFixed(1)} < line ${avgLine.toFixed(1)}` }
+    const dir = totalDirection(tot, avgLine, md.weather, home.abbr, away.abbr)
+    const factorTxt = dir.factors.length ? dir.factors.join(' · ') : `proj ${tot.toFixed(1)} vs line ${avgLine.toFixed(1)}`
+    totalPick = {
+      side: `${dir.side} ${avgLine.toFixed(1)}`,
+      color: dir.side === 'OVER' ? '#25d97b' : '#f4526a',
+      detail: factorTxt,
     }
   } else if (tot != null) {
-    totalPick = { side: `${tot.toFixed(1)}`, color: '#7b8ba3', detail: 'no book line to compare' }
+    // No book line — still use weather + matchup to decide
+    const dir = totalDirection(tot, null, md.weather, home.abbr, away.abbr)
+    totalPick = {
+      side: `${dir.side} ${tot.toFixed(1)}`,
+      color: dir.side === 'OVER' ? '#25d97b' : '#f4526a',
+      detail: dir.factors.join(' · ') || `proj ${tot.toFixed(1)}`,
+    }
   }
 
   return (
