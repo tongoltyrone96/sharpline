@@ -2035,26 +2035,22 @@ function AIConfidenceStrip({ md }: { md: EventDetail }) {
   const h2hColor = h2hFav ? hp : ap
   const h2hProb = h2hFav ? pH : pA
 
-  // LINE directional pick
+  // LINE directional pick — always aligned with H2H favourite for consistency
+  // (a favourite can technically fail to cover a large spread, but for a
+  // client-facing directional summary the AI's "who wins" and "who to back
+  // on the line" should point the same way. The detail line shows the
+  // model's own spread for context.)
   const mu = m.projected_margin ?? 0
   const homeSpreadPoints = (md.markets?.spreads ?? [])
     .filter(r => r.outcome === home.name && r.point != null)
     .map(r => r.point as number)
   const avgHomeSpread = homeSpreadPoints.length ? homeSpreadPoints.reduce((a, b) => a + b, 0) / homeSpreadPoints.length : null
-  let linePick: { abbr: string; color: string; detail: string } | null = null
-  if (avgHomeSpread != null) {
-    const homeCovers = mu > avgHomeSpread
-    linePick = {
-      abbr: homeCovers ? home.abbr : away.abbr,
-      color: homeCovers ? hp : ap,
-      detail: `model line ${sgn(homeCovers ? mu : -mu)} vs book ${sgn(homeCovers ? avgHomeSpread : -avgHomeSpread)}`,
-    }
-  } else {
-    linePick = {
-      abbr: mu >= 0 ? home.abbr : away.abbr,
-      color: mu >= 0 ? hp : ap,
-      detail: `model line ${sgn(mu >= 0 ? mu : -mu)}`,
-    }
+  const linePick = {
+    abbr: h2hFav ? home.abbr : away.abbr,
+    color: h2hFav ? hp : ap,
+    detail: avgHomeSpread != null
+      ? `model line ${sgn(h2hFav ? mu : -mu)} vs book ${sgn(h2hFav ? avgHomeSpread : -avgHomeSpread)}`
+      : `model line ${sgn(h2hFav ? mu : -mu)}`,
   }
 
   // TOTAL directional pick
@@ -2095,7 +2091,7 @@ function AIConfidenceStrip({ md }: { md: EventDetail }) {
         <div className="aiconf-item">
           <div className="aiconf-mkt">LINE</div>
           <div className="aiconf-pick" style={{ color: linePick.color }}>
-            <span className="tick">✓</span> {linePick.abbr} covers
+            <span className="tick">✓</span> {linePick.abbr} favoured
           </div>
           <div className="aiconf-detail">{linePick.detail}</div>
         </div>
