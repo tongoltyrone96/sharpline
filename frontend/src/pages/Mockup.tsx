@@ -400,11 +400,11 @@ const CSS = `
 .mck-root .cr2 .n{font-size:11px;font-weight:800;color:var(--mgreen);font-family:'IBM Plex Mono',monospace}
 
 /* Directional lean bar (LINE / TOTAL — replaces confidence bar) */
-.mck-root .leanbar{display:flex;align-items:center;gap:8px;flex:none;margin-top:10px}
-.mck-root .leanbar .side{font-size:11px;font-weight:700;letter-spacing:.05em;white-space:nowrap;font-family:'IBM Plex Mono',monospace;min-width:82px;text-align:left}
+.mck-root .leanbar{display:grid !important;grid-template-columns:auto minmax(60px,1fr) auto;align-items:center;gap:8px;flex:none;margin-top:10px;width:100%}
+.mck-root .leanbar .side{font-size:11px;font-weight:700;letter-spacing:.05em;white-space:nowrap;font-family:'IBM Plex Mono',monospace;text-align:left;line-height:1.2}
 .mck-root .leanbar .side.r{text-align:right}
-.mck-root .leanbar .side b{font-weight:900;font-size:13px}
-.mck-root .leanbar .track{flex:1;display:flex;height:12px;background:#1a2333;border-radius:6px;overflow:hidden;position:relative}
+.mck-root .leanbar .side b{font-weight:900;font-size:13px;display:inline}
+.mck-root .leanbar .track{display:flex;height:12px;background:#1a2333;border-radius:6px;overflow:hidden;position:relative;min-width:0}
 .mck-root .leanbar .track .fill{height:100%;transition:width .3s ease}
 .mck-root .leanbar .track .tick{position:absolute;top:-2px;bottom:-2px;left:50%;width:2px;background:rgba(255,255,255,.55);transform:translateX(-50%);z-index:1;border-radius:1px}
 .mck-root .leanbar .track .empty{width:100%;text-align:center;font-size:8px;font-weight:700;color:var(--mdim2);letter-spacing:.09em;line-height:10px;font-family:'IBM Plex Mono',monospace}
@@ -597,11 +597,11 @@ const CSS = `
   /* Make OVER / UNDER labels under the total-points sparkline larger on
      phone so the recommended side actually pops. */
   .mck-root .tcou{font-size:11px !important;padding:0 6px !important}
-  /* Lean bar — force readable labels on phone; no wrap, boosted contrast */
-  .mck-root .leanbar{gap:6px !important;margin-top:12px !important;flex-wrap:nowrap !important;display:flex !important}
-  .mck-root .leanbar .side{font-size:12px !important;min-width:76px !important;letter-spacing:.04em !important;flex:0 0 auto !important;text-shadow:0 1px 2px rgba(0,0,0,.7);filter:brightness(1.4)}
-  .mck-root .leanbar .side b{font-size:15px !important;font-weight:900 !important}
-  .mck-root .leanbar .track{height:12px !important;flex:1 1 auto !important;min-width:60px !important}
+  /* Lean bar — grid guarantees single-row layout on phone */
+  .mck-root .leanbar{gap:6px !important;margin-top:12px !important;grid-template-columns:auto minmax(40px,1fr) auto !important}
+  .mck-root .leanbar .side{font-size:11px !important;letter-spacing:.04em !important;text-shadow:0 1px 2px rgba(0,0,0,.7);filter:brightness(1.4)}
+  .mck-root .leanbar .side b{font-size:14px !important;font-weight:900 !important}
+  .mck-root .leanbar .track{height:12px !important}
 }
 
 /* Phone */
