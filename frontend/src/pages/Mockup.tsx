@@ -242,6 +242,8 @@ function matchupLean(homeAbbr: string, awayAbbr: string): { score: number; label
 // Combined total-points direction using projected/line gap + weather + matchup.
 // Always returns OVER or UNDER (never null) — the client explicitly asked for a
 // directional call every game, using all available data as a tiebreaker.
+// factors returned are only the ones that SUPPORT the winning side, so we
+// never surface a contradictory reason like 'attack strong' next to an UNDER call.
 function totalDirection(
   projected: number | null,
   avgLine: number | null,
@@ -249,26 +251,41 @@ function totalDirection(
   homeAbbr: string,
   awayAbbr: string,
 ): { side: 'OVER' | 'UNDER'; strength: number; factors: string[] } {
-  const factors: string[] = []
+  const contributions: { label: string; score: number }[] = []
   let net = 0
   if (projected != null && avgLine != null) {
     const gap = projected - avgLine
-    net += gap * 2   // primary signal, weighted higher than tiebreakers
-    if (Math.abs(gap) >= 0.05) factors.push(`model ${gap > 0 ? 'above' : 'below'} line by ${Math.abs(gap).toFixed(1)}`)
+    const contribution = gap * 2   // primary signal, weighted higher than tiebreakers
+    net += contribution
+    if (Math.abs(gap) >= 0.05) {
+      contributions.push({
+        label: `model ${gap > 0 ? 'above' : 'below'} line by ${Math.abs(gap).toFixed(1)}`,
+        score: contribution,
+      })
+    }
   }
   const wl = weatherLean(weather)
   net += wl.score
-  if (wl.label) factors.push(wl.label)
+  if (wl.label) contributions.push({ label: wl.label, score: wl.score })
   const ml = matchupLean(homeAbbr, awayAbbr)
   net += ml.score
-  if (ml.label) factors.push(ml.label)
+  if (ml.label) contributions.push({ label: ml.label, score: ml.score })
   // Tiny epsilon: if truly zero after all factors, use projected gap sign directly (fallback)
   if (net === 0 && projected != null && avgLine != null) net = projected - avgLine
   if (net === 0) net = 0.01   // final safety — never truly zero
+  const side: 'OVER' | 'UNDER' = net > 0 ? 'OVER' : 'UNDER'
+  // Only keep factors whose sign matches the winning direction, so the label
+  // never reads 'rain · attack strong → UNDER' (rain supports UNDER, attack
+  // strong contradicts it). Sort by magnitude so the strongest reason comes
+  // first.
+  const supporting = contributions
+    .filter(c => (side === 'OVER' ? c.score > 0 : c.score < 0))
+    .sort((a, b) => Math.abs(b.score) - Math.abs(a.score))
+    .map(c => c.label)
   return {
-    side: net > 0 ? 'OVER' : 'UNDER',
+    side,
     strength: Math.abs(net),
-    factors,
+    factors: supporting,
   }
 }
 
@@ -1183,11 +1200,17 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
     .filter(r => r.outcome === home.name && r.point != null)
     .map(r => r.point as number)
   const avgHomeSpread = homeSpreadPoints.length ? homeSpreadPoints.reduce((a, b) => a + b, 0) / homeSpreadPoints.length : null
-  // homeCoverPct: 50 = neutral, 100 = HOME fully covers, 0 = AWAY covers
-  let homeCoverPct: number | null = null
+  // Line lean now anchored on H2H win probability so it always agrees with the
+  // CONFIDENCE PICKS strip. If the model likes the home team on H2H (60% win
+  // prob), the line bar starts at ~60% home. Any additional spread edge
+  // (mu vs avgHomeSpread) shifts it a little more.
+  const winProbHome = Math.round(m.home_win_prob * 100)
+  let homeCoverPct: number | null = winProbHome
   if (avgHomeSpread != null) {
     const gap = mu - avgHomeSpread
-    homeCoverPct = Math.max(5, Math.min(95, 50 + (gap / 2) * 50))
+    homeCoverPct = Math.max(8, Math.min(92, winProbHome + (gap / 3) * 15))
+  } else {
+    homeCoverPct = Math.max(8, Math.min(92, winProbHome))
   }
 
   // AI OVER/UNDER call for total points — direction FIRST (via totalDirection),
