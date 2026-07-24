@@ -398,6 +398,16 @@ const CSS = `
 .mck-root .cr2 .tk{flex:1;height:7px;background:#1a2333;border-radius:4px;overflow:hidden}
 .mck-root .cr2 .tk i{display:block;height:100%;background:linear-gradient(90deg,#0f8f4d,var(--mgreen));border-radius:4px}
 .mck-root .cr2 .n{font-size:11px;font-weight:800;color:var(--mgreen);font-family:'IBM Plex Mono',monospace}
+
+/* Directional lean bar (LINE / TOTAL — replaces confidence bar) */
+.mck-root .leanbar{display:flex;align-items:center;gap:8px;flex:none;margin-top:10px}
+.mck-root .leanbar .side{font-size:10px;font-weight:700;letter-spacing:.05em;white-space:nowrap;font-family:'IBM Plex Mono',monospace;min-width:76px;text-align:left}
+.mck-root .leanbar .side.r{text-align:right}
+.mck-root .leanbar .side b{font-weight:900;font-size:12px}
+.mck-root .leanbar .track{flex:1;display:flex;height:10px;background:#1a2333;border-radius:5px;overflow:hidden;position:relative}
+.mck-root .leanbar .track .fill{height:100%;transition:width .3s ease}
+.mck-root .leanbar .track .tick{position:absolute;top:-2px;bottom:-2px;left:50%;width:2px;background:rgba(255,255,255,.55);transform:translateX(-50%);z-index:1;border-radius:1px}
+.mck-root .leanbar .track .empty{width:100%;text-align:center;font-size:8px;font-weight:700;color:var(--mdim2);letter-spacing:.09em;line-height:10px;font-family:'IBM Plex Mono',monospace}
 .mck-root .tc{display:flex;align-items:stretch;gap:10px;flex:1;min-width:0}
 .mck-root .tc .tcleft{display:flex;flex-direction:column;justify-content:center;flex:none}
 .mck-root .tc .big{font-size:34px;font-weight:800;letter-spacing:-.03em;color:var(--mtxt);line-height:1}
@@ -587,6 +597,11 @@ const CSS = `
   /* Make OVER / UNDER labels under the total-points sparkline larger on
      phone so the recommended side actually pops. */
   .mck-root .tcou{font-size:11px !important;padding:0 6px !important}
+  /* Lean bar — compact on phone but still readable */
+  .mck-root .leanbar{gap:6px;margin-top:8px}
+  .mck-root .leanbar .side{font-size:9.5px;min-width:64px}
+  .mck-root .leanbar .side b{font-size:11px}
+  .mck-root .leanbar .track{height:9px}
 }
 
 /* Phone */
@@ -1055,14 +1070,29 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
   const pH = Math.round(m.home_win_prob * 100), pA = 100 - pH
   const mu = m.projected_margin ?? 0
   const tot = m.projected_total
-  const confPct = Math.round((m.confidence ?? 0) * 100)
-  const lineConf = Math.max(30, confPct - 4)
-  const totConf = Math.max(30, confPct - 8)
 
   const totalLines = (md.markets?.totals ?? [])
     .filter(r => r.outcome.toLowerCase() === 'over' && r.point != null)
     .map(r => r.point as number)
   const avgLine = totalLines.length ? totalLines.reduce((s, v) => s + v, 0) / totalLines.length : null
+
+  // Directional lean: 50 = neutral (on the line), 100 = fully OVER, 0 = fully UNDER
+  let overPct: number | null = null
+  if (tot != null && avgLine != null) {
+    const gap = tot - avgLine
+    overPct = Math.max(5, Math.min(95, 50 + (gap / 6) * 50))
+  }
+
+  const homeSpreadPoints = (md.markets?.spreads ?? [])
+    .filter(r => r.outcome === home.name && r.point != null)
+    .map(r => r.point as number)
+  const avgHomeSpread = homeSpreadPoints.length ? homeSpreadPoints.reduce((a, b) => a + b, 0) / homeSpreadPoints.length : null
+  // homeCoverPct: 50 = neutral, 100 = HOME fully covers, 0 = AWAY covers
+  let homeCoverPct: number | null = null
+  if (avgHomeSpread != null) {
+    const gap = mu - avgHomeSpread
+    homeCoverPct = Math.max(5, Math.min(95, 50 + (gap / 5) * 50))
+  }
 
   // AI OVER/UNDER call for total points — pick best-value (book, line) combo
   let ouCall: { label: string; color: string; bg: string } | null = null
@@ -1172,10 +1202,20 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
             <div className="v mono" style={{ color: ap }}>{sgn(-mu)}</div>
             <Crest primary={ap} secondary={darken(ap)} abbr={away.abbr} teamName={away.name} className="mc" />
           </div>
-          <div className="cr2">
-            <span className="l">LINE CONF</span>
-            <span className="tk"><i style={{ width: `${lineConf}%` }} /></span>
-            <span className="n mono">{lineConf}%</span>
+          <div className="leanbar">
+            <span className="side" style={{ color: hp }}>
+              <b>{homeCoverPct != null ? Math.round(homeCoverPct) : 50}%</b> {home.abbr}
+            </span>
+            <div className="track">
+              {homeCoverPct != null ? <>
+                <div className="fill" style={{ width: `${homeCoverPct}%`, background: `linear-gradient(90deg, ${darken(hp, 0.6)}, ${hp})` }} />
+                <div className="fill" style={{ width: `${100 - homeCoverPct}%`, background: `linear-gradient(90deg, ${ap}, ${darken(ap, 0.6)})` }} />
+                <div className="tick" />
+              </> : <div className="empty">no line data</div>}
+            </div>
+            <span className="side r" style={{ color: ap }}>
+              {away.abbr} <b>{homeCoverPct != null ? Math.round(100 - homeCoverPct) : 50}%</b>
+            </span>
           </div>
         </div>
       </div>
@@ -1231,14 +1271,20 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
               })()}
             </div>
           </div>
-          <div className="tcou">
-            <span style={ouCall && ouCall.label.includes('OVER') ? { color: '#25d97b', fontWeight: 900 } : undefined}>▲ OVER</span>
-            <span style={ouCall && ouCall.label.includes('UNDER') ? { color: '#f4526a', fontWeight: 900 } : undefined}>▼ UNDER</span>
-          </div>
-          <div className="cr2">
-            <span className="l">TOTAL CONF</span>
-            <span className="tk"><i style={{ width: `${totConf}%` }} /></span>
-            <span className="n mono">{totConf}%</span>
+          <div className="leanbar">
+            <span className="side" style={{ color: '#25d97b' }}>
+              <b>{overPct != null ? Math.round(overPct) : 50}%</b> ▲ OVER
+            </span>
+            <div className="track">
+              {overPct != null ? <>
+                <div className="fill" style={{ width: `${overPct}%`, background: 'linear-gradient(90deg, #0f8f4d, #25d97b)' }} />
+                <div className="fill" style={{ width: `${100 - overPct}%`, background: 'linear-gradient(90deg, #f4526a, #c02a44)' }} />
+                <div className="tick" />
+              </> : <div className="empty">no total data</div>}
+            </div>
+            <span className="side r" style={{ color: '#f4526a' }}>
+              UNDER ▼ <b>{overPct != null ? Math.round(100 - overPct) : 50}%</b>
+            </span>
           </div>
         </div>
       </div>
