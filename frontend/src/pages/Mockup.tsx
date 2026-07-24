@@ -597,11 +597,11 @@ const CSS = `
   /* Make OVER / UNDER labels under the total-points sparkline larger on
      phone so the recommended side actually pops. */
   .mck-root .tcou{font-size:11px !important;padding:0 6px !important}
-  /* Lean bar — bump sizes on phone so labels are actually readable */
-  .mck-root .leanbar{gap:6px;margin-top:10px;flex-wrap:wrap}
-  .mck-root .leanbar .side{font-size:11px;min-width:70px;letter-spacing:.04em}
-  .mck-root .leanbar .side b{font-size:13.5px;font-weight:900}
-  .mck-root .leanbar .track{height:11px}
+  /* Lean bar — force readable labels on phone; no wrap, boosted contrast */
+  .mck-root .leanbar{gap:6px !important;margin-top:12px !important;flex-wrap:nowrap !important;display:flex !important}
+  .mck-root .leanbar .side{font-size:12px !important;min-width:76px !important;letter-spacing:.04em !important;flex:0 0 auto !important;text-shadow:0 1px 2px rgba(0,0,0,.7);filter:brightness(1.4)}
+  .mck-root .leanbar .side b{font-size:15px !important;font-weight:900 !important}
+  .mck-root .leanbar .track{height:12px !important;flex:1 1 auto !important;min-width:60px !important}
 }
 
 /* Phone */
