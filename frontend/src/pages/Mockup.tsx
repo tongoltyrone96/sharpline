@@ -895,14 +895,8 @@ function Sidebar({ onNavigate, roundConf }: {
     ['pOdds',   'Match Centre',    'M12 2v20M2 12h20', 'active'],
     ['pMove',   'AI Predictions',  'M12 3l3 6 6 1-4.5 4.5 1 6L12 17l-5.5 3.5 1-6L3 10l6-1 3-6z', 'active'],
     ['pMove',   'Line Movement',   'M4 18 L10 11 L14 15 L20 6 M20 11V6h-5', 'active'],
-    ['dummy',   'Stats Centre',    'M5 20V10M10 20V4M15 20v-8M20 20v-5', 'soon'],
-    ['dummy',   'H2H Analysis',    'M8 12h8M8 8l-4 4 4 4M16 8l4 4-4 4', 'soon'],
     ['pNews',   'Team News',       'M4 6h16M4 12h16M4 18h10', 'active'],
-    ['dummy',   'Injuries',        'M12 2v20M2 12h20M6 6l12 12M18 6L6 18', 'soon'],
-    ['dummy',   'Power Rankings',  'M12 3l-8 11h6l-2 7 8-11h-6l2-7z', 'soon'],
-    ['dummy',   'My Bets',         'M3 4h18v16H3zM3 10h18M7 15h4', 'soon'],
-    ['dummy',   'Alerts',          'M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9z', 'soon'],
-    ['dummy',   'Settings',        'M12 8v8M8 12h8', 'soon'],
+    ['admin',   'Admin',           'M12 2l3 6 6 1-4.5 4.5 1 6L12 17l-5.5 3.5 1-6L3 10l6-1 3-6z M9 9h6v6H9z', 'admin'],
   ]
   return (
     <aside className="side">
@@ -916,10 +910,8 @@ function Sidebar({ onNavigate, roundConf }: {
         {NAV.map(([id, label, d, kind], i) => (
           <a
             key={label}
-            className={
-              (i === 0 ? 'on ' : '') +
-              (kind === 'soon' ? 'soon' : '')
-            }
+            className={i === 0 ? 'on' : ''}
+            href={kind === 'admin' ? '#/admin' : undefined}
             onClick={() => kind === 'active' && onNavigate(id)}
           >
             <svg viewBox="0 0 24 24"><path d={d} /></svg>{label}
@@ -978,7 +970,6 @@ function TopBar({ sport, matches, selectedId, onSelect }: {
         <div className="livep"><span className="dot"></span>LIVE</div>
         <button className="sharebtn" type="button">↑ SHARE</button>
         <button className="bellbtn" type="button">🔔</button>
-        <div className="mockp">MOCKUP</div>
       </div>
     </div>
   )
