@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDashboard, DashboardEvent } from '../hooks/useDashboard'
-import { getEvent, getEventHistory, HistoryPoint } from '../lib/api'
+import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing } from '../lib/api'
 
 // ───────────────────────────────────────────────────────────────────────────
 // Types
@@ -62,6 +62,42 @@ function fakeRecord(abbr: string): string {
   const w = 3 + (s % 10)
   const l = 3 + ((s >> 4) % 9)
   return `${w}W – ${l}L`
+}
+
+function ordinal(n: number): string {
+  if (n <= 0) return `${n}`
+  const s = ['th', 'st', 'nd', 'rd']
+  const v = n % 100
+  return n + (s[(v - 20) % 10] || s[v] || s[0])
+}
+
+function realLadder(s: Standing | null | undefined): string | null {
+  if (!s || s.rank == null) return null
+  return ordinal(s.rank)
+}
+
+function realRecord(s: Standing | null | undefined): string | null {
+  if (!s) return null
+  const w = s.wins ?? 0
+  const l = s.losses ?? 0
+  const d = s.draws ?? 0
+  return d > 0 ? `${w}W – ${l}L – ${d}D` : `${w}W – ${l}L`
+}
+
+/**
+ * Fetches ladder + season record for one team from the backend and returns
+ * the raw Standing object. Never throws — if the source is unavailable the
+ * hook resolves to null and the caller falls back to seeded placeholder.
+ */
+function useTeamStanding(teamName: string | undefined, sportKey: string | undefined): Standing | null {
+  const [row, setRow] = useState<Standing | null>(null)
+  useEffect(() => {
+    if (!teamName || !sportKey) { setRow(null); return }
+    let cancelled = false
+    getTeamStanding(teamName, sportKey).then(r => { if (!cancelled) setRow(r) })
+    return () => { cancelled = true }
+  }, [teamName, sportKey])
+  return row
 }
 function fakeForm(abbr: string): ('W'|'L')[] {
   const s = seedFrom(abbr + 'f')
@@ -1065,6 +1101,14 @@ function Hero({ md }: { md: EventDetail }) {
   const hn = splitName(home.name), an = splitName(away.name)
   const { day, time } = fmtDayTime(md.event.commence_time)
   const wk = weatherIconKind(md.weather)
+  // Real ladder + record when available; falls back to seeded placeholder so
+  // the layout never blanks out while the standings API is warming up.
+  const homeStanding = useTeamStanding(home.name, md.event.sport)
+  const awayStanding = useTeamStanding(away.name, md.event.sport)
+  const homeLadder   = realLadder(homeStanding) ?? fakeLadder(home.abbr)
+  const homeRecord   = realRecord(homeStanding) ?? fakeRecord(home.abbr)
+  const awayLadder   = realLadder(awayStanding) ?? fakeLadder(away.abbr)
+  const awayRecord   = realRecord(awayStanding) ?? fakeRecord(away.abbr)
 
   return (
     <div className="hero" style={{
@@ -1077,8 +1121,8 @@ function Hero({ md }: { md: EventDetail }) {
         <div>
           <div className="city">{hn.city}</div>
           <div className="tn">{hn.short.toUpperCase()}</div>
-          <div className="tmeta" style={{ color: safeCol(home.primary_color, '#4da6ff'), fontWeight: 800 }}>{fakeLadder(home.abbr)}</div>
-          <div className="tmeta mono" style={{ fontSize: 11, marginTop: 2 }}>{fakeRecord(home.abbr)}</div>
+          <div className="tmeta" style={{ color: safeCol(home.primary_color, '#4da6ff'), fontWeight: 800 }}>{homeLadder}</div>
+          <div className="tmeta mono" style={{ fontSize: 11, marginTop: 2 }}>{homeRecord}</div>
         </div>
       </div>
       <div className="hmid">
@@ -1099,8 +1143,8 @@ function Hero({ md }: { md: EventDetail }) {
         <div>
           <div className="city">{an.city}</div>
           <div className="tn">{an.short.toUpperCase()}</div>
-          <div className="tmeta" style={{ color: safeCol(away.primary_color, '#8b5cf6'), fontWeight: 800 }}>{fakeLadder(away.abbr)}</div>
-          <div className="tmeta mono" style={{ fontSize: 11, marginTop: 2 }}>{fakeRecord(away.abbr)}</div>
+          <div className="tmeta" style={{ color: safeCol(away.primary_color, '#8b5cf6'), fontWeight: 800 }}>{awayLadder}</div>
+          <div className="tmeta mono" style={{ fontSize: 11, marginTop: 2 }}>{awayRecord}</div>
         </div>
       </div>
     </div>
@@ -1934,6 +1978,9 @@ function H2HFormStack({ md }: { md: EventDetail }) {
   const hp = safeCol(home.primary_color, '#4da6ff'), ap = safeCol(away.primary_color, '#8b5cf6')
   const hd = darken(hp, 0.7), ad = darken(ap, 0.7)
   const h2h = fakeH2H(md.event.id)
+  // Real ladder from the standings service, falls back to seeded value.
+  const homeStanding = useTeamStanding(home.name, md.event.sport)
+  const awayStanding = useTeamStanding(away.name, md.event.sport)
   return (
     <>
       <div className="p" id="pH2h">
@@ -1969,11 +2016,13 @@ function H2HFormStack({ md }: { md: EventDetail }) {
               const dcol = k === 'home' ? hd : ad
               const form = fakeForm(t.abbr)
               const pts = form.filter(f => f === 'W').length * 2
+              const standing = k === 'home' ? homeStanding : awayStanding
+              const ladder = realLadder(standing) ?? fakeLadder(t.abbr)
               return (
                 <div key={k} className="fgc" style={{ borderColor: `${col}33` }}>
                   <div className="fghdr" style={{ background: `linear-gradient(90deg, ${dcol}, ${dcol}44)`, borderBottom: `1px solid ${col}55` }}>
                     <span className="fghdr-abbr" style={{ color: col }}>{t.abbr}</span>
-                    <span className="fghdr-lad">{fakeLadder(t.abbr)}</span>
+                    <span className="fghdr-lad">{ladder}</span>
                   </div>
                   <div className="row5">
                     {form.map((f, i) => <span key={i} className={'f ' + f.toLowerCase()}>{f}</span>)}

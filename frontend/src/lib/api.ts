@@ -23,6 +23,36 @@ export const getEventHistory = (
   return fetch(`/api/v1/events/${id}/history?${q.toString()}`).then(r => r.json())
 }
 
+export interface Standing {
+  rank: number | null
+  wins: number
+  losses: number
+  draws: number
+  played: number
+  points: number | null
+  source: string | null
+}
+
+/**
+ * Fetch ladder + record for one team. Returns null if the standings source
+ * is unavailable or the team isn't on the ladder — callers should render a
+ * fallback in that case, never crash.
+ */
+export const getTeamStanding = async (
+  teamName: string,
+  sportKey: string,
+): Promise<Standing | null> => {
+  try {
+    const r = await fetch(
+      `/api/v1/standings/team/${encodeURIComponent(teamName)}?sport=${encodeURIComponent(sportKey)}`,
+    )
+    if (!r.ok) return null
+    return await r.json()
+  } catch {
+    return null
+  }
+}
+
 export const getSports = () =>
   fetch('/api/v1/sports').then(r => r.json())
 

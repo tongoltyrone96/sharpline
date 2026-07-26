@@ -39,3 +39,19 @@ class LineupAdapter(ABC):
 
         Must NEVER raise — log any failure and return [].
         """
+
+
+class StandingsAdapter(ABC):
+    """Fetches league standings (ladder position + season record) per team."""
+
+    @abstractmethod
+    def fetch(self, sport_key: str) -> dict[str, dict] | None:
+        """
+        Return { team_name_lower: {rank, wins, losses, draws, played, points} }
+        for the given sport, or None if the source is unavailable.
+
+        Team name keys are lowercased, whitespace-collapsed for lookup by any
+        variant of the team name we see from the odds feed.
+
+        Must NEVER raise — log any failure and return None.
+        """
