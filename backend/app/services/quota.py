@@ -95,11 +95,17 @@ class QuotaGovernor:
         """
         Hours until the nearest upcoming / live event for this sport.
         Negative values mean the event is already underway.
-        Returns None if there are no events in the [now-3h, now+24h] window.
+        Returns None if there are no events in the [now-3h, now+96h] window.
+
+        The window covers the full four-day fixture horizon on the
+        dashboard so mid-week games aren't shut out of polling. The
+        interval table below still throttles distant games to a 6-hour
+        cadence so total spend stays well under budget (~60 credits/day
+        across 5 sports vs. ~465/day allowance).
         """
         now = datetime.now(tz=timezone.utc)
         window_open = now - timedelta(hours=3)
-        window_close = now + timedelta(hours=24)
+        window_close = now + timedelta(hours=96)
 
         row = (
             self._db.query(Event.commence_time)
