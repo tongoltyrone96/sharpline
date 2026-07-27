@@ -41,7 +41,7 @@ class OpenWeatherAdapter(WeatherAdapter):
                     "lon": lon,
                     "appid": self._key,
                     "units": "metric",
-                    "cnt": 16,  # 16 × 3 h = 48 h of forecast
+                    "cnt": 40,  # 40 × 3 h = 120 h (5 days) of forecast
                 },
                 timeout=_TIMEOUT,
             )

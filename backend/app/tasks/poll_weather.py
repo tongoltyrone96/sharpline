@@ -24,7 +24,11 @@ from app.tasks.recompute import recompute_event_task
 
 log = logging.getLogger(__name__)
 
-_WINDOW_HOURS = 24
+# OpenWeatherMap's free tier 5-day/3-hour forecast reaches ~120 hours out,
+# so we cover every fixture on the current dashboard (games are typically
+# scheduled ≤5 days ahead). Beyond 5 days the API returns nothing and we
+# gracefully leave the weather row null.
+_WINDOW_HOURS = 120
 
 
 @celery_app.task(name="app.tasks.poll_weather.poll_weather", bind=True, max_retries=3)

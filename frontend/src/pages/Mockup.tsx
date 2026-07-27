@@ -2087,8 +2087,16 @@ function TeamNews({ md }: { md: EventDetail }) {
   const awayChanges = aIn.length + aOut.length
 
   const wKind = weatherIconKind(md.weather)
-  const wIcon = wKind === 'rain' ? '🌧' : wKind === 'wind' ? '💨' : wKind === 'cloud' ? '☁️' : '☀️'
-  const wText = wKind === 'rain'
+  const wIcon = !md.weather
+    ? '⏳'
+    : md.weather.is_indoor
+    ? '🏟'
+    : wKind === 'rain' ? '🌧' : wKind === 'wind' ? '💨' : wKind === 'cloud' ? '☁️' : '☀️'
+  const wText = !md.weather
+    ? 'Forecast pending — weather updates automatically closer to kickoff.'
+    : md.weather.is_indoor
+    ? 'Indoor venue — no weather impact.'
+    : wKind === 'rain'
     ? 'Rain forecast — expect a slippery ball and reduced scoring conditions.'
     : wKind === 'wind'
     ? 'Strong wind forecast — kicking game likely affected.'
