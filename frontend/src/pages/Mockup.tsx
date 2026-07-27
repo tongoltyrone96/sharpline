@@ -1914,14 +1914,31 @@ function LineTotalStack({ md }: { md: EventDetail }) {
   const llo = Math.min(...lS) - 2.5, lhi = Math.max(...lS) + 2.5
   const lLast = lS[lS.length - 1]
 
-  const tS = seriesTo(tot, tot - 3.5, 12, 0.3)
+  // Real totals history. AFL fixtures often have no totals market at all
+  // (backend probe showed 0 rows) — in that case we drop the whole panel
+  // rather than draw a synthetic curve. NRL has totals so it plots real
+  // over-line movement.
+  const [totalHistory, setTotalHistory] = useState<HistoryPoint[]>([])
+  useEffect(() => {
+    getEventHistory(md.event.id, { market: 'totals', outcome: 'Over' })
+      .then(r => setTotalHistory(r.history ?? []))
+      .catch(() => setTotalHistory([]))
+  }, [md.event.id])
+
+  const realTot = downsampleHistory(totalHistory, p => p.point)
+  const totalIsReal = realTot.values.length >= 4
+  const totalHasAny = totalHistory.length > 0 || md.model?.projected_total != null
+
+  const tS = totalIsReal ? realTot.values : seriesTo(tot, tot - 3.5, 12, 0.3)
   const tlo = Math.min(...tS) - 2, thi = Math.max(...tS) + 2
   const tLast = tS[tS.length - 1]
 
   const lXLabels = lineIsReal
     ? timeAxisLabels(realLine.timestamps[0])
     : ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
-  const xLabels = ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
+  const tXLabels = totalIsReal
+    ? timeAxisLabels(realTot.timestamps[0])
+    : ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
 
   const lYPct = (v: number) => (1 - (v - llo) / (lhi - llo || 1)) * 100
   const lPts = lS.map((v, i) => `${(i / (lS.length - 1) * 100).toFixed(2)},${lYPct(v).toFixed(2)}`).join(' ')
@@ -1963,40 +1980,52 @@ function LineTotalStack({ md }: { md: EventDetail }) {
           </div>
         </div>
       </div>
-      <div className="p" id="pTotMv">
-        <div className="ph"><span className="pt">Total Points Movement</span><span className="hv mono" style={{ color: '#25d97b' }}>{tot.toFixed(1)}</span></div>
-        <div className="pb">
-          <div className="chg">
-            <div className="chg-yaxis">
-              {tYLabels.map((v, i) => <span key={i}>{v}</span>)}
-            </div>
-            <div className="chg-plot">
-              <svg className="chg-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="mck-gt2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#25d97b" stopOpacity=".3" />
-                    <stop offset="100%" stopColor="#25d97b" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
-                  {[0,33,66,100].map(y => <line key={y} x1={0} y1={y} x2={100} y2={y} />)}
-                </g>
-                <polygon points={`${tPts} 100,100 0,100`} fill="url(#mck-gt2)" />
-                <polyline points={tPts} fill="none" stroke="#25d97b" strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-              </svg>
-              {tS.map((v, i) => (
-                <span key={i} className="chg-mkr" style={{ left: `${(i / (tS.length - 1) * 100)}%`, top: `${tYPct(v)}%`, borderColor: '#25d97b' }} />
-              ))}
-            </div>
-            <div className="chg-endcol">
-              <span className="chg-dot" style={{ top: `${tYPct(tLast)}%`, background: '#25d97b' }} />
-            </div>
-            <div className="chg-xaxis">
-              {xLabels.map((l, i) => <span key={i}>{l}</span>)}
+      {totalIsReal ? (
+        <div className="p" id="pTotMv">
+          <div className="ph">
+            <span className="pt">Total Points Movement</span>
+            <span className="hv mono" style={{ color: '#25d97b' }}>{tLast.toFixed(1)}</span>
+          </div>
+          <div className="pb">
+            <div className="chg">
+              <div className="chg-yaxis">
+                {tYLabels.map((v, i) => <span key={i}>{v}</span>)}
+              </div>
+              <div className="chg-plot">
+                <svg className="chg-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="mck-gt2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#25d97b" stopOpacity=".3" />
+                      <stop offset="100%" stopColor="#25d97b" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <g stroke="#161f30" strokeWidth={1} strokeDasharray="2 4" vectorEffect="non-scaling-stroke">
+                    {[0,33,66,100].map(y => <line key={y} x1={0} y1={y} x2={100} y2={y} />)}
+                  </g>
+                  <polygon points={`${tPts} 100,100 0,100`} fill="url(#mck-gt2)" />
+                  <polyline points={tPts} fill="none" stroke="#25d97b" strokeWidth={2.2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+                </svg>
+                {tS.map((v, i) => (
+                  <span key={i} className="chg-mkr" style={{ left: `${(i / (tS.length - 1) * 100)}%`, top: `${tYPct(v)}%`, borderColor: '#25d97b' }} />
+                ))}
+              </div>
+              <div className="chg-endcol">
+                <span className="chg-dot" style={{ top: `${tYPct(tLast)}%`, background: '#25d97b' }} />
+              </div>
+              <div className="chg-xaxis">
+                {tXLabels.map((l, i) => <span key={i}>{l}</span>)}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="p" id="pTotMv">
+          <div className="ph"><span className="pt">Total Points Movement</span></div>
+          <div className="pb" style={{ minHeight: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#55647a', fontSize: 12, textAlign: 'center', padding: 16 }}>
+            {totalHasAny ? 'Collecting total-line samples…' : 'No total points market offered for this fixture.'}
+          </div>
+        </div>
+      )}
     </>
   )
 }
