@@ -233,36 +233,88 @@ def _lookup_nrl(team_name: str) -> str | None:
     return None
 
 
+def _matches_nrl_name(target: str, candidate: str) -> bool:
+    """Match a target team name against a Wikipedia-canonical NRL side name."""
+    t = _norm(target)
+    c = _norm(candidate)
+    if t == c:
+        return True
+    if _ALIASES.get(t) == c or _ALIASES.get(c) == t:
+        return True
+    return t in c or c in t
+
+
 def _nrl_h2h(home_name: str, away_name: str, n: int) -> dict | None:
     """
-    NRL H2H — without an easy games API we return a coarse plausible split
-    derived from where the two teams sit on the ladder. Better than showing
-    seeded random values; will get upgraded to real historical data once we
-    hook up a games source.
+    Real NRL H2H — scraped from the last four Wikipedia season-results
+    pages, so we can show the actual last N meetings with scores and
+    winners (matching the AFL H2H shape).
+
+    Falls back to None if Wikipedia is unreachable or neither team is
+    recognised. The frontend already renders "not enough history" style
+    fallbacks when this returns None.
     """
-    hk = _lookup_nrl(home_name)
-    ak = _lookup_nrl(away_name)
-    if not hk or not ak:
+    from app.adapters.wiki_h2h_nrl import fetch_season
+
+    year = datetime.now(timezone.utc).year
+    all_matches: list[dict] = []
+    for y in range(year - 3, year + 1):
+        season = fetch_season(y)
+        if season:
+            all_matches.extend(season)
+
+    filtered = [
+        m for m in all_matches
+        if (_matches_nrl_name(home_name, m["home"]) and _matches_nrl_name(away_name, m["away"]))
+        or (_matches_nrl_name(home_name, m["away"]) and _matches_nrl_name(away_name, m["home"]))
+    ]
+    if not filtered:
         return None
-    # Use recent form to bias the plausible H2H: stronger recent form → more historical wins
-    hf = _NRL_FORM.get(hk, [])
-    af = _NRL_FORM.get(ak, [])
-    hw = sum(1 for r in hf if r == "W")
-    aw = sum(1 for r in af if r == "W")
-    total = 10
-    # Normalise to a 10-game split with a floor of 1 each
-    if hw + aw == 0:
-        home_wins = away_wins = 5
-    else:
-        home_wins = max(1, min(9, round(hw / (hw + aw) * total)))
-        away_wins = total - home_wins
+
+    # Sort chronologically (latest first) using (year, round) as a proxy.
+    filtered.sort(key=lambda m: (m.get("year", 0), m.get("round") or 0), reverse=True)
+    filtered = filtered[:n]
+
+    home_wins = 0
+    away_wins = 0
+    draws = 0
+    last: list[dict] = []
+    for m in filtered:
+        hs = m["hscore"]
+        as_ = m["ascore"]
+        home_played_as_home = _matches_nrl_name(home_name, m["home"])
+        # Perspective from the requested `home_name`
+        if hs == as_:
+            draws += 1
+            for_home = "D"
+        else:
+            match_home_won = hs > as_
+            requested_home_won = (home_played_as_home and match_home_won) or \
+                                 (not home_played_as_home and not match_home_won)
+            if requested_home_won:
+                home_wins += 1
+                for_home = "H"
+            else:
+                away_wins += 1
+                for_home = "A"
+        winner = m["home"] if hs > as_ else (m["away"] if as_ > hs else "")
+        last.append({
+            "date":          f"{m['year']} R{m.get('round') or '?'}",
+            "hteam":         m["home"],
+            "ateam":         m["away"],
+            "hscore":        hs,
+            "ascore":        as_,
+            "winner":        winner,
+            "for_home_side": for_home,
+        })
+
     return {
         "home_wins": home_wins,
         "away_wins": away_wins,
-        "draws":     0,
-        "played":    total,
-        "last":      [],   # no per-game detail for NRL yet
-        "source":    "nrl-form-proxy",
+        "draws":     draws,
+        "played":    len(last),
+        "last":      last,
+        "source":    "wikipedia",
     }
 
 
