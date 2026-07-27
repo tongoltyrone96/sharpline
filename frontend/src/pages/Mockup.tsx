@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDashboard, DashboardEvent } from '../hooks/useDashboard'
-import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult, getTeamRatings, TeamRatings } from '../lib/api'
+import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult, getTeamRatings, TeamRatings, getTeamPower, TeamPower } from '../lib/api'
 
 // ───────────────────────────────────────────────────────────────────────────
 // Types
@@ -140,6 +140,20 @@ function useTeamRatings(teamName: string | undefined, sportKey: string | undefin
     if (!teamName || !sportKey) { setRow(null); return }
     let cancelled = false
     getTeamRatings(teamName, sportKey).then(r => { if (!cancelled) setRow(r) })
+    return () => { cancelled = true }
+  }, [teamName, sportKey])
+  return row
+}
+
+/**
+ * Power ranking (1 = strongest right now). null while loading or unavailable.
+ */
+function useTeamPower(teamName: string | undefined, sportKey: string | undefined): TeamPower | null {
+  const [row, setRow] = useState<TeamPower | null>(null)
+  useEffect(() => {
+    if (!teamName || !sportKey) { setRow(null); return }
+    let cancelled = false
+    getTeamPower(teamName, sportKey).then(r => { if (!cancelled) setRow(r) })
     return () => { cancelled = true }
   }, [teamName, sportKey])
   return row
@@ -2172,6 +2186,8 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
   const ap = safeCol(away.primary_color, '#8b5cf6')
   const homeRatings = useTeamRatings(home.name, md.event.sport)
   const awayRatings = useTeamRatings(away.name, md.event.sport)
+  const homePower   = useTeamPower(home.name, md.event.sport)
+  const awayPower   = useTeamPower(away.name, md.event.sport)
   const seeded = fakeMetrics(home.abbr, away.abbr)
   const rows = seeded.map(r => {
     if (r.label === 'Attack Rating' && homeRatings && awayRatings) {
@@ -2186,7 +2202,10 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
     }
     return r
   })
-  const pow = fakePower(home.abbr, away.abbr)
+  const seededPow = fakePower(home.abbr, away.abbr)
+  const pow = (homePower && awayPower)
+    ? { home: homePower.rank, away: awayPower.rank }
+    : seededPow
   const homePowerWins = pow.home < pow.away
   const powBg = `linear-gradient(90deg, ${homePowerWins ? hp : darken(hp,0.85)}22 0%, #0d1320 50%, ${homePowerWins ? darken(ap,0.85) : ap}22 100%)`
   return (

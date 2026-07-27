@@ -19,7 +19,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.services.games_service import recent_form, h2h, team_ratings
+from app.services.games_service import recent_form, h2h, team_ratings, team_power
 
 log = logging.getLogger(__name__)
 
@@ -60,4 +60,16 @@ def ratings_for_team(
     result = team_ratings(name, sport)
     if not result:
         raise HTTPException(status_code=404, detail="ratings not available")
+    return result
+
+
+@router.get("/power/team/{name}")
+def power_for_team(
+    name: str,
+    sport: str = Query(..., description="Sport key"),
+) -> dict:
+    """Power ranking (1 = strongest team right now)."""
+    result = team_power(name, sport)
+    if not result:
+        raise HTTPException(status_code=404, detail="power ranking not available")
     return result

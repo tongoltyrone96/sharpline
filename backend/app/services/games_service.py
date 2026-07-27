@@ -404,5 +404,141 @@ def team_ratings(team_name: str, sport_key: str) -> dict | None:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Power Ranking (ELO for AFL, derived score for NRL)
+# ---------------------------------------------------------------------------
+# Rank 1 = strongest team right now. AFL rank is derived from a
+# margin-adjusted ELO run over the last three completed seasons of Squiggle
+# game logs (with home-ground advantage and season-boundary regression to
+# the mean). NRL rank is derived from the snapshot Attack + Defence ratings
+# since we don't yet have a games API for the NRL.
+
+def _afl_power_rankings() -> dict[str, dict] | None:
+    import math
+    from collections import defaultdict
+
+    year = datetime.now(timezone.utc).year
+    all_games: list[dict] = []
+    for y in range(year - 2, year + 1):
+        gs = _squiggle_games_for("aussierules_afl", y)
+        if gs:
+            all_games.extend(gs)
+    completed = [g for g in all_games if g.get("complete") == 100]
+    if not completed:
+        return None
+    completed.sort(key=lambda g: g.get("unixtime", 0))
+
+    K = 20
+    HOME_ADV = 40
+    START_ELO = 1500.0
+    SEASON_REGRESS = 0.5  # regress halfway back to the mean at season boundaries
+
+    elos: dict[str, float] = defaultdict(lambda: START_ELO)
+    last_year_seen: dict[str, int] = {}
+
+    for g in completed:
+        h = _norm(g.get("hteam") or "")
+        a = _norm(g.get("ateam") or "")
+        if not h or not a:
+            continue
+        hs = g.get("hscore") or 0
+        as_ = g.get("ascore") or 0
+        game_year = int((g.get("date") or "0000")[:4] or 0)
+
+        for team in (h, a):
+            prev = last_year_seen.get(team)
+            if prev is not None and game_year > prev:
+                elos[team] = START_ELO + (elos[team] - START_ELO) * SEASON_REGRESS
+            last_year_seen[team] = game_year
+
+        _ = elos[h]
+        _ = elos[a]
+
+        elo_diff = (elos[h] + HOME_ADV) - elos[a]
+        expected_h = 1.0 / (1.0 + 10 ** (-elo_diff / 400))
+        if hs > as_:
+            actual_h = 1.0
+        elif hs < as_:
+            actual_h = 0.0
+        else:
+            actual_h = 0.5
+
+        margin = abs(hs - as_)
+        # FiveThirtyEight-style margin-of-victory multiplier
+        mov = math.log(margin + 1) * 2.2 / ((abs(elo_diff) * 0.001) + 2.2)
+
+        change = K * mov * (actual_h - expected_h)
+        elos[h] += change
+        elos[a] -= change
+
+    # Only rank teams we've actually seen in the current or previous season —
+    # skip defunct / relocated names still lurking in old data.
+    current_teams = {t for t, y in last_year_seen.items() if y >= year - 1}
+    active = {t: e for t, e in elos.items() if t in current_teams}
+    if not active:
+        return None
+
+    ranked = sorted(active.items(), key=lambda kv: kv[1], reverse=True)
+    out: dict[str, dict] = {}
+    for rank, (team, elo) in enumerate(ranked, start=1):
+        out[team] = {
+            "rank":   rank,
+            "elo":    round(elo, 1),
+            "source": "elo-squiggle",
+        }
+    return out
+
+
+def _nrl_power_rankings() -> dict[str, dict]:
+    """Rank NRL teams by (attack + defence) — 100. Snapshot-derived."""
+    scored = [
+        (team, r["attack_rating"] + r["defence_rating"] - 100.0)
+        for team, r in _NRL_RATINGS.items()
+    ]
+    scored.sort(key=lambda kv: kv[1], reverse=True)
+    out: dict[str, dict] = {}
+    for rank, (team, score) in enumerate(scored, start=1):
+        out[team] = {
+            "rank":   rank,
+            "score":  round(score, 1),
+            "source": "nrl-snapshot",
+        }
+    return out
+
+
+def team_power(team_name: str, sport_key: str) -> dict | None:
+    """Return {'rank': int, ...} or None if the sport / team isn't supported."""
+    if not team_name:
+        return None
+    sk = (sport_key or "").lower()
+    if "afl" in sk or "aussierules" in sk:
+        table = _afl_power_rankings()
+        if not table:
+            return None
+        n = _norm(team_name)
+        if n in table:
+            return table[n]
+        alias = _ALIASES.get(n)
+        if alias and alias in table:
+            return table[alias]
+        for k in table:
+            if n and (n in k or k in n):
+                return table[k]
+        return None
+    if "nrl" in sk or "rugby_league" in sk:
+        table = _nrl_power_rankings()
+        n = _norm(team_name)
+        if n in table:
+            return table[n]
+        alias = _ALIASES.get(n)
+        if alias and alias in table:
+            return table[alias]
+        for k in table:
+            if n and (n in k or k in n):
+                return table[k]
+        return None
+    return None
+
+
 def invalidate() -> None:
     _games_cache.clear()

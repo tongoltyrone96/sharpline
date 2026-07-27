@@ -100,6 +100,29 @@ export const getH2H = async (
   }
 }
 
+export interface TeamPower {
+  rank: number
+  elo?: number
+  score?: number
+  source: string
+}
+
+/** Power ranking (1 = strongest right now). null if unavailable. */
+export const getTeamPower = async (
+  teamName: string,
+  sportKey: string,
+): Promise<TeamPower | null> => {
+  try {
+    const r = await fetch(
+      `/api/v1/power/team/${encodeURIComponent(teamName)}?sport=${encodeURIComponent(sportKey)}`,
+    )
+    if (!r.ok) return null
+    return await r.json()
+  } catch {
+    return null
+  }
+}
+
 export interface TeamRatings {
   attack_rating: number
   defence_rating: number
