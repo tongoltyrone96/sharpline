@@ -1309,6 +1309,19 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
     .map(r => r.point as number)
   const avgLine = totalLines.length ? totalLines.reduce((s, v) => s + v, 0) / totalLines.length : null
 
+  // Real totals history for the top-strip sparkline. If none exists (many
+  // AFL fixtures don't offer a totals market) we hide the sparkline
+  // rather than drawing a synthetic curve next to the "no total data"
+  // label on the same card.
+  const [totalHistory, setTotalHistory] = useState<HistoryPoint[]>([])
+  useEffect(() => {
+    getEventHistory(md.event.id, { market: 'totals', outcome: 'Over' })
+      .then(r => setTotalHistory(r.history ?? []))
+      .catch(() => setTotalHistory([]))
+  }, [md.event.id])
+  const totSpark = downsampleHistory(totalHistory, p => p.point)
+  const totSparkReady = totSpark.values.length >= 4
+
   // Directional lean: 50 = neutral, 100 = fully OVER, 0 = fully UNDER.
   // Uses the same combined signal as the confidence strip (projected/line gap
   // + weather + matchup) so the bar never sits at 50/50 while the confidence
@@ -1494,12 +1507,8 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
               )}
             </div>
             <div className="tcchart">
-              {(() => {
-                const base = tot ?? 40
-                const pts = Array.from({ length: 15 }, (_, i) => {
-                  const t = i / 14
-                  return base - 2.5 + (1 - Math.pow(1 - t, 1.6)) * 2.5 + Math.sin(i * 1.6) * 0.5
-                })
+              {totSparkReady && (() => {
+                const pts = totSpark.values
                 const min = Math.min(...pts) - 0.6, max = Math.max(...pts) + 0.6
                 const xPct = (i: number) => i / (pts.length - 1) * 100
                 const yPct = (v: number) => (1 - (v - min) / (max - min || 1)) * 100
