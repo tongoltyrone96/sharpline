@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDashboard, DashboardEvent } from '../hooks/useDashboard'
-import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult, getTeamRatings, TeamRatings, getTeamPower, TeamPower, getEventLineups, EventLineups, LineupPlayer } from '../lib/api'
+import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult, getTeamRatings, TeamRatings, getTeamPower, TeamPower, getEventLineups, EventLineups, LineupPlayer, getStatus } from '../lib/api'
 
 // ───────────────────────────────────────────────────────────────────────────
 // Types
@@ -1047,11 +1047,26 @@ function Sidebar({ onNavigate, roundConf }: {
 // ───────────────────────────────────────────────────────────────────────────
 // Top bar
 // ───────────────────────────────────────────────────────────────────────────
-function TopBar({ sport, matches, selectedId, onSelect }: {
+function fmtAgo(iso: string | null): string {
+  if (!iso) return '—'
+  const then = new Date(iso).getTime()
+  if (isNaN(then)) return '—'
+  const diffSec = Math.max(0, Math.floor((Date.now() - then) / 1000))
+  if (diffSec < 60) return `${diffSec}s ago`
+  const m = Math.floor(diffSec / 60)
+  if (m < 60) return `${m} min${m === 1 ? '' : 's'} ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h} hr${h === 1 ? '' : 's'} ago`
+  const d = Math.floor(h / 24)
+  return `${d} day${d === 1 ? '' : 's'} ago`
+}
+
+function TopBar({ sport, matches, selectedId, onSelect, lastPoll }: {
   sport: string;
   matches: DashboardEvent[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  lastPoll: string | null;
 }) {
   return (
     <div className="top">
@@ -1076,7 +1091,7 @@ function TopBar({ sport, matches, selectedId, onSelect }: {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#7b8ba3', whiteSpace: 'nowrap' }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#25d97b' }} />
-          Last Updated: <b style={{ color: '#c3d0e2', fontWeight: 600 }}>2 mins ago</b>
+          Last Updated: <b style={{ color: '#c3d0e2', fontWeight: 600 }}>{fmtAgo(lastPoll)}</b>
         </div>
         <div className="livep"><span className="dot"></span>LIVE</div>
         <button className="sharebtn" type="button">↑ SHARE</button>
@@ -1513,10 +1528,12 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
             alignItems: 'center', gap: 8, marginTop: 10, width: '100%',
           }}>
             <span style={{
-              color: '#25d97b', fontSize: 12, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace',
+              color: overPct != null ? '#25d97b' : '#55647a', fontSize: 12, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace',
               whiteSpace: 'nowrap', textShadow: '0 1px 2px rgba(0,0,0,.7)',
             }}>
-              <b style={{ fontSize: 14, fontWeight: 900 }}>{overPct != null ? Math.round(overPct) : 50}%</b> ▲ OVER
+              {overPct != null
+                ? <><b style={{ fontSize: 14, fontWeight: 900 }}>{Math.round(overPct)}%</b> ▲ OVER</>
+                : <>— ▲ OVER</>}
             </span>
             <div style={{
               display: 'flex', height: 12, background: '#1a2333', borderRadius: 6,
@@ -1529,10 +1546,12 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
               </> : <div style={{ width: '100%', textAlign: 'center', fontSize: 8, color: '#55647a', lineHeight: '12px' }}>no total data</div>}
             </div>
             <span style={{
-              color: '#f4526a', fontSize: 12, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace',
+              color: overPct != null ? '#f4526a' : '#55647a', fontSize: 12, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace',
               whiteSpace: 'nowrap', textAlign: 'right', textShadow: '0 1px 2px rgba(0,0,0,.7)',
             }}>
-              UNDER ▼ <b style={{ fontSize: 14, fontWeight: 900 }}>{overPct != null ? Math.round(100 - overPct) : 50}%</b>
+              {overPct != null
+                ? <>UNDER ▼ <b style={{ fontSize: 14, fontWeight: 900 }}>{Math.round(100 - overPct)}%</b></>
+                : <>UNDER ▼ —</>}
             </span>
           </div>
         </div>
@@ -1963,10 +1982,12 @@ function TeamNews({ md }: { md: EventDetail }) {
   const wKind = weatherIconKind(md.weather)
   const wIcon = wKind === 'rain' ? '🌧' : wKind === 'wind' ? '💨' : wKind === 'cloud' ? '☁️' : '☀️'
   const wText = wKind === 'rain'
-    ? 'Rain and a slippery ball. Model shades the projected total down 2.4 points.'
+    ? 'Rain forecast — expect a slippery ball and reduced scoring conditions.'
     : wKind === 'wind'
-    ? 'Strong wind. Kicking game affected; total shaded down 1.8 points.'
-    : 'Settled conditions. No material adjustment to the projected total.'
+    ? 'Strong wind forecast — kicking game likely affected.'
+    : wKind === 'cloud'
+    ? 'Overcast but settled — no material weather impact expected.'
+    : 'Settled conditions — no weather impact expected.'
 
   // Column contents:
   //  - scraped team list if we have one for this team (real data)
@@ -2076,7 +2097,7 @@ function TeamNews({ md }: { md: EventDetail }) {
             <div className="ic">🧠</div>
             <div>
               <div className="tt">AI MODEL FACTORS</div>
-              <p>Injuries, H2H, Form, Line Movement, Weather, Venue, Rest Days, Power Ratings &amp; 120+ more.</p>
+              <p>Ratings, Recent Form, H2H, Line Movement, Weather, Venue &amp; Power Ranking.</p>
             </div>
           </div>
         </div>
@@ -2602,6 +2623,19 @@ function MockupInner() {
     return () => clearInterval(t)
   }, [selectedId])
 
+  // Backend last-poll timestamp — drives the "Last Updated" header. Poll
+  // once a minute so the "N mins ago" text stays fresh.
+  const [lastPoll, setLastPoll] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    const fetchIt = () => getStatus()
+      .then(s => { if (!cancelled) setLastPoll(s?.last_poll ?? null) })
+      .catch(() => {})
+    fetchIt()
+    const t = setInterval(fetchIt, 60_000)
+    return () => { cancelled = true; clearInterval(t) }
+  }, [])
+
   // Round confidence — real avg confidence across filtered events
   const roundConf = useMemo(() => {
     const list = (sport === 'ALL' ? events : events.filter(e => (e.sport_title || '').toUpperCase() === sport))
@@ -2637,6 +2671,7 @@ function MockupInner() {
             matches={matchList}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            lastPoll={lastPoll}
           />
           <FixturesStrip
             events={events}
