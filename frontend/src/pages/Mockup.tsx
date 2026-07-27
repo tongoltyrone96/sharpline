@@ -2264,20 +2264,21 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
   const awayRatings = useTeamRatings(away.name, md.event.sport)
   const homePower   = useTeamPower(home.name, md.event.sport)
   const awayPower   = useTeamPower(away.name, md.event.sport)
-  const seeded = fakeMetrics(home.abbr, away.abbr)
-  const rows = seeded.map(r => {
-    if (r.label === 'Attack Rating' && homeRatings && awayRatings) {
-      const h = homeRatings.attack_rating, a = awayRatings.attack_rating
-      return { label: r.label, h: h.toFixed(1), a: a.toFixed(1), homeAdv: h > a }
-    }
-    if (r.label === 'Defence Rating' && homeRatings && awayRatings) {
-      // Higher rating = better defence (adapter normalizes so that fewer points
-      // conceded → higher score). So home advantage when home > away.
-      const h = homeRatings.defence_rating, a = awayRatings.defence_rating
-      return { label: r.label, h: h.toFixed(1), a: a.toFixed(1), homeAdv: h > a }
-    }
-    return r
-  })
+
+  // Only Attack + Defence Rating are backed by real data (season averages
+  // from Squiggle for AFL / snapshot for NRL). The old fake rows (Expected
+  // Tries, Completion Rate, Possession %, Territory %, Penalties Conceded)
+  // have no free data source and were removed rather than shown as
+  // synthetic values the client couldn't defend.
+  const rows: Array<{ label: string; h: string; a: string; homeAdv: boolean }> = []
+  if (homeRatings && awayRatings) {
+    const ha = homeRatings.attack_rating, aa = awayRatings.attack_rating
+    rows.push({ label: 'Attack Rating',  h: ha.toFixed(1), a: aa.toFixed(1), homeAdv: ha > aa })
+    const hd = homeRatings.defence_rating, ad = awayRatings.defence_rating
+    // Higher rating = better defence (adapter inverts points-conceded).
+    rows.push({ label: 'Defence Rating', h: hd.toFixed(1), a: ad.toFixed(1), homeAdv: hd > ad })
+  }
+
   const seededPow = fakePower(home.abbr, away.abbr)
   const pow = (homePower && awayPower)
     ? { home: homePower.rank, away: awayPower.rank }
@@ -2295,7 +2296,7 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
             <span style={{ color: ap }}>{away.abbr}</span>
           </div>
           <div className="mtxbody">
-            {rows.map((r, i) => (
+            {rows.length > 0 ? rows.map((r, i) => (
               <div key={i} className="mtxrow">
                 <span className="mv" style={{ color: hp }}>{r.h}</span>
                 <span className="ml">{r.label}</span>
@@ -2304,7 +2305,11 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
                 </span>
                 <span className="mv r" style={{ color: ap }}>{r.a}</span>
               </div>
-            ))}
+            )) : (
+              <div className="mtxrow" style={{ color: '#55647a', fontSize: 12, gridColumn: '1 / -1', textAlign: 'center', padding: '18px 0' }}>
+                Loading ratings…
+              </div>
+            )}
           </div>
         </div>
       </div>
