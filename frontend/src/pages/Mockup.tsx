@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDashboard, DashboardEvent } from '../hooks/useDashboard'
-import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult } from '../lib/api'
+import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult, getTeamRatings, TeamRatings } from '../lib/api'
 
 // ───────────────────────────────────────────────────────────────────────────
 // Types
@@ -127,6 +127,21 @@ function useH2H(homeName: string | undefined, awayName: string | undefined, spor
     getH2H(homeName, awayName, sportKey, n).then(r => { if (!cancelled) setRow(r) })
     return () => { cancelled = true }
   }, [homeName, awayName, sportKey, n])
+  return row
+}
+
+/**
+ * Season attack + defence ratings normalized to 100 = league average.
+ * null while loading or unavailable — caller must fall back.
+ */
+function useTeamRatings(teamName: string | undefined, sportKey: string | undefined): TeamRatings | null {
+  const [row, setRow] = useState<TeamRatings | null>(null)
+  useEffect(() => {
+    if (!teamName || !sportKey) { setRow(null); return }
+    let cancelled = false
+    getTeamRatings(teamName, sportKey).then(r => { if (!cancelled) setRow(r) })
+    return () => { cancelled = true }
+  }, [teamName, sportKey])
   return row
 }
 function fakeForm(abbr: string): ('W'|'L')[] {
@@ -2155,7 +2170,22 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
   const { home, away } = md.event
   const hp = safeCol(home.primary_color, '#c8324f')
   const ap = safeCol(away.primary_color, '#8b5cf6')
-  const rows = fakeMetrics(home.abbr, away.abbr)
+  const homeRatings = useTeamRatings(home.name, md.event.sport)
+  const awayRatings = useTeamRatings(away.name, md.event.sport)
+  const seeded = fakeMetrics(home.abbr, away.abbr)
+  const rows = seeded.map(r => {
+    if (r.label === 'Attack Rating' && homeRatings && awayRatings) {
+      const h = homeRatings.attack_rating, a = awayRatings.attack_rating
+      return { label: r.label, h: h.toFixed(1), a: a.toFixed(1), homeAdv: h > a }
+    }
+    if (r.label === 'Defence Rating' && homeRatings && awayRatings) {
+      // Higher rating = better defence (adapter normalizes so that fewer points
+      // conceded → higher score). So home advantage when home > away.
+      const h = homeRatings.defence_rating, a = awayRatings.defence_rating
+      return { label: r.label, h: h.toFixed(1), a: a.toFixed(1), homeAdv: h > a }
+    }
+    return r
+  })
   const pow = fakePower(home.abbr, away.abbr)
   const homePowerWins = pow.home < pow.away
   const powBg = `linear-gradient(90deg, ${homePowerWins ? hp : darken(hp,0.85)}22 0%, #0d1320 50%, ${homePowerWins ? darken(ap,0.85) : ap}22 100%)`

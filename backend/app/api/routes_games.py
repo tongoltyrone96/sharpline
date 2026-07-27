@@ -19,7 +19,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.services.games_service import recent_form, h2h
+from app.services.games_service import recent_form, h2h, team_ratings
 
 log = logging.getLogger(__name__)
 
@@ -48,4 +48,16 @@ def h2h_endpoint(
     result = h2h(home, away, sport, n)
     if not result:
         raise HTTPException(status_code=404, detail="h2h not available")
+    return result
+
+
+@router.get("/ratings/team/{name}")
+def ratings_for_team(
+    name: str,
+    sport: str = Query(..., description="Sport key"),
+) -> dict:
+    """Attack + defence ratings (100 = league average)."""
+    result = team_ratings(name, sport)
+    if not result:
+        raise HTTPException(status_code=404, detail="ratings not available")
     return result

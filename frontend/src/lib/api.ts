@@ -100,6 +100,28 @@ export const getH2H = async (
   }
 }
 
+export interface TeamRatings {
+  attack_rating: number
+  defence_rating: number
+  source: string
+}
+
+/** Attack + defence ratings normalized so 100 = league average. null if unavailable. */
+export const getTeamRatings = async (
+  teamName: string,
+  sportKey: string,
+): Promise<TeamRatings | null> => {
+  try {
+    const r = await fetch(
+      `/api/v1/ratings/team/${encodeURIComponent(teamName)}?sport=${encodeURIComponent(sportKey)}`,
+    )
+    if (!r.ok) return null
+    return await r.json()
+  } catch {
+    return null
+  }
+}
+
 export const getSports = () =>
   fetch('/api/v1/sports').then(r => r.json())
 
