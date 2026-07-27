@@ -23,7 +23,10 @@ log = logging.getLogger(__name__)
 
 _BASE = "https://api.squiggle.com.au/"
 _TIMEOUT = 10
-_USER_AGENT = "Sharpline/1.0 (contact via product owner)"
+# Squiggle's usage policy requires a User-Agent that identifies the caller
+# with a way to contact you (name + email). Without an email address they
+# return HTTP 403.
+_USER_AGENT = "Sharpline (tongoltyrone84@gmail.com) — AFL standings for match dashboard"
 
 
 def _normalise(name: str) -> str:
