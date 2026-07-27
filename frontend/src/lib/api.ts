@@ -53,6 +53,53 @@ export const getTeamStanding = async (
   }
 }
 
+export type FormResult = 'W' | 'L' | 'D'
+
+/** Recent completed-match form for one team, latest first. null if unavailable. */
+export const getTeamForm = async (
+  teamName: string,
+  sportKey: string,
+  n = 5,
+): Promise<FormResult[] | null> => {
+  try {
+    const r = await fetch(
+      `/api/v1/form/team/${encodeURIComponent(teamName)}?sport=${encodeURIComponent(sportKey)}&n=${n}`,
+    )
+    if (!r.ok) return null
+    const d = await r.json()
+    return d.form ?? null
+  } catch {
+    return null
+  }
+}
+
+export interface H2HResult {
+  home_wins: number
+  away_wins: number
+  draws: number
+  played: number
+  last: Array<{ date: string; hteam: string; ateam: string; hscore: number; ascore: number; winner: string; for_home_side: 'H' | 'A' | 'D' }>
+  source: string
+}
+
+/** Head-to-head history between two teams. null if unavailable. */
+export const getH2H = async (
+  homeName: string,
+  awayName: string,
+  sportKey: string,
+  n = 10,
+): Promise<H2HResult | null> => {
+  try {
+    const r = await fetch(
+      `/api/v1/h2h?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&sport=${encodeURIComponent(sportKey)}&n=${n}`,
+    )
+    if (!r.ok) return null
+    return await r.json()
+  } catch {
+    return null
+  }
+}
+
 export const getSports = () =>
   fetch('/api/v1/sports').then(r => r.json())
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDashboard, DashboardEvent } from '../hooks/useDashboard'
-import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing } from '../lib/api'
+import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult } from '../lib/api'
 
 // ───────────────────────────────────────────────────────────────────────────
 // Types
@@ -97,6 +97,36 @@ function useTeamStanding(teamName: string | undefined, sportKey: string | undefi
     getTeamStanding(teamName, sportKey).then(r => { if (!cancelled) setRow(r) })
     return () => { cancelled = true }
   }, [teamName, sportKey])
+  return row
+}
+
+/**
+ * Fetches last-N completed match results for a team. Returns null while
+ * loading or if the source is unavailable — caller must fall back.
+ */
+function useTeamForm(teamName: string | undefined, sportKey: string | undefined, n = 5): FormResult[] | null {
+  const [form, setForm] = useState<FormResult[] | null>(null)
+  useEffect(() => {
+    if (!teamName || !sportKey) { setForm(null); return }
+    let cancelled = false
+    getTeamForm(teamName, sportKey, n).then(r => { if (!cancelled) setForm(r) })
+    return () => { cancelled = true }
+  }, [teamName, sportKey, n])
+  return form
+}
+
+/**
+ * Head-to-head aggregate + per-game history between the two teams.
+ * null while loading or unavailable — caller must fall back.
+ */
+function useH2H(homeName: string | undefined, awayName: string | undefined, sportKey: string | undefined, n = 10): H2HResult | null {
+  const [row, setRow] = useState<H2HResult | null>(null)
+  useEffect(() => {
+    if (!homeName || !awayName || !sportKey) { setRow(null); return }
+    let cancelled = false
+    getH2H(homeName, awayName, sportKey, n).then(r => { if (!cancelled) setRow(r) })
+    return () => { cancelled = true }
+  }, [homeName, awayName, sportKey, n])
   return row
 }
 function fakeForm(abbr: string): ('W'|'L')[] {
@@ -499,6 +529,7 @@ const CSS = `
 .mck-root .f{width:14px;height:14px;border-radius:3px;display:grid;place-items:center;font-size:7.5px;font-weight:800;font-family:'IBM Plex Mono',monospace}
 .mck-root .f.w{background:#0f3d24;color:var(--mgreen)}
 .mck-root .f.l{background:#3b1420;color:var(--mred)}
+.mck-root .f.d{background:#2a2f3d;color:#c3d0e2}
 .mck-root .hmid{text-align:center;padding:6px 2px}
 .mck-root .hmid .vn{font-size:8.5px;letter-spacing:.08em;color:#a9b6c8;font-weight:700}
 .mck-root .hmid .wh{font-size:9.5px;color:var(--mdim);margin-top:1px}
@@ -1977,10 +2008,23 @@ function H2HFormStack({ md }: { md: EventDetail }) {
   const { home, away } = md.event
   const hp = safeCol(home.primary_color, '#4da6ff'), ap = safeCol(away.primary_color, '#8b5cf6')
   const hd = darken(hp, 0.7), ad = darken(ap, 0.7)
-  const h2h = fakeH2H(md.event.id)
-  // Real ladder from the standings service, falls back to seeded value.
+  const seededH2H = fakeH2H(md.event.id)
+  // Real values from backend services; fall back to seeded placeholders when
+  // the endpoint is unavailable or the team isn't matched.
   const homeStanding = useTeamStanding(home.name, md.event.sport)
   const awayStanding = useTeamStanding(away.name, md.event.sport)
+  const homeForm     = useTeamForm(home.name, md.event.sport, 5)
+  const awayForm     = useTeamForm(away.name, md.event.sport, 5)
+  const realH2H      = useH2H(home.name, away.name, md.event.sport, 10)
+  const h2h = realH2H
+    ? {
+        hw: realH2H.home_wins,
+        aw: realH2H.away_wins,
+        last: (realH2H.last.length
+          ? realH2H.last.slice(0, 10).map(g => (g.for_home_side === 'H' ? 'h' : 'a') as 'h' | 'a')
+          : seededH2H.last),
+      }
+    : seededH2H
   return (
     <>
       <div className="p" id="pH2h">
@@ -2014,8 +2058,13 @@ function H2HFormStack({ md }: { md: EventDetail }) {
               const t = k === 'home' ? home : away
               const col = k === 'home' ? hp : ap
               const dcol = k === 'home' ? hd : ad
-              const form = fakeForm(t.abbr)
-              const pts = form.filter(f => f === 'W').length * 2
+              const realForm = k === 'home' ? homeForm : awayForm
+              // Real form when we have it (already 'W'/'L'/'D'), otherwise seeded W/L.
+              const form: Array<'W' | 'L' | 'D'> = (realForm && realForm.length > 0)
+                ? realForm.slice(0, 5)
+                : fakeForm(t.abbr)
+              // 2 pts per win, 1 pt per draw (AFL & NRL both use this scoring)
+              const pts = form.filter(f => f === 'W').length * 2 + form.filter(f => f === 'D').length
               const standing = k === 'home' ? homeStanding : awayStanding
               const ladder = realLadder(standing) ?? fakeLadder(t.abbr)
               return (
