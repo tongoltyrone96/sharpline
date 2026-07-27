@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDashboard, DashboardEvent } from '../hooks/useDashboard'
-import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult, getTeamRatings, TeamRatings, getTeamPower, TeamPower } from '../lib/api'
+import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult, getTeamRatings, TeamRatings, getTeamPower, TeamPower, getEventLineups, EventLineups, LineupPlayer } from '../lib/api'
 
 // ───────────────────────────────────────────────────────────────────────────
 // Types
@@ -156,6 +156,21 @@ function useTeamPower(teamName: string | undefined, sportKey: string | undefined
     getTeamPower(teamName, sportKey).then(r => { if (!cancelled) setRow(r) })
     return () => { cancelled = true }
   }, [teamName, sportKey])
+  return row
+}
+
+/**
+ * Scraped team lists for a match (NRL only for now — AFL currently
+ * returns null since there's no public source for weekly lineups).
+ */
+function useEventLineups(eventId: string | undefined): EventLineups | null {
+  const [row, setRow] = useState<EventLineups | null>(null)
+  useEffect(() => {
+    if (!eventId) { setRow(null); return }
+    let cancelled = false
+    getEventLineups(eventId).then(r => { if (!cancelled) setRow(r) })
+    return () => { cancelled = true }
+  }, [eventId])
   return row
 }
 function fakeForm(abbr: string): ('W'|'L')[] {
@@ -1909,18 +1924,41 @@ function LineTotalStack({ md }: { md: EventDetail }) {
 // ───────────────────────────────────────────────────────────────────────────
 // Team News & Lineups
 // ───────────────────────────────────────────────────────────────────────────
+// Short position code for the badge (Fullback -> FB, 2nd Row -> 2R, etc.)
+function shortPos(position: string): string {
+  if (!position) return ''
+  const p = position.trim().toLowerCase()
+  const map: Record<string, string> = {
+    'fullback': 'FB', 'winger': 'WG', 'centre': 'CE', 'center': 'CE',
+    'five-eighth': 'FE', 'halfback': 'HB', 'prop': 'PR', 'hooker': 'HK',
+    '2nd row': '2R', 'second row': '2R', 'lock': 'LK',
+    'interchange': 'INT', 'reserve': 'RES', 'bench': 'BEN',
+    // AFL positions (for future use)
+    'ruck': 'RK', 'ruckman': 'RK', 'defender': 'DEF', 'midfielder': 'MID',
+    'forward': 'FWD',
+  }
+  if (map[p]) return map[p]
+  // Fallback: initials of first two words, max 3 chars
+  return position.split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase()
+}
+
 function TeamNews({ md }: { md: EventDetail }) {
   const { home, away } = md.event
   const hp = safeCol(home.primary_color, '#4da6ff'), ap = safeCol(away.primary_color, '#8b5cf6')
   const hd = darken(hp, 0.7), ad = darken(ap, 0.7)
-  const lineups = md.lineups ?? []
-  const hIn = lineups.filter(l => l.team === home.name && l.status === 'in')
-  const hOut = lineups.filter(l => l.team === home.name && (l.status === 'out' || l.status === 'doubtful'))
-  const aIn = lineups.filter(l => l.team === away.name && l.status === 'in')
-  const aOut = lineups.filter(l => l.team === away.name && (l.status === 'out' || l.status === 'doubtful'))
 
-  const hAdj = fakeAdjPct(home.abbr)
-  const aAdj = fakeAdjPct(away.abbr)
+  // Scraped team lists (NRL, when available). AFL currently returns null.
+  const scraped = useEventLineups(md.event.id)
+
+  // Admin-entered manual lineup changes (IN/OUT from the events endpoint).
+  const manual = md.lineups ?? []
+  const hIn = manual.filter(l => l.team === home.name && l.status === 'in')
+  const hOut = manual.filter(l => l.team === home.name && (l.status === 'out' || l.status === 'doubtful'))
+  const aIn = manual.filter(l => l.team === away.name && l.status === 'in')
+  const aOut = manual.filter(l => l.team === away.name && (l.status === 'out' || l.status === 'doubtful'))
+
+  const homeChanges = hIn.length + hOut.length
+  const awayChanges = aIn.length + aOut.length
 
   const wKind = weatherIconKind(md.weather)
   const wIcon = wKind === 'rain' ? '🌧' : wKind === 'wind' ? '💨' : wKind === 'cloud' ? '☁️' : '☀️'
@@ -1930,9 +1968,13 @@ function TeamNews({ md }: { md: EventDetail }) {
     ? 'Strong wind. Kicking game affected; total shaded down 1.8 points.'
     : 'Settled conditions. No material adjustment to the projected total.'
 
-  const posFor = (name: string): string => {
-    const positions = ['HK','FB','WG','CE','FE','HB','PR','SR','LK']
-    return positions[seedFrom(name) % positions.length]
+  // Column contents:
+  //  - scraped team list if we have one for this team (real data)
+  //  - else fall back to admin-entered IN/OUT
+  //  - else honest "not yet announced" placeholder
+  const scrapedFor = (side: 'h' | 'a'): LineupPlayer[] => {
+    if (!scraped) return []
+    return side === 'h' ? scraped.home.players : scraped.away.players
   }
 
   const column = (side: 'h' | 'a') => {
@@ -1941,7 +1983,11 @@ function TeamNews({ md }: { md: EventDetail }) {
     const d = side === 'h' ? hd : ad
     const ins = side === 'h' ? hIn : aIn
     const outs = side === 'h' ? hOut : aOut
+    const roster = scrapedFor(side)
+    const starters = roster.filter(pl => pl.starter)
+    const bench = roster.filter(pl => !pl.starter)
     const name = splitName(t.name)
+    const hasAny = roster.length > 0 || ins.length > 0 || outs.length > 0
     return (
       <div className="luc" style={{
         background: `linear-gradient(150deg, ${d}, #0d1320 62%)`,
@@ -1952,28 +1998,36 @@ function TeamNews({ md }: { md: EventDetail }) {
         </div>
         <div style={{ position: 'relative', zIndex: 1 }}>
           <h4 style={{ color: p }}>{name.city} {name.short.toUpperCase()}</h4>
-          {ins.length > 0 && (<><div className="io i">IN</div>
-            {ins.map((pl, i) => {
-              const pn = pl.player_name ?? pl.player ?? 'Player'
-              return (
-                <div key={i} className="pl">
-                  <b>✓</b>{pn}
-                  <span className="pos">{posFor(pn)}</span>
-                </div>
-              )
-            })}</>)}
+          {starters.length > 0 && (<><div className="io i">STARTING</div>
+            {starters.map((pl, i) => (
+              <div key={'s' + i} className="pl">
+                {pl.number != null && <b style={{ minWidth: 22, display: 'inline-block' }}>#{pl.number}</b>}
+                {pl.name}
+                {pl.position && <span className="pos">{shortPos(pl.position)}</span>}
+              </div>
+            ))}</>)}
+          {bench.length > 0 && (<><div className="io i" style={{ marginTop: 8 }}>BENCH</div>
+            {bench.map((pl, i) => (
+              <div key={'b' + i} className="pl">
+                {pl.number != null && <b style={{ minWidth: 22, display: 'inline-block' }}>#{pl.number}</b>}
+                {pl.name}
+                {pl.position && <span className="pos">{shortPos(pl.position)}</span>}
+              </div>
+            ))}</>)}
+          {ins.length > 0 && (<><div className="io i" style={{ marginTop: 8 }}>IN</div>
+            {ins.map((pl, i) => (
+              <div key={'in' + i} className="pl">
+                <b>✓</b>{pl.player_name ?? pl.player ?? 'Player'}
+              </div>
+            ))}</>)}
           {outs.length > 0 && (<><div className="io o">OUT</div>
-            {outs.map((pl, i) => {
-              const pn = pl.player_name ?? pl.player ?? 'Player'
-              return (
-                <div key={i} className="pl x">
-                  <b>✗</b>{pn}
-                  <span className="pos">{posFor(pn)}</span>
-                  {pl.reason && <span style={{ color: '#55647a', marginLeft: 4 }}>– {pl.reason}</span>}
-                </div>
-              )
-            })}</>)}
-          {ins.length === 0 && outs.length === 0 && (
+            {outs.map((pl, i) => (
+              <div key={'out' + i} className="pl x">
+                <b>✗</b>{pl.player_name ?? pl.player ?? 'Player'}
+                {pl.reason && <span style={{ color: '#55647a', marginLeft: 4 }}>– {pl.reason}</span>}
+              </div>
+            ))}</>)}
+          {!hasAny && (
             <div className="pl" style={{ color: '#55647a' }}>Lineups not yet announced</div>
           )}
         </div>
@@ -1981,13 +2035,20 @@ function TeamNews({ md }: { md: EventDetail }) {
     )
   }
 
+  // Honest AI Impact copy: shows only when there are admin-confirmed
+  // changes. No fake percentage adjustments — the model doesn't know how
+  // to price the impact of an unknown player without an impact rating.
+  const impactCopy = (changes: number) =>
+    changes > 0
+      ? `${changes} confirmed change${changes === 1 ? '' : 's'} — model factors updated.`
+      : 'No confirmed changes; baseline projections used.'
+
   return (
     <div className="p" id="pNews">
       <div className="ph"><span className="pt">Team News &amp; Lineups</span><span className="q">?</span></div>
       <div className="pb">
         <div className="lu">{column('h')}{column('a')}</div>
 
-        {/* Unified AI IMPACT — one title, two side descriptions */}
         <div className="aiimp">
           <div className="aiimp-hdr">
             <span className="ai-badge">AI</span>
@@ -1996,17 +2057,11 @@ function TeamNews({ md }: { md: EventDetail }) {
           <div className="aiimp-body">
             <div className="aiimp-side">
               <div className="aiimp-team" style={{ color: hp }}>{home.abbr}</div>
-              <p>{hIn.length + hOut.length > 0 ? 'Selected changes moderately affect model outputs.' : 'No confirmed changes; baseline projections used.'}</p>
-              <div className="aiimp-adj" style={{ color: hAdj >= 0 ? '#25d97b' : '#f4526a' }}>
-                {home.abbr} win probability {hAdj >= 0 ? '+' : '−'}{Math.abs(hAdj)}%
-              </div>
+              <p>{impactCopy(homeChanges)}</p>
             </div>
             <div className="aiimp-side">
               <div className="aiimp-team" style={{ color: ap }}>{away.abbr}</div>
-              <p>{aIn.length + aOut.length > 0 ? 'Selected changes moderately affect model outputs.' : 'No confirmed changes; baseline projections used.'}</p>
-              <div className="aiimp-adj" style={{ color: aAdj >= 0 ? '#25d97b' : '#f4526a' }}>
-                {away.abbr} win probability {aAdj >= 0 ? '+' : '−'}{Math.abs(aAdj)}%
-              </div>
+              <p>{impactCopy(awayChanges)}</p>
             </div>
           </div>
         </div>

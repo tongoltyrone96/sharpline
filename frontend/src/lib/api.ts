@@ -100,6 +100,33 @@ export const getH2H = async (
   }
 }
 
+export interface LineupPlayer {
+  name: string
+  position: string
+  number: number | null
+  starter: boolean
+}
+
+export interface EventLineups {
+  home: { team: string; players: LineupPlayer[] }
+  away: { team: string; players: LineupPlayer[] }
+  source: string
+  url?: string
+  round?: number
+}
+
+/** Full scraped team lists for a match. null if not available (upcoming
+ *  match, AFL, or scraping failure) — caller falls back to placeholder. */
+export const getEventLineups = async (eventId: string): Promise<EventLineups | null> => {
+  try {
+    const r = await fetch(`/api/v1/lineups/${encodeURIComponent(eventId)}`)
+    if (!r.ok) return null
+    return await r.json()
+  } catch {
+    return null
+  }
+}
+
 export interface TeamPower {
   rank: number
   elo?: number

@@ -12,6 +12,7 @@ from .api.routes_sports import router as sports_router
 from .api.routes_status import router as status_router
 from .api.routes_standings import router as standings_router
 from .api.routes_games import router as games_router
+from .api.routes_lineups import router as lineups_router
 from .api.ws import redis_listener, router as ws_router
 
 
@@ -50,6 +51,7 @@ app.include_router(sports_router)
 app.include_router(status_router)
 app.include_router(standings_router)
 app.include_router(games_router)
+app.include_router(lineups_router)
 app.include_router(ws_router)
 
 
