@@ -1796,12 +1796,18 @@ function WinProbMovement({ md }: { md: EventDetail }) {
       .catch(() => setHistory([]))
   }, [md.event.id, home.name])
 
-  // Convert history prices → implied probability if we have >= 4 points, else fall back to synthetic
+  // Convert price → implied % for the home side. downsampleHistory averages
+  // same-timestamp bookmakers and returns up to 12 evenly-spaced samples
+  // along with their timestamps, which drive the dynamic X-axis labels.
+  const homeProbs = downsampleHistory(history, p =>
+    p.price > 0 ? Math.max(3, Math.min(97, (1 / p.price) * 100)) : null,
+  )
+  const isReal = homeProbs.values.length >= 4
+
   let hS: number[], aS: number[]
-  if (history.length >= 4) {
-    hS = history.map(p => Math.max(3, Math.min(97, (1 / p.price) * 100)))
+  if (isReal) {
+    hS = homeProbs.values
     aS = hS.map(v => 100 - v)
-    if (hS.length > 12) { const step = Math.floor(hS.length / 12); hS = hS.filter((_, i) => i % step === 0).slice(-12); aS = aS.filter((_, i) => i % step === 0).slice(-12); }
   } else {
     const end = Math.round((md.model?.home_win_prob ?? 0.5) * 100)
     const start = end + (end < 50 ? 9 : -9)
@@ -1814,7 +1820,9 @@ function WinProbMovement({ md }: { md: EventDetail }) {
   const yPct = (v: number) => (1 - (v - lo) / (hi - lo || 1)) * 100
   const pts = (vals: number[]) => vals.map((v, i) => `${(i / (vals.length - 1) * 100).toFixed(2)},${yPct(v).toFixed(2)}`).join(' ')
   const yLabels = [0, 1, 2, 3, 4].map(i => Math.round(hi - (hi - lo) * i / 4))
-  const xLabels = ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
+  const xLabels = isReal
+    ? timeAxisLabels(homeProbs.timestamps[0])
+    : ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
 
   return (
     <div className="p" id="pMove">
