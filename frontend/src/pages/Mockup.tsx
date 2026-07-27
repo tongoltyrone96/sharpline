@@ -1849,13 +1849,68 @@ function WinProbMovement({ md }: { md: EventDetail }) {
   )
 }
 
+// Downsamples a chronological history array to at most 12 evenly-spaced
+// samples, averaging the values in each bucket. Returns [] if input has
+// fewer than 4 valid points.
+function downsampleHistory(
+  history: HistoryPoint[],
+  extract: (p: HistoryPoint) => number | null,
+): { values: number[]; timestamps: string[] } {
+  const filtered = history
+    .map(p => ({ t: p.recorded_at, v: extract(p) }))
+    .filter((p): p is { t: string; v: number } => p.v != null)
+  if (filtered.length < 4) return { values: [], timestamps: [] }
+  // Bucket by index into up to 12 groups
+  const N = 12
+  const bucketSize = Math.max(1, Math.floor(filtered.length / N))
+  const values: number[] = []
+  const timestamps: string[] = []
+  for (let i = 0; i < filtered.length; i += bucketSize) {
+    const chunk = filtered.slice(i, i + bucketSize)
+    const avg = chunk.reduce((s, p) => s + p.v, 0) / chunk.length
+    values.push(avg)
+    timestamps.push(chunk[chunk.length - 1].t)
+    if (values.length >= N) break
+  }
+  return { values, timestamps }
+}
+
+// Generates X-axis labels ("-3d", "-12h", ..., "Now") based on the actual
+// time span of the samples.
+function timeAxisLabels(firstIso: string | undefined): string[] {
+  if (!firstIso) return ['', '', '', '', '', 'Now']
+  const hrs = Math.max(0.5, (Date.now() - new Date(firstIso).getTime()) / 3600000)
+  const fmt = (fraction: number): string => {
+    const hAgo = hrs - hrs * fraction
+    if (hAgo < 0.75) return 'Now'
+    if (hrs < 48) return `-${Math.round(hAgo)}h`
+    return `-${Math.max(1, Math.round(hAgo / 24))}d`
+  }
+  return [fmt(0), fmt(0.25), fmt(0.5), fmt(0.75), fmt(0.9), 'Now']
+}
+
 function LineTotalStack({ md }: { md: EventDetail }) {
   const { home, away } = md.event
   const ap = safeCol(away.primary_color, '#8b5cf6')
   const mu = md.model?.projected_margin ?? 0
   const tot = md.model?.projected_total ?? 40
 
-  const lS = seriesTo(mu, mu + (mu < 0 ? 1.2 : -1.2), 12, 0.12)
+  // Real line-history for the home team's spread. If we have enough
+  // recorded odds we plot the actual market movement; otherwise fall
+  // back to the previous synthetic curve so the panel still renders.
+  const [lineHistory, setLineHistory] = useState<HistoryPoint[]>([])
+  useEffect(() => {
+    getEventHistory(md.event.id, { market: 'spreads', outcome: home.name })
+      .then(r => setLineHistory(r.history ?? []))
+      .catch(() => setLineHistory([]))
+  }, [md.event.id, home.name])
+
+  const realLine = downsampleHistory(lineHistory, p => p.point)
+  const lineIsReal = realLine.values.length >= 4
+
+  const lS = lineIsReal
+    ? realLine.values
+    : seriesTo(mu, mu + (mu < 0 ? 1.2 : -1.2), 12, 0.12)
   const llo = Math.min(...lS) - 2.5, lhi = Math.max(...lS) + 2.5
   const lLast = lS[lS.length - 1]
 
@@ -1863,6 +1918,9 @@ function LineTotalStack({ md }: { md: EventDetail }) {
   const tlo = Math.min(...tS) - 2, thi = Math.max(...tS) + 2
   const tLast = tS[tS.length - 1]
 
+  const lXLabels = lineIsReal
+    ? timeAxisLabels(realLine.timestamps[0])
+    : ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
   const xLabels = ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
 
   const lYPct = (v: number) => (1 - (v - llo) / (lhi - llo || 1)) * 100
@@ -1876,7 +1934,10 @@ function LineTotalStack({ md }: { md: EventDetail }) {
   return (
     <>
       <div className="p" id="pLineMv">
-        <div className="ph"><span className="pt">Line Movement</span><span className="hv mono" style={{ color: ap }}>{sgn(mu)}</span></div>
+        <div className="ph">
+          <span className="pt">Line Movement</span>
+          <span className="hv mono" style={{ color: ap }}>{lineIsReal ? sgn(lLast) : sgn(mu)}</span>
+        </div>
         <div className="pb">
           <div className="chg">
             <div className="chg-yaxis">
@@ -1897,7 +1958,7 @@ function LineTotalStack({ md }: { md: EventDetail }) {
               <span className="chg-dot" style={{ top: `${lYPct(lLast)}%`, background: ap }} />
             </div>
             <div className="chg-xaxis">
-              {xLabels.map((l, i) => <span key={i}>{l}</span>)}
+              {lXLabels.map((l, i) => <span key={i}>{l}</span>)}
             </div>
           </div>
         </div>
