@@ -26,7 +26,7 @@ _TIMEOUT = 10
 # Squiggle's usage policy requires a User-Agent that identifies the caller
 # with a way to contact you (name + email). Without an email address they
 # return HTTP 403.
-_USER_AGENT = "Sharpline (tongoltyrone84@gmail.com) — AFL standings for match dashboard"
+_USER_AGENT = "Sharpline (tongoltyrone84@gmail.com) - AFL standings for match dashboard"
 
 
 def _normalise(name: str) -> str:
