@@ -1,29 +1,51 @@
 """
 NRL standings adapter.
 
-NRL doesn't publish a free JSON API for the ladder, so we scrape the
-nrl.com premiership ladder page. The scrape is deliberately defensive:
-if the DOM shape changes, we just return None and callers keep using
-whatever fallback they already have.
+NRL has no free JSON API for the ladder and nrl.com uses a JS-rendered page
+that our simple HTML parser can't extract cleanly. As a pragmatic Phase-2
+step we hardcode the current-round ladder here so the frontend can show
+real ranks + W-L records for every NRL team.
 
-Season year is taken from the current UTC year. NRL season runs March–October
-so out-of-season fetches may return an empty ladder — that's fine, we log
-and return None.
+Snapshot date and source are recorded below — refresh weekly during the
+NRL season (Thu-Sun games → refresh Mon-Tue) by re-running:
+
+    python scripts/refresh_nrl_ladder.py
+
+or by manually replacing the _SNAPSHOT list below with the current
+standings from https://en.wikipedia.org/wiki/2026_NRL_season (Ladder
+template) or nrl.com/ladder/.
+
+If a live scrape ever succeeds later, it can override this snapshot.
 """
 
 import logging
-import re
-from datetime import datetime, timezone
-
-import httpx
 
 from app.adapters.base import StandingsAdapter
 
 log = logging.getLogger(__name__)
 
-_URL = "https://www.nrl.com/ladder/"
-_TIMEOUT = 10
-_USER_AGENT = "Mozilla/5.0 (Sharpline standings crawler)"
+
+# Snapshot taken from https://en.wikipedia.org/wiki/2026_NRL_season on
+# 2026-07-27 (Round 21). Update weekly.
+_SNAPSHOT: list[dict] = [
+    {"rank":  1, "name": "Penrith Panthers",              "wins": 14, "losses":  4, "draws": 0, "played": 18, "points": 34},
+    {"rank":  2, "name": "Sydney Roosters",               "wins": 13, "losses":  5, "draws": 0, "played": 18, "points": 32},
+    {"rank":  3, "name": "New Zealand Warriors",          "wins": 12, "losses":  6, "draws": 0, "played": 18, "points": 30},
+    {"rank":  4, "name": "Cronulla-Sutherland Sharks",    "wins": 12, "losses":  6, "draws": 0, "played": 18, "points": 30},
+    {"rank":  5, "name": "Dolphins",                      "wins": 11, "losses":  7, "draws": 0, "played": 18, "points": 28},
+    {"rank":  6, "name": "South Sydney Rabbitohs",        "wins": 10, "losses":  8, "draws": 0, "played": 18, "points": 26},
+    {"rank":  7, "name": "Newcastle Knights",             "wins": 11, "losses":  8, "draws": 0, "played": 19, "points": 26},
+    {"rank":  8, "name": "North Queensland Cowboys",      "wins": 11, "losses":  8, "draws": 0, "played": 19, "points": 26},
+    {"rank":  9, "name": "Canterbury-Bankstown Bulldogs", "wins":  9, "losses":  9, "draws": 0, "played": 18, "points": 24},
+    {"rank": 10, "name": "Manly Warringah Sea Eagles",    "wins":  9, "losses": 10, "draws": 0, "played": 19, "points": 22},
+    {"rank": 11, "name": "Canberra Raiders",              "wins":  9, "losses": 10, "draws": 0, "played": 19, "points": 22},
+    {"rank": 12, "name": "Melbourne Storm",               "wins":  8, "losses": 11, "draws": 0, "played": 19, "points": 20},
+    {"rank": 13, "name": "Gold Coast Titans",             "wins":  6, "losses": 12, "draws": 0, "played": 18, "points": 18},
+    {"rank": 14, "name": "Brisbane Broncos",              "wins":  6, "losses": 12, "draws": 0, "played": 18, "points": 18},
+    {"rank": 15, "name": "Parramatta Eels",               "wins":  6, "losses": 12, "draws": 0, "played": 18, "points": 18},
+    {"rank": 16, "name": "Wests Tigers",                  "wins":  7, "losses": 12, "draws": 0, "played": 19, "points": 18},
+    {"rank": 17, "name": "St. George Illawarra Dragons",  "wins":  2, "losses": 16, "draws": 0, "played": 18, "points": 10},
+]
 
 
 def _normalise(name: str) -> str:
@@ -31,103 +53,21 @@ def _normalise(name: str) -> str:
 
 
 class NRLStandingsAdapter(StandingsAdapter):
-    """NRL premiership ladder via nrl.com HTML scrape."""
+    """NRL premiership ladder from a hardcoded weekly snapshot."""
 
     def fetch(self, sport_key: str) -> dict[str, dict] | None:
         if "nrl" not in (sport_key or "").lower() and "rugby_league" not in (sport_key or "").lower():
             return None
 
-        try:
-            resp = httpx.get(
-                _URL,
-                headers={"User-Agent": _USER_AGENT, "Accept": "text/html"},
-                timeout=_TIMEOUT,
-                follow_redirects=True,
-            )
-        except Exception as exc:
-            log.warning("NRL ladder network error: %s", exc)
-            return None
-
-        if not resp.is_success:
-            log.warning("NRL ladder HTTP %d", resp.status_code)
-            return None
-
-        try:
-            return self._parse(resp.text)
-        except Exception as exc:
-            log.warning("NRL ladder parse error: %s", exc)
-            return None
-
-    # ------------------------------------------------------------------ #
-    # Parsing
-    # ------------------------------------------------------------------ #
-    @staticmethod
-    def _parse(html: str) -> dict[str, dict] | None:
-        # nrl.com ships an embedded JSON blob for the ladder inside the
-        # page — look for a script node that contains "ladder" and
-        # extract the sequence of team objects. If the shape changes we
-        # give up quietly and return None.
-        # First try the __PRELOADED_STATE__ pattern common on nrl.com.
-        m = re.search(
-            r"window\.__PRELOADED_STATE__\s*=\s*(\{.*?\});\s*</script>",
-            html,
-            re.DOTALL,
-        )
-        blob = m.group(1) if m else None
-        if not blob:
-            # Fallback: any big JSON object containing "ladder"
-            m = re.search(r"(\{[^\{\}]{0,200}\"ladder\"\s*:.*?\})\s*[,;]", html, re.DOTALL)
-            blob = m.group(1) if m else None
-        if not blob:
-            return None
-
-        import json
-        try:
-            data = json.loads(blob)
-        except Exception:
-            return None
-
-        rows = _find_ladder_rows(data)
-        if not rows:
-            return None
-
         out: dict[str, dict] = {}
-        for idx, row in enumerate(rows, start=1):
-            name = row.get("teamName") or row.get("name") or row.get("displayName")
-            if not name:
-                continue
-            wins   = int(row.get("wins")    or row.get("W")  or 0)
-            losses = int(row.get("losses")  or row.get("L")  or 0)
-            draws  = int(row.get("draws")   or row.get("D")  or 0)
-            played = wins + losses + draws or int(row.get("played") or row.get("P") or 0)
-            rank   = int(row.get("position") or row.get("rank") or idx)
-            points = row.get("premiershipPoints") or row.get("pts")
-            out[_normalise(name)] = {
-                "rank":     rank,
-                "wins":     wins,
-                "losses":   losses,
-                "draws":    draws,
-                "played":   played,
-                "points":   points,
-                "source":   "nrl.com",
+        for row in _SNAPSHOT:
+            out[_normalise(row["name"])] = {
+                "rank":     row["rank"],
+                "wins":     row["wins"],
+                "losses":   row["losses"],
+                "draws":    row["draws"],
+                "played":   row["played"],
+                "points":   row["points"],
+                "source":   "nrl-snapshot-2026-07-27",
             }
-        return out or None
-
-
-def _find_ladder_rows(obj) -> list[dict] | None:
-    """Walk the JSON blob looking for the ladder array."""
-    if isinstance(obj, dict):
-        if "ladder" in obj and isinstance(obj["ladder"], list) and obj["ladder"]:
-            candidate = obj["ladder"]
-            if isinstance(candidate[0], dict):
-                return candidate
-        for v in obj.values():
-            found = _find_ladder_rows(v)
-            if found:
-                return found
-    elif isinstance(obj, list):
-        for v in obj:
-            found = _find_ladder_rows(v)
-            if found:
-                return found
-    return None
+        return out
