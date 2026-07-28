@@ -197,6 +197,10 @@ class EventBrief(BaseModel):
     sport: str
     home_name: str
     away_name: str
+    home_team_id: int | None = None
+    away_team_id: int | None = None
+    home_abbr: str | None = None
+    away_abbr: str | None = None
     commence_time: str  # ISO 8601 string
 
     model_config = {"from_attributes": True}
@@ -560,6 +564,10 @@ def list_upcoming_events(
             sport=ev.sport.key if ev.sport else "",
             home_name=ev.home_team.name if ev.home_team else "",
             away_name=ev.away_team.name if ev.away_team else "",
+            home_team_id=ev.home_team.id if ev.home_team else None,
+            away_team_id=ev.away_team.id if ev.away_team else None,
+            home_abbr=ev.home_team.abbreviation if ev.home_team else None,
+            away_abbr=ev.away_team.abbreviation if ev.away_team else None,
             commence_time=ev.commence_time.isoformat(),
         ))
     return result

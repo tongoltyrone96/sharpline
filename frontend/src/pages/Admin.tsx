@@ -361,7 +361,13 @@ function ParamRow({ param, saving, onSave }: { param: Param; saving: boolean; on
 // Tab 3 — Lineups
 // ---------------------------------------------------------------------------
 
-interface LineupEvent { id: string; sport: string; home_name: string; away_name: string; commence_time: string }
+interface LineupEvent {
+  id: string; sport: string
+  home_name: string; away_name: string
+  home_team_id?: number; away_team_id?: number
+  home_abbr?: string; away_abbr?: string
+  commence_time: string
+}
 interface LineupRow {
   id: number; event_id: string; team_id: number; player_name: string
   status: string; reason: string | null; importance: number; source: string
@@ -451,16 +457,26 @@ function LineupsTab({ pw }: { pw: string }) {
         </select>
       </div>
 
-      {selectedEvent && (
+      {selectedEvent && (() => {
+        const currentEvent = events.find(e => e.id === selectedEvent)
+        const teamOptions: Array<{ id: number; label: string }> = []
+        if (currentEvent?.home_team_id) teamOptions.push({ id: currentEvent.home_team_id, label: `${currentEvent.home_name} (home)` })
+        if (currentEvent?.away_team_id) teamOptions.push({ id: currentEvent.away_team_id, label: `${currentEvent.away_name} (away)` })
+        return (
         <>
           {/* Add form */}
           <div style={{ background: 'var(--panel-2)', border: '1px solid var(--line)', borderRadius: 10, padding: 16, marginBottom: 16 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-2)', marginBottom: 12 }}>Add Player</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 130px 1fr auto', gap: 10, alignItems: 'end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 130px 1fr auto', gap: 10, alignItems: 'end' }}>
               <div>
-                <span style={label}>Team ID</span>
-                <input style={input} type="number" value={form.team_id}
-                  onChange={e => setForm(f => ({ ...f, team_id: e.target.value }))} placeholder="123" />
+                <span style={label}>Team</span>
+                <select style={input} value={form.team_id}
+                  onChange={e => setForm(f => ({ ...f, team_id: e.target.value }))}>
+                  <option value="">— select team —</option>
+                  {teamOptions.map(t => (
+                    <option key={t.id} value={t.id}>{t.label}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <span style={label}>Player Name</span>
@@ -502,7 +518,7 @@ function LineupsTab({ pw }: { pw: string }) {
           {loading ? <div style={{ color: 'var(--text-3)', fontSize: 12 }}>Loading…</div> : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr>{['Player', 'Team ID', 'Status', 'Reason', 'Imp', 'Src', 'Confirmed', ''].map(h => (
+                <tr>{['Player', 'Team', 'Status', 'Reason', 'Imp', 'Src', 'Confirmed', ''].map(h => (
                   <th key={h} style={th}>{h}</th>
                 ))}</tr>
               </thead>
@@ -510,29 +526,37 @@ function LineupsTab({ pw }: { pw: string }) {
                 {lineups.length === 0 && (
                   <tr><td colSpan={8} style={{ ...cell, color: 'var(--text-3)', textAlign: 'center' }}>No entries for this event</td></tr>
                 )}
-                {lineups.map(l => (
-                  <tr key={l.id}>
-                    <td style={cell}>{l.player_name}</td>
-                    <td style={cell}>{l.team_id}</td>
-                    <td style={cell}>
-                      <span style={{ color: statusColor(l.status), fontWeight: 600, fontSize: 11 }}>{l.status}</span>
-                    </td>
-                    <td style={{ ...cell, color: 'var(--text-3)', fontSize: 11 }}>{l.reason ?? '—'}</td>
-                    <td style={cell}>{l.importance.toFixed(1)}</td>
-                    <td style={cell}><span style={{ fontSize: 10, color: l.source === 'manual' ? 'var(--blue)' : 'var(--text-3)' }}>{l.source}</span></td>
-                    <td style={cell}>{l.confirmed ? '✓' : '—'}</td>
-                    <td style={cell}>
-                      {l.source === 'manual' && (
-                        <button style={btn('danger')} onClick={() => del(l.id)}>Delete</button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {lineups.map(l => {
+                  const teamLabel = l.team_id === currentEvent?.home_team_id
+                    ? currentEvent?.home_name
+                    : l.team_id === currentEvent?.away_team_id
+                    ? currentEvent?.away_name
+                    : `#${l.team_id}`
+                  return (
+                    <tr key={l.id}>
+                      <td style={cell}>{l.player_name}</td>
+                      <td style={cell}>{teamLabel}</td>
+                      <td style={cell}>
+                        <span style={{ color: statusColor(l.status), fontWeight: 600, fontSize: 11 }}>{l.status}</span>
+                      </td>
+                      <td style={{ ...cell, color: 'var(--text-3)', fontSize: 11 }}>{l.reason ?? '—'}</td>
+                      <td style={cell}>{l.importance.toFixed(1)}</td>
+                      <td style={cell}><span style={{ fontSize: 10, color: l.source === 'manual' ? 'var(--blue)' : 'var(--text-3)' }}>{l.source}</span></td>
+                      <td style={cell}>{l.confirmed ? '✓' : '—'}</td>
+                      <td style={cell}>
+                        {l.source === 'manual' && (
+                          <button style={btn('danger')} onClick={() => del(l.id)}>Delete</button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           )}
         </>
-      )}
+        )
+      })()}
     </div>
   )
 }
@@ -581,13 +605,14 @@ function TeamsTab({ pw }: { pw: string }) {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr>{['Name', 'Abbr', 'Primary', 'Secondary', 'Venue', 'Indoor', ''].map(h => (
+              <tr>{['ID', 'Name', 'Abbr', 'Primary', 'Secondary', 'Venue', 'Indoor', ''].map(h => (
                 <th key={h} style={th}>{h}</th>
               ))}</tr>
             </thead>
             <tbody>
               {rows.map(t => editId === t.id ? (
                 <tr key={t.id} style={{ background: 'rgba(79,125,243,0.06)' }}>
+                  <td style={{ ...cell, color: 'var(--text-3)', fontSize: 11 }}>{t.id}</td>
                   <td style={cell}><input style={{ ...input, width: 140 }} value={draft.name ?? ''} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} /></td>
                   <td style={cell}><input style={{ ...input, width: 60 }} value={draft.abbreviation ?? ''} onChange={e => setDraft(d => ({ ...d, abbreviation: e.target.value }))} /></td>
                   <td style={cell}>
@@ -613,6 +638,7 @@ function TeamsTab({ pw }: { pw: string }) {
                 </tr>
               ) : (
                 <tr key={t.id}>
+                  <td style={{ ...cell, color: 'var(--text-3)', fontSize: 11 }}>{t.id}</td>
                   <td style={cell}>{t.name}</td>
                   <td style={cell}><code style={{ fontSize: 11 }}>{t.abbreviation}</code></td>
                   <td style={cell}>
