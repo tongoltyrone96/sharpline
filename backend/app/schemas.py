@@ -88,6 +88,7 @@ class LineupRow(BaseModel):
     status: str
     reason: str | None = None
     confirmed: bool = False
+    position: str | None = None  # auto-filled from Wikipedia roster for AFL
 
     model_config = {"from_attributes": True}
 

@@ -31,7 +31,7 @@ interface EventDetail {
     temp_c: number; wind_kmh: number; rain_prob: number
     humidity: number; condition: string; is_indoor: boolean
   } | null
-  lineups: Array<{ team: string; player_name?: string; player?: string; status: string; reason?: string }>
+  lineups: Array<{ team: string; player_name?: string; player?: string; status: string; reason?: string; position?: string | null }>
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -2077,11 +2077,15 @@ function TeamNews({ md }: { md: EventDetail }) {
   const scraped = useEventLineups(md.event.id)
 
   // Admin-entered manual lineup changes (IN/OUT from the events endpoint).
+  // Backend returns team as an abbreviation, so match on either the abbr
+  // or the full team name to be tolerant of both formats.
   const manual = md.lineups ?? []
-  const hIn = manual.filter(l => l.team === home.name && l.status === 'in')
-  const hOut = manual.filter(l => l.team === home.name && (l.status === 'out' || l.status === 'doubtful'))
-  const aIn = manual.filter(l => l.team === away.name && l.status === 'in')
-  const aOut = manual.filter(l => l.team === away.name && (l.status === 'out' || l.status === 'doubtful'))
+  const isHome = (l: { team: string }) => l.team === home.abbr || l.team === home.name
+  const isAway = (l: { team: string }) => l.team === away.abbr || l.team === away.name
+  const hIn = manual.filter(l => isHome(l) && l.status === 'in')
+  const hOut = manual.filter(l => isHome(l) && (l.status === 'out' || l.status === 'doubtful'))
+  const aIn = manual.filter(l => isAway(l) && l.status === 'in')
+  const aOut = manual.filter(l => isAway(l) && (l.status === 'out' || l.status === 'doubtful'))
 
   const homeChanges = hIn.length + hOut.length
   const awayChanges = aIn.length + aOut.length
@@ -2154,12 +2158,14 @@ function TeamNews({ md }: { md: EventDetail }) {
             {ins.map((pl, i) => (
               <div key={'in' + i} className="pl">
                 <b>✓</b>{pl.player_name ?? pl.player ?? 'Player'}
+                {pl.position && <span className="pos">{shortPos(pl.position)}</span>}
               </div>
             ))}</>)}
           {outs.length > 0 && (<><div className="io o">OUT</div>
             {outs.map((pl, i) => (
               <div key={'out' + i} className="pl x">
                 <b>✗</b>{pl.player_name ?? pl.player ?? 'Player'}
+                {pl.position && <span className="pos">{shortPos(pl.position)}</span>}
                 {pl.reason && <span style={{ color: '#55647a', marginLeft: 4 }}>– {pl.reason}</span>}
               </div>
             ))}</>)}

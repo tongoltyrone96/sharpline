@@ -161,15 +161,29 @@ def get_event_detail(
     # Step 6: build lineups using merged_lineups
     lineup_rows: list[LineupRow] = []
     lineups = merged_lineups(db, event_id)
+    is_afl = "afl" in (event.sport.key or "").lower() or "aussierules" in (event.sport.key or "").lower()
     for lineup in lineups:
         team = lineup.team
         abbr = team.abbreviation if team else "UNK"
+        # AFL admin-entered lineups get their position auto-filled from
+        # the current Wikipedia squad roster so the frontend can render
+        # a Ruck / Midfielder / Forward badge alongside the player name.
+        # Positions come from an in-process cache so this is cheap after
+        # the first call per player.
+        position: str | None = None
+        if is_afl and team and lineup.player_name:
+            try:
+                from app.adapters.wiki_rosters_afl import get_player_position
+                position = get_player_position(lineup.player_name)
+            except Exception:
+                position = None
         lineup_rows.append(LineupRow(
             team=abbr,
             player=lineup.player_name,
             status=lineup.status,
             reason=lineup.reason,
             confirmed=lineup.confirmed,
+            position=position,
         ))
 
     return EventDetailResponse(
