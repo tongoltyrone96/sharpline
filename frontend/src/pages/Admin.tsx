@@ -701,6 +701,24 @@ function SystemTab({ pw }: { pw: string }) {
     setRefreshing(false)
   }
 
+  const [seeding, setSeeding] = useState(false)
+  const seedDemo = async () => {
+    setSeeding(true)
+    try {
+      const res = await fetch('/admin/system/seed-demo-lineups', {
+        method: 'POST',
+        headers: { Authorization: 'Basic ' + btoa('admin:' + pw) },
+      })
+      const body = await res.json()
+      if (res.ok) {
+        toast(`Added ${body.added ?? 0} entries (skipped ${body.skipped_existing ?? 0})`)
+      } else {
+        toast(body.detail ?? 'Seed failed', false)
+      }
+    } catch (e: any) { toast(e.message, false) }
+    setSeeding(false)
+  }
+
   const stat = (label: string, value: React.ReactNode, accent = false) => (
     <div style={{
       background: 'var(--panel-2)', border: '1px solid var(--line)',
@@ -717,6 +735,10 @@ function SystemTab({ pw }: { pw: string }) {
         <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>System Status</h3>
         <div style={{ display: 'flex', gap: 8 }}>
           <button style={btn('ghost')} onClick={load}>Refresh</button>
+          <button style={btn('ghost')} onClick={seedDemo} disabled={seeding}
+            title="Fill upcoming AFL fixtures with a set of plausible manual lineup entries so the Team News panel isn't empty during a demo.">
+            {seeding ? 'Seeding…' : 'Seed Demo AFL Lineups'}
+          </button>
           <button style={btn('primary')} onClick={forceRefresh} disabled={refreshing}>
             {refreshing ? 'Recomputing…' : 'Force Recompute'}
           </button>

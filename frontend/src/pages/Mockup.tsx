@@ -1001,14 +1001,31 @@ function Sidebar({ onNavigate, roundConf }: {
 }) {
   const label = roundConf >= 82 ? 'HIGH' : roundConf >= 65 ? 'MEDIUM' : 'LOW'
   const dash = (roundConf / 100) * 251
+  // [target-id, label, svg-path, kind]
+  // Special targets: '__top' scrolls to top of page, 'admin' opens the
+  // admin route. Everything else looks up the corresponding panel by
+  // its DOM id and smooth-scrolls to it.
   const NAV: Array<[string, string, string, string]> = [
-    ['strip',   'Dashboard',       'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z', 'active'],
+    ['__top',   'Dashboard',       'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z', 'active'],
     ['pOdds',   'Match Centre',    'M12 2v20M2 12h20', 'active'],
-    ['pMove',   'AI Predictions',  'M12 3l3 6 6 1-4.5 4.5 1 6L12 17l-5.5 3.5 1-6L3 10l6-1 3-6z', 'active'],
-    ['pMove',   'Line Movement',   'M4 18 L10 11 L14 15 L20 6 M20 11V6h-5', 'active'],
+    ['pMetrics','AI Predictions',  'M12 3l3 6 6 1-4.5 4.5 1 6L12 17l-5.5 3.5 1-6L3 10l6-1 3-6z', 'active'],
+    ['pLineMv', 'Line Movement',   'M4 18 L10 11 L14 15 L20 6 M20 11V6h-5', 'active'],
     ['pNews',   'Team News',       'M4 6h16M4 12h16M4 18h10', 'active'],
     ['admin',   'Admin',           'M12 2l3 6 6 1-4.5 4.5 1 6L12 17l-5.5 3.5 1-6L3 10l6-1 3-6z M9 9h6v6H9z', 'admin'],
   ]
+
+  const handleNav = (target: string) => {
+    if (target === '__top') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    const el = document.getElementById(target)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    onNavigate(target)
+  }
+
   return (
     <aside className="side">
       <div className="brand">
@@ -1022,8 +1039,13 @@ function Sidebar({ onNavigate, roundConf }: {
           <a
             key={label}
             className={i === 0 ? 'on' : ''}
-            href={kind === 'admin' ? '#/admin' : undefined}
-            onClick={() => kind === 'active' && onNavigate(id)}
+            href={kind === 'admin' ? '#/admin' : '#'}
+            style={{ cursor: 'pointer' }}
+            onClick={e => {
+              if (kind === 'admin') return
+              e.preventDefault()
+              handleNav(id)
+            }}
           >
             <svg viewBox="0 0 24 24"><path d={d} /></svg>{label}
           </a>

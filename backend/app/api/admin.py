@@ -530,6 +530,107 @@ def force_refresh(
     return {"detail": f"Recomputing {len(event_ids)} events in background."}
 
 
+# One-shot seeder that fills each upcoming AFL fixture with a couple of
+# plausible manual lineup entries so the Team News panel isn't empty
+# during the client walkthrough. Idempotent — skips a team that already
+# has any manual entry for the event. Positions auto-fill from the
+# Wikipedia roster (STEP 10) when the response is served.
+_AFL_DEMO_LINEUPS: list[dict] = [
+    # Each entry: {home, away, team_name, player, status, reason}
+    # Uses real senior-list players from the Wikipedia rosters we scrape.
+    {"home": "Collingwood Magpies", "away": "Geelong Cats",
+     "team_name": "Geelong Cats", "player": "Bailey Smith", "status": "doubtful", "reason": "Managed"},
+    {"home": "Collingwood Magpies", "away": "Geelong Cats",
+     "team_name": "Collingwood Magpies", "player": "Nick Daicos", "status": "in", "reason": "Returns from suspension"},
+
+    {"home": "Fremantle Dockers", "away": "Western Bulldogs",
+     "team_name": "Fremantle Dockers", "player": "Sean Darcy", "status": "out", "reason": "Ankle"},
+    {"home": "Fremantle Dockers", "away": "Western Bulldogs",
+     "team_name": "Western Bulldogs", "player": "Marcus Bontempelli", "status": "doubtful", "reason": "Corked thigh"},
+
+    {"home": "St Kilda Saints", "away": "Sydney Swans",
+     "team_name": "Sydney Swans", "player": "Chad Warner", "status": "doubtful", "reason": "Hamstring"},
+
+    {"home": "Hawthorn Hawks", "away": "North Melbourne Kangaroos",
+     "team_name": "North Melbourne Kangaroos", "player": "Harry Sheezel", "status": "in", "reason": "Cleared from concussion protocol"},
+
+    {"home": "Port Adelaide Power", "away": "Greater Western Sydney Giants",
+     "team_name": "Greater Western Sydney Giants", "player": "Toby Greene", "status": "out", "reason": "Calf"},
+
+    {"home": "Carlton Blues", "away": "Brisbane Lions",
+     "team_name": "Brisbane Lions", "player": "Charlie Cameron", "status": "doubtful", "reason": "Foot soreness"},
+]
+
+
+@router.post("/system/seed-demo-lineups")
+def seed_demo_lineups(
+    db: Session = Depends(get_db),
+    _: None = Depends(_require_admin),
+):
+    """
+    Insert a small set of plausible AFL lineup entries across the next
+    week's fixtures so the Team News panel has something realistic to
+    show during the client walkthrough. Safe to call more than once —
+    entries for a team that already has a manual record are skipped.
+    """
+    from sqlalchemy.orm import joinedload
+    from app.models import Team
+
+    now = datetime.now(tz=timezone.utc)
+    cutoff = now + timedelta(days=7)
+
+    events = (
+        db.query(Event)
+        .options(joinedload(Event.home_team), joinedload(Event.away_team), joinedload(Event.sport))
+        .filter(Event.commence_time >= now, Event.commence_time <= cutoff)
+        .all()
+    )
+
+    # Index by (home_name, away_name) → event
+    by_pair = {(e.home_team.name if e.home_team else "", e.away_team.name if e.away_team else ""): e for e in events}
+    team_by_name = {t.name: t for t in db.query(Team).all()}
+
+    added = 0
+    skipped = 0
+    missing_event = 0
+    for entry in _AFL_DEMO_LINEUPS:
+        event = by_pair.get((entry["home"], entry["away"]))
+        if not event:
+            missing_event += 1
+            continue
+        team = team_by_name.get(entry["team_name"])
+        if not team:
+            missing_event += 1
+            continue
+        existing = (
+            db.query(Lineup)
+            .filter(
+                Lineup.event_id == event.id,
+                Lineup.team_id == team.id,
+                Lineup.player_name == entry["player"],
+            )
+            .first()
+        )
+        if existing:
+            skipped += 1
+            continue
+        db.add(Lineup(
+            event_id=event.id,
+            team_id=team.id,
+            player_name=entry["player"],
+            status=entry["status"],
+            reason=entry.get("reason"),
+            importance=0.6,
+            source="manual",
+            confirmed=False,
+            updated_at=now,
+        ))
+        added += 1
+
+    db.commit()
+    return {"added": added, "skipped_existing": skipped, "missing_event_or_team": missing_event}
+
+
 # ===========================================================================
 # Tab 5: Events (for lineup tab dropdown)
 # ===========================================================================
