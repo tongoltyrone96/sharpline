@@ -1083,8 +1083,10 @@ function fmtAgo(iso: string | null): string {
   return `${d} day${d === 1 ? '' : 's'} ago`
 }
 
-function TopBar({ sport, matches, selectedId, onSelect, lastPoll }: {
+function TopBar({ sport, sports, onSportChange, matches, selectedId, onSelect, lastPoll }: {
   sport: string;
+  sports: string[];
+  onSportChange: (s: string) => void;
   matches: DashboardEvent[];
   selectedId: string | null;
   onSelect: (id: string) => void;
@@ -1097,6 +1099,14 @@ function TopBar({ sport, matches, selectedId, onSelect, lastPoll }: {
         <div className="sb">AI POWERED PREDICTIONS &amp; ANALYTICS</div>
       </div>
       <div className="ctl">
+        <div className="round-picker" title="Filter fixtures by sport">
+          <select value={sport} onChange={e => onSportChange(e.target.value)}>
+            {sports.map(s => (
+              <option key={s} value={s}>{s === 'ALL' ? 'All Sports' : s}</option>
+            ))}
+          </select>
+          <span className="rp-cal">🏆</span>
+        </div>
         <div className="round-picker">
           <select value={selectedId ?? ''} onChange={e => onSelect(e.target.value)}>
             {matches.length === 0 && <option value="">— No matches —</option>}
@@ -1134,14 +1144,12 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
   const stripRef = useRef<HTMLDivElement | null>(null)
   const filtered = useMemo(() => {
     let list = events.slice()
-    // Only show fixtures where BOTH teams are real, named, and have a real logo
-    // in the TEAM_LOGOS map. Filters out TBD-placeholder fixtures (finals
-    // brackets) and clubs we don't have a logo file for (e.g. North Melbourne).
-    list = list.filter(e =>
-      e.home_team && e.away_team &&
-      e.home_team.toUpperCase() !== 'TBD' && e.away_team.toUpperCase() !== 'TBD' &&
-      TEAM_LOGOS[e.home_team] && TEAM_LOGOS[e.away_team]
-    )
+    // Show every scheduled fixture that has team names attached. The
+    // Crest component already falls back to a shield-and-letters icon
+    // when a logo is missing, and TBD-placeholder opponents are handled
+    // downstream with a plain "TBD" label — the client explicitly asked
+    // for these fixtures to appear so the round is complete.
+    list = list.filter(e => e.home_team && e.away_team)
     if (filter.sport && filter.sport !== 'ALL') list = list.filter(e => (e.sport_title || '').toUpperCase() === filter.sport)
     const q = filter.search.trim().toLowerCase()
     if (q) list = list.filter(e =>
@@ -2816,6 +2824,8 @@ function MockupInner() {
         <main>
           <TopBar
             sport={sport}
+            sports={availableSports}
+            onSportChange={setSport}
             matches={matchList}
             selectedId={selectedId}
             onSelect={setSelectedId}
