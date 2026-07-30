@@ -658,7 +658,18 @@ const CSS = `
 .mck-root .beats-bf-row .bb-outcome{font-size:10px;font-weight:700;letter-spacing:.06em;color:#c3d0e2;text-transform:uppercase}
 .mck-root .beats-bf-row .bb-price{font-family:'IBM Plex Mono',monospace;font-weight:800;color:#25d97b;font-size:12px}
 .mck-root .beats-bf-row .bb-vs{font-size:10px;color:#7b8ba3}
-.mck-root .beats-bf-row .bb-delta{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:800;color:#25d97b;background:rgba(37,217,123,.14);padding:2px 6px;border-radius:4px}
+.mck-root .beats-bf-row .bb-delta{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:800;color:#25d97b;background:rgba(37,217,123,.14);padding:2px 6px;border-radius:4px;white-space:nowrap}
+/* Narrow-screen fallback — the 5-column grid squeezes the delta and
+   "vs Betfair" columns to the point they clip. Switch to a two-line
+   flex layout so nothing overlaps and the +% badge stays readable. */
+@media(max-width:700px){
+  .mck-root .beats-bf-row{display:flex;flex-wrap:wrap;column-gap:6px;row-gap:2px;padding:5px 4px 6px;border-bottom:1px solid rgba(245,167,36,.10)}
+  .mck-root .beats-bf-row .bb-book{flex:1 1 auto;min-width:0;font-size:11px}
+  .mck-root .beats-bf-row .bb-outcome{flex:0 0 auto;order:2}
+  .mck-root .beats-bf-row .bb-price{flex:0 0 auto;order:3;margin-left:auto;font-size:13px}
+  .mck-root .beats-bf-row .bb-vs{flex:1 1 100%;order:4;font-size:10px;color:#7b8ba3}
+  .mck-root .beats-bf-row .bb-delta{flex:0 0 auto;order:5;align-self:flex-start}
+}
 .mck-root .nopick{font-size:10px;color:#55647a;font-family:'IBM Plex Mono',monospace;font-style:italic;letter-spacing:.03em}
 .mck-root .foot{display:flex;align-items:center;gap:5px;font-size:8px;color:var(--mdim2);padding-top:4px}
 .mck-root .note8{font-size:8px;color:var(--mdim2);padding-top:4px;line-height:1.4}
