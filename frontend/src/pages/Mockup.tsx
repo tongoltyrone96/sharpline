@@ -645,6 +645,17 @@ const CSS = `
 .mck-root .edgechip{display:inline-block;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;background:rgba(37,217,123,.15);color:#25d97b;letter-spacing:.04em}
 .mck-root .aipick{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:#25d97b;background:rgba(37,217,123,.14);border:1px solid rgba(37,217,123,.42);padding:3px 7px;border-radius:5px;white-space:nowrap;font-family:'IBM Plex Mono',monospace;letter-spacing:.02em}
 .mck-root .besttrophy{display:inline-block;font-size:11px;vertical-align:middle;margin-right:2px;filter:drop-shadow(0 0 3px rgba(245,167,36,.55))}
+.mck-root .beats-bf{margin-top:10px;padding:10px 12px;background:linear-gradient(180deg,rgba(245,167,36,.10),rgba(245,167,36,.04));border:1px solid rgba(245,167,36,.32);border-radius:8px}
+.mck-root .beats-bf-hdr{font-size:10px;font-weight:800;letter-spacing:.10em;color:#f5a724;margin-bottom:6px;text-transform:uppercase}
+.mck-root .beats-bf-body{display:flex;flex-direction:column;gap:4px}
+.mck-root .beats-bf-row{display:grid;grid-template-columns:minmax(120px,1.2fr) 90px 60px 1fr auto;gap:8px;font-size:11px;align-items:center;padding:3px 4px;border-radius:4px}
+.mck-root .beats-bf-row:hover{background:rgba(245,167,36,.06)}
+.mck-root .beats-bf-row .bb-book{display:inline-flex;align-items:center;gap:6px;color:#e7eef8;font-weight:600}
+.mck-root .beats-bf-row .bb-book i{display:inline-flex;align-items:center;justify-content:center;width:22px;height:16px;font-size:8px;font-weight:800;border-radius:3px;letter-spacing:.02em}
+.mck-root .beats-bf-row .bb-outcome{font-size:10px;font-weight:700;letter-spacing:.06em;color:#c3d0e2;text-transform:uppercase}
+.mck-root .beats-bf-row .bb-price{font-family:'IBM Plex Mono',monospace;font-weight:800;color:#25d97b;font-size:12px}
+.mck-root .beats-bf-row .bb-vs{font-size:10px;color:#7b8ba3}
+.mck-root .beats-bf-row .bb-delta{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:800;color:#25d97b;background:rgba(37,217,123,.14);padding:2px 6px;border-radius:4px}
 .mck-root .nopick{font-size:10px;color:#55647a;font-family:'IBM Plex Mono',monospace;font-style:italic;letter-spacing:.03em}
 .mck-root .foot{display:flex;align-items:center;gap:5px;font-size:8px;color:var(--mdim2);padding-top:4px}
 .mck-root .note8{font-size:8px;color:var(--mdim2);padding-top:4px;line-height:1.4}
@@ -1618,6 +1629,43 @@ function iconFor(name: string): { c: string; t: string; a: string } {
   return BOOK_ICON[k] ?? { c: '#3b4a63', t: '#fff', a: (name || '?').slice(0, 2).toUpperCase() }
 }
 
+function isBetfair(bookmaker: string): boolean {
+  return (bookmaker || '').toLowerCase().includes('betfair')
+}
+
+// "Beats Betfair" summary row — displayed at the bottom of each odds
+// tab. Client asked for any non-Betfair book that offers longer odds
+// than Betfair to be surfaced separately so value pops out at a
+// glance. Only renders when there's something to show; when Betfair
+// isn't offering that market at all, nothing appears (comparison
+// wouldn't be meaningful).
+type BeatRow = { bookmaker: string; outcome: string; price: number; betfair: number }
+
+function BeatsBetfair({ rows }: { rows: BeatRow[] }) {
+  if (rows.length === 0) return null
+  return (
+    <div className="beats-bf">
+      <div className="beats-bf-hdr">🎯 BEATS BETFAIR — better prices available</div>
+      <div className="beats-bf-body">
+        {rows.map((r, i) => {
+          const ic = iconFor(r.bookmaker)
+          const delta = r.price - r.betfair
+          const pctBetter = (delta / r.betfair) * 100
+          return (
+            <div key={i} className="beats-bf-row">
+              <span className="bb-book"><i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>{r.bookmaker}</span>
+              <span className="bb-outcome">{r.outcome}</span>
+              <span className="bb-price mono">{r.price.toFixed(2)}</span>
+              <span className="bb-vs">vs Betfair {r.betfair.toFixed(2)}</span>
+              <span className="bb-delta">+{pctBetter.toFixed(1)}%</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function OddsComparison({ md }: { md: EventDetail }) {
   const [tab, setTab] = useState<'h2h' | 'line' | 'tot'>('h2h')
   const { home, away } = md.event
@@ -1656,6 +1704,22 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
   const awayPrices = rows.filter(r => r.outcome === away.name && r.price > 0).map(r => r.price)
   const maxHome = homePrices.length ? Math.max(...homePrices) : null
   const maxAway = awayPrices.length ? Math.max(...awayPrices) : null
+
+  // Beats-Betfair list — for each side, if any non-Betfair book has a
+  // longer price than Betfair, add a summary row so the client can see
+  // value at a glance.
+  const bfHome = rows.find(r => isBetfair(r.bookmaker) && r.outcome === home.name)?.price
+  const bfAway = rows.find(r => isBetfair(r.bookmaker) && r.outcome === away.name)?.price
+  const beats: BeatRow[] = []
+  if (bfHome != null) {
+    rows.filter(r => r.outcome === home.name && !isBetfair(r.bookmaker) && r.price > bfHome)
+      .forEach(r => beats.push({ bookmaker: r.bookmaker, outcome: home.abbr, price: r.price, betfair: bfHome }))
+  }
+  if (bfAway != null) {
+    rows.filter(r => r.outcome === away.name && !isBetfair(r.bookmaker) && r.price > bfAway)
+      .forEach(r => beats.push({ bookmaker: r.bookmaker, outcome: away.abbr, price: r.price, betfair: bfAway }))
+  }
+  beats.sort((a, b) => (b.price - b.betfair) - (a.price - a.betfair))
   return <>
     <div className="tblwrap">
     <table className="mono">
@@ -1696,6 +1760,7 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
       </tbody>
     </table>
     </div>
+    <BeatsBetfair rows={beats} />
     <div className="foot"><span className="dot"></span>Prices update every 30 seconds · 🏆 = highest odds on this side · <b>AI PICK</b> = model recommends this side at this book's price</div>
   </>
 }
@@ -1706,6 +1771,18 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
   const awayPrices = rows.filter(r => r.outcome === away.name && r.price > 0).map(r => r.price)
   const maxHome = homePrices.length ? Math.max(...homePrices) : null
   const maxAway = awayPrices.length ? Math.max(...awayPrices) : null
+  const bfHome = rows.find(r => isBetfair(r.bookmaker) && r.outcome === home.name)?.price
+  const bfAway = rows.find(r => isBetfair(r.bookmaker) && r.outcome === away.name)?.price
+  const beats: BeatRow[] = []
+  if (bfHome != null) {
+    rows.filter(r => r.outcome === home.name && !isBetfair(r.bookmaker) && r.price > bfHome)
+      .forEach(r => beats.push({ bookmaker: r.bookmaker, outcome: `${home.abbr} line`, price: r.price, betfair: bfHome }))
+  }
+  if (bfAway != null) {
+    rows.filter(r => r.outcome === away.name && !isBetfair(r.bookmaker) && r.price > bfAway)
+      .forEach(r => beats.push({ bookmaker: r.bookmaker, outcome: `${away.abbr} line`, price: r.price, betfair: bfAway }))
+  }
+  beats.sort((a, b) => (b.price - b.betfair) - (a.price - a.betfair))
   return <>
     <div className="tblwrap">
     <table className="mono">
@@ -1754,6 +1831,7 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
       </tbody>
     </table>
     </div>
+    <BeatsBetfair rows={beats} />
     <div className="note8">Each book priced at its own line · 🏆 = highest price on this side · <b>AI PICK</b> uses the model's projected margin vs this book's spread.</div>
   </>
 }
@@ -1764,6 +1842,18 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
   const underPrices = rows.filter(r => r.outcome.toLowerCase() === 'under' && r.price > 0).map(r => r.price)
   const maxOver = overPrices.length ? Math.max(...overPrices) : null
   const maxUnder = underPrices.length ? Math.max(...underPrices) : null
+  const bfOver = rows.find(r => isBetfair(r.bookmaker) && r.outcome.toLowerCase() === 'over')?.price
+  const bfUnder = rows.find(r => isBetfair(r.bookmaker) && r.outcome.toLowerCase() === 'under')?.price
+  const beats: BeatRow[] = []
+  if (bfOver != null) {
+    rows.filter(r => r.outcome.toLowerCase() === 'over' && !isBetfair(r.bookmaker) && r.price > bfOver)
+      .forEach(r => beats.push({ bookmaker: r.bookmaker, outcome: 'OVER', price: r.price, betfair: bfOver }))
+  }
+  if (bfUnder != null) {
+    rows.filter(r => r.outcome.toLowerCase() === 'under' && !isBetfair(r.bookmaker) && r.price > bfUnder)
+      .forEach(r => beats.push({ bookmaker: r.bookmaker, outcome: 'UNDER', price: r.price, betfair: bfUnder }))
+  }
+  beats.sort((a, b) => (b.price - b.betfair) - (a.price - a.betfair))
   return <>
     <div className="tblwrap">
     <table className="mono">
@@ -1810,6 +1900,7 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
       </tbody>
     </table>
     </div>
+    <BeatsBetfair rows={beats} />
     <div className="note8">Each book priced at its own line · 🏆 = highest price on this side · <b>AI PICK</b> uses the model's projected total vs this book's line.</div>
   </>
 }
