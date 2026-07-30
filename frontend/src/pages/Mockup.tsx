@@ -2806,6 +2806,136 @@ function RecommendedBets({ md }: { md: EventDetail }) {
   )
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// AI Aligned Picks — bets the model directionally likes, even when the
+// book has priced in the edge. Separate from RecommendedBets (value)
+// so the client can see "the model wants this side" at a glance
+// without confusing directional agreement with actual positive edge.
+// ───────────────────────────────────────────────────────────────────────────
+function AIAlignedPicks({ md }: { md: EventDetail }) {
+  const { home, away } = md.event
+  const m = md.model
+  if (!m) return null
+
+  interface Aligned {
+    market: 'H2H' | 'LINE' | 'TOTAL'
+    selection: string
+    price: number
+    fair: number | null
+    bookmaker: string
+    edge: number
+    modelProb: number
+    teamColor?: string
+  }
+  const picks: Aligned[] = []
+
+  // H2H — model's implied prob >= 55% on this side
+  for (const r of md.markets?.h2h ?? []) {
+    const isHome = r.outcome === home.name
+    const modelProb = isHome ? m.home_win_prob : m.away_win_prob
+    if (modelProb == null || modelProb < 0.55) continue
+    picks.push({
+      market: 'H2H', selection: `${isHome ? home.abbr : away.abbr} to win`,
+      price: r.price, fair: r.fair_price ?? null, bookmaker: r.bookmaker,
+      edge: r.edge_pct ?? 0, modelProb,
+      teamColor: isHome ? safeCol(home.primary_color, '#4da6ff') : safeCol(away.primary_color, '#8b5cf6'),
+    })
+  }
+  // LINE — model's projected margin comfortably beats the book's line
+  const mu = m.projected_margin
+  for (const r of md.markets?.spreads ?? []) {
+    if (r.point == null || mu == null) continue
+    const isHome = r.outcome === home.name
+    // Home covers if mu (negative when home fav) is more negative than the home line
+    const homeCovers = mu < r.point
+    const awayCovers = (-mu) < r.point
+    const covers = isHome ? homeCovers : awayCovers
+    if (!covers) continue
+    // Require a comfortable margin — at least 0.5 points of cushion
+    const cushion = isHome ? Math.abs(r.point - mu) : Math.abs(r.point - (-mu))
+    if (cushion < 0.5) continue
+    // Fair price implied prob >= 52%
+    if (r.fair_price == null || r.fair_price > 1.92) continue
+    picks.push({
+      market: 'LINE', selection: `${isHome ? home.abbr : away.abbr} ${sgn(r.point)}`,
+      price: r.price, fair: r.fair_price ?? null, bookmaker: r.bookmaker,
+      edge: r.edge_pct ?? 0, modelProb: 1 / (r.fair_price ?? 2),
+      teamColor: isHome ? safeCol(home.primary_color, '#4da6ff') : safeCol(away.primary_color, '#8b5cf6'),
+    })
+  }
+  // TOTAL — model's projected total on the same side as the book's line
+  const tot = m.projected_total
+  for (const r of md.markets?.totals ?? []) {
+    if (r.point == null || tot == null) continue
+    const side = r.outcome.toLowerCase()
+    const modelPicks = tot > r.point + 0.5 ? 'over' : tot < r.point - 0.5 ? 'under' : null
+    if (modelPicks !== side) continue
+    if (r.fair_price == null || r.fair_price > 1.92) continue
+    picks.push({
+      market: 'TOTAL', selection: `${r.outcome} ${r.point.toFixed(1)}`,
+      price: r.price, fair: r.fair_price ?? null, bookmaker: r.bookmaker,
+      edge: r.edge_pct ?? 0, modelProb: 1 / (r.fair_price ?? 2),
+      teamColor: side === 'over' ? '#25d97b' : '#f4526a',
+    })
+  }
+
+  // Rank by model probability, dedupe near-duplicates within same market
+  picks.sort((a, b) => b.modelProb - a.modelProb)
+  // Keep the best price per (market, selection) so we don't spam the
+  // same pick across 5 different books.
+  const seen = new Set<string>()
+  const dedup: Aligned[] = []
+  for (const p of picks) {
+    const key = `${p.market}:${p.selection}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    dedup.push(p)
+  }
+  const top = dedup.slice(0, 6)
+
+  if (top.length === 0) return null
+
+  return (
+    <div className="p" id="pAlignedBets">
+      <div className="ph">
+        <span className="pt">AI Aligned Picks</span>
+        <span className="q">?</span>
+        <span style={{ marginLeft: 'auto', fontSize: 9, color: '#7b8ba3', fontWeight: 600, letterSpacing: '.04em' }}>
+          {top.length} pick{top.length === 1 ? '' : 's'} — model direction &amp; best available price
+        </span>
+      </div>
+      <div className="pb">
+        <div className="recbets">
+          {top.map((p, i) => {
+            const ic = iconFor(p.bookmaker)
+            return (
+              <div key={i} className="rbrow">
+                <span className="rbmkt" style={{ color: p.teamColor ?? '#4da6ff' }}>{p.market}</span>
+                <span className="rbsel">{p.selection}</span>
+                <span className="rbprice mono">${p.price.toFixed(2)}</span>
+                <span className="rbbk">
+                  <i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>
+                  {p.bookmaker}
+                </span>
+                <span className="rbfair mono">
+                  model {(p.modelProb * 100).toFixed(0)}%
+                </span>
+                <span className="rbedge mono" style={{ color: p.edge > 0 ? '#25d97b' : '#4da6ff' }}>
+                  {p.edge > 0 ? `+${p.edge.toFixed(1)}%` : 'aligned'}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+        <div className="foot" style={{ marginTop: 6 }}>
+          <span className="dot" style={{ background: '#4da6ff' }}></span>
+          <b>AI ALIGNED</b> = model directionally agrees. Positive edge is a genuine value bet; "aligned" means the book has priced in most of the edge but AI still likes this side.
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BottomBar({ md }: { md: EventDetail }) {
   const m = md.model
   if (!m) return null
@@ -2997,6 +3127,7 @@ function MockupInner() {
                 </div>
               </div>
               <RecommendedBets md={detail} />
+              <AIAlignedPicks md={detail} />
               <BottomBar md={detail} />
             </>
           )}
