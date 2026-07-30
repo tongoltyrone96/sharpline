@@ -516,6 +516,9 @@ const CSS = `
 .mck-root .gi .r1{display:flex;align-items:center;gap:5px}
 .mck-root .lg{font-size:7px;font-weight:800;letter-spacing:.06em;padding:2px 4px;border-radius:3px;background:#16213a;color:#8fa2bb}
 .mck-root .gi .tm{font-size:9px;color:var(--mdim);font-weight:600}
+.mck-root .gi .gi-live{font-size:9px;font-weight:800;letter-spacing:.08em;padding:1px 5px;border-radius:3px;line-height:1.3}
+.mck-root .gi .gi-live.on{background:rgba(239,68,68,.18);color:#f87171;box-shadow:0 0 6px rgba(239,68,68,.35)}
+.mck-root .gi .gi-live.done{background:rgba(123,139,163,.18);color:#c3d0e2}
 .mck-root .gi .ed{margin-left:auto;font-size:10px;font-weight:800;color:var(--mgreen)}
 .mck-root .gi .ed.no{color:var(--mdim2);font-weight:600}
 .mck-root .gi .r2{display:flex;align-items:center;gap:5px}
@@ -1191,11 +1194,23 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
           const { day, time } = fmtDayTime(e.commence_time)
           const edge = e.best_edge_pct ?? 0
           const hasV = edge >= 2
+          // A game is considered LIVE from kickoff up to ~2.5h later
+          // (average AFL / NRL match). After that we still show it (per
+          // client request to keep the whole game visible) but label it
+          // as FINAL rather than LIVE.
+          const kickMs = new Date(e.commence_time).getTime()
+          const nowMs = Date.now()
+          const minsSinceKick = (nowMs - kickMs) / 60000
+          const isLive = minsSinceKick > 0 && minsSinceKick < 150
+          const isFinal = minsSinceKick >= 150 && minsSinceKick < 4 * 60
+          const badge = isLive ? 'LIVE' : isFinal ? 'FINAL' : null
           return (
             <div key={e.id} className={'gi' + (selectedId === e.id ? ' on' : '')} onClick={() => onSelect(e.id)}>
               <div className="r1">
                 <span className="lg">{e.sport_title || 'SPT'}</span>
-                <span className="tm">{day} {time}</span>
+                {badge
+                  ? <span className={'gi-live ' + (isLive ? 'on' : 'done')}>{badge}</span>
+                  : <span className="tm">{day} {time}</span>}
                 <span className={'ed' + (hasV ? '' : ' no')}>{hasV ? `+${edge.toFixed(1)}%` : '—'}</span>
               </div>
               <div className="r2">

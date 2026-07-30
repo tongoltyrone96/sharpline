@@ -43,6 +43,11 @@ def get_dashboard(
 ) -> DashboardResponse:
     now = datetime.now(tz=timezone.utc)
     cutoff = now + timedelta(days=7)
+    # Keep in-progress and just-finished games on the dashboard so the
+    # client can still see all the data through the whole game — AFL is
+    # ~2.5h, NRL ~2h, so a 4-hour post-kickoff buffer covers live plus a
+    # short review window after full time.
+    window_start = now - timedelta(hours=4)
 
     q = (
         db.query(Event)
@@ -53,7 +58,7 @@ def get_dashboard(
         )
         .join(Event.sport)
         .filter(
-            Event.commence_time >= now,
+            Event.commence_time >= window_start,
             Event.commence_time <= cutoff,
         )
     )

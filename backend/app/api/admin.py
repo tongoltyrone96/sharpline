@@ -645,6 +645,10 @@ def list_upcoming_events(
 
     now = datetime.now(tz=timezone.utc)
     cutoff = now + timedelta(days=7)
+    # Keep live and just-finished games in the admin picker too so
+    # lineup entries can be added / edited during and shortly after a
+    # game, not just before kickoff.
+    window_start = now - timedelta(hours=4)
 
     events = (
         db.query(Event)
@@ -653,7 +657,7 @@ def list_upcoming_events(
             joinedload(Event.home_team),
             joinedload(Event.away_team),
         )
-        .filter(Event.commence_time >= now, Event.commence_time <= cutoff)
+        .filter(Event.commence_time >= window_start, Event.commence_time <= cutoff)
         .order_by(Event.commence_time)
         .all()
     )
