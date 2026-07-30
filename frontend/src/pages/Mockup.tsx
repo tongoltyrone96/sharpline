@@ -644,6 +644,7 @@ const CSS = `
 .mck-root .pickcell{background:rgba(37,217,123,.08);box-shadow:inset 0 0 0 1px rgba(37,217,123,.28)}
 .mck-root .edgechip{display:inline-block;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;background:rgba(37,217,123,.15);color:#25d97b;letter-spacing:.04em}
 .mck-root .aipick{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:#25d97b;background:rgba(37,217,123,.14);border:1px solid rgba(37,217,123,.42);padding:3px 7px;border-radius:5px;white-space:nowrap;font-family:'IBM Plex Mono',monospace;letter-spacing:.02em}
+.mck-root .besttrophy{display:inline-block;font-size:11px;vertical-align:middle;margin-right:2px;filter:drop-shadow(0 0 3px rgba(245,167,36,.55))}
 .mck-root .nopick{font-size:10px;color:#55647a;font-family:'IBM Plex Mono',monospace;font-style:italic;letter-spacing:.03em}
 .mck-root .foot{display:flex;align-items:center;gap:5px;font-size:8px;color:var(--mdim2);padding-top:4px}
 .mck-root .note8{font-size:8px;color:var(--mdim2);padding-top:4px;line-height:1.4}
@@ -1649,6 +1650,12 @@ function OddsComparison({ md }: { md: EventDetail }) {
 function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[]; home: EventDetail['event']['home']; away: EventDetail['event']['away'] }) {
   const rows = md.markets?.h2h ?? []
   const fH = md.model?.fair_home_price, fA = md.model?.fair_away_price
+  // Best-price detection — the trophy icon marks whoever offers the
+  // longest price on each side, which is what the client asked for.
+  const homePrices = rows.filter(r => r.outcome === home.name && r.price > 0).map(r => r.price)
+  const awayPrices = rows.filter(r => r.outcome === away.name && r.price > 0).map(r => r.price)
+  const maxHome = homePrices.length ? Math.max(...homePrices) : null
+  const maxAway = awayPrices.length ? Math.max(...awayPrices) : null
   return <>
     <div className="tblwrap">
     <table className="mono">
@@ -1662,14 +1669,18 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
           const aEdge = a?.edge_pct ?? 0
           const pickHome = hEdge > 0 && hEdge >= aEdge
           const pickAway = aEdge > 0 && aEdge > hEdge
+          const bestHome = h?.price != null && maxHome != null && Math.abs(h.price - maxHome) < 0.001
+          const bestAway = a?.price != null && maxAway != null && Math.abs(a.price - maxAway) < 0.001
           return (
             <tr key={bk}>
               <td><span className="bk"><i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>{bk}</span></td>
               <td className={pickHome ? 'pickcell' : ''}>
+                {bestHome && <span className="besttrophy" title="Highest odds">🏆 </span>}
                 {h?.price.toFixed(2) ?? '–'}
                 {pickHome && <span className="edgechip up"> +{hEdge.toFixed(1)}%</span>}
               </td>
               <td className={pickAway ? 'pickcell' : ''}>
+                {bestAway && <span className="besttrophy" title="Highest odds">🏆 </span>}
                 {a?.price.toFixed(2) ?? '–'}
                 {pickAway && <span className="edgechip up"> +{aEdge.toFixed(1)}%</span>}
               </td>
@@ -1685,12 +1696,16 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
       </tbody>
     </table>
     </div>
-    <div className="foot"><span className="dot"></span>Prices update every 30 seconds · <b>AI PICK</b> = model recommends this side at this book's price</div>
+    <div className="foot"><span className="dot"></span>Prices update every 30 seconds · 🏆 = highest odds on this side · <b>AI PICK</b> = model recommends this side at this book's price</div>
   </>
 }
 function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[]; home: EventDetail['event']['home']; away: EventDetail['event']['away'] }) {
   const rows = md.markets?.spreads ?? []
   const mu = md.model?.projected_margin
+  const homePrices = rows.filter(r => r.outcome === home.name && r.price > 0).map(r => r.price)
+  const awayPrices = rows.filter(r => r.outcome === away.name && r.price > 0).map(r => r.price)
+  const maxHome = homePrices.length ? Math.max(...homePrices) : null
+  const maxAway = awayPrices.length ? Math.max(...awayPrices) : null
   return <>
     <div className="tblwrap">
     <table className="mono">
@@ -1703,6 +1718,8 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
           if (!h && !a) return null
           const hEdge = h?.edge_pct ?? 0
           const aEdge = a?.edge_pct ?? 0
+          const bestHome = h?.price != null && maxHome != null && Math.abs(h.price - maxHome) < 0.001
+          const bestAway = a?.price != null && maxAway != null && Math.abs(a.price - maxAway) < 0.001
           // AI covers home iff projected margin > home line at this book
           let pick: 'h' | 'a' | null = null
           if (mu != null) {
@@ -1716,11 +1733,13 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
               <td><span className="bk"><i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>{bk}</span></td>
               <td className={pick === 'h' ? 'pickcell' : ''}>{h?.point != null ? sgn(h.point) : '–'}</td>
               <td className={pick === 'h' ? 'pickcell' : ''}>
+                {bestHome && <span className="besttrophy" title="Highest odds">🏆 </span>}
                 {h?.price?.toFixed(2) ?? '–'}
                 {pick === 'h' && hEdge > 0 && <span className="edgechip up"> +{hEdge.toFixed(1)}%</span>}
               </td>
               <td className={pick === 'a' ? 'pickcell' : ''}>{a?.point != null ? sgn(a.point) : '–'}</td>
               <td className={pick === 'a' ? 'pickcell' : ''}>
+                {bestAway && <span className="besttrophy" title="Highest odds">🏆 </span>}
                 {a?.price?.toFixed(2) ?? '–'}
                 {pick === 'a' && aEdge > 0 && <span className="edgechip up"> +{aEdge.toFixed(1)}%</span>}
               </td>
@@ -1735,12 +1754,16 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
       </tbody>
     </table>
     </div>
-    <div className="note8">Each book priced at its own line — <b>AI PICK</b> uses the model's projected margin vs this book's spread.</div>
+    <div className="note8">Each book priced at its own line · 🏆 = highest price on this side · <b>AI PICK</b> uses the model's projected margin vs this book's spread.</div>
   </>
 }
 function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
   const rows = md.markets?.totals ?? []
   const tot = md.model?.projected_total
+  const overPrices = rows.filter(r => r.outcome.toLowerCase() === 'over' && r.price > 0).map(r => r.price)
+  const underPrices = rows.filter(r => r.outcome.toLowerCase() === 'under' && r.price > 0).map(r => r.price)
+  const maxOver = overPrices.length ? Math.max(...overPrices) : null
+  const maxUnder = underPrices.length ? Math.max(...underPrices) : null
   return <>
     <div className="tblwrap">
     <table className="mono">
@@ -1754,6 +1777,8 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
           const line = o?.point ?? u?.point ?? 0
           const oEdge = o?.edge_pct ?? 0
           const uEdge = u?.edge_pct ?? 0
+          const bestOver = o?.price != null && maxOver != null && Math.abs(o.price - maxOver) < 0.001
+          const bestUnder = u?.price != null && maxUnder != null && Math.abs(u.price - maxUnder) < 0.001
           // AI recommends OVER at this book if projected total > this book's line
           let pick: 'o' | 'u' | null = null
           if (tot != null) {
@@ -1765,10 +1790,12 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
               <td><span className="bk"><i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>{bk}</span></td>
               <td>{line.toFixed(1)}</td>
               <td className={pick === 'o' ? 'pickcell' : ''}>
+                {bestOver && <span className="besttrophy" title="Highest odds">🏆 </span>}
                 {o?.price?.toFixed(2) ?? '–'}
                 {pick === 'o' && oEdge > 0 && <span className="edgechip up"> +{oEdge.toFixed(1)}%</span>}
               </td>
               <td className={pick === 'u' ? 'pickcell' : ''}>
+                {bestUnder && <span className="besttrophy" title="Highest odds">🏆 </span>}
                 {u?.price?.toFixed(2) ?? '–'}
                 {pick === 'u' && uEdge > 0 && <span className="edgechip up"> +{uEdge.toFixed(1)}%</span>}
               </td>
@@ -1783,7 +1810,7 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
       </tbody>
     </table>
     </div>
-    <div className="note8">Each book priced at its own line — <b>AI PICK</b> uses the model's projected total vs this book's line.</div>
+    <div className="note8">Each book priced at its own line · 🏆 = highest price on this side · <b>AI PICK</b> uses the model's projected total vs this book's line.</div>
   </>
 }
 
