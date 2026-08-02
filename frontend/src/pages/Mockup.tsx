@@ -648,6 +648,9 @@ const CSS = `
 .mck-root .edgechip{display:inline-block;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;background:rgba(37,217,123,.15);color:#25d97b;letter-spacing:.04em}
 .mck-root .aipick{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:#25d97b;background:rgba(37,217,123,.14);border:1px solid rgba(37,217,123,.42);padding:3px 7px;border-radius:5px;white-space:nowrap;font-family:'IBM Plex Mono',monospace;letter-spacing:.02em}
 .mck-root .besttrophy{display:inline-block;font-size:11px;vertical-align:middle;margin-right:2px;filter:drop-shadow(0 0 3px rgba(245,167,36,.55))}
+.mck-root .ai-row{background:linear-gradient(90deg,rgba(77,166,255,.12),rgba(77,166,255,.04));border-top:1px solid rgba(77,166,255,.35);border-bottom:1px solid rgba(77,166,255,.35)}
+.mck-root .ai-row td{color:#e7eef8;font-weight:700}
+.mck-root .ai-model-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;color:#4da6ff;background:rgba(77,166,255,.14);border:1px solid rgba(77,166,255,.42);padding:2px 6px;border-radius:5px;white-space:nowrap;font-family:'IBM Plex Mono',monospace;letter-spacing:.03em}
 .mck-root .beats-bf{margin-top:10px;padding:10px 12px;background:linear-gradient(180deg,rgba(245,167,36,.10),rgba(245,167,36,.04));border:1px solid rgba(245,167,36,.32);border-radius:8px}
 .mck-root .beats-bf-hdr{font-size:10px;font-weight:800;letter-spacing:.10em;color:#f5a724;margin-bottom:6px;text-transform:uppercase}
 .mck-root .beats-bf-body{display:flex;flex-direction:column;gap:4px}
@@ -1746,11 +1749,33 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
       .forEach(r => beats.push({ bookmaker: r.bookmaker, outcome: away.abbr, price: r.price, betfair: bfAway }))
   }
   beats.sort((a, b) => (b.price - b.betfair) - (a.price - a.betfair))
+  // Also flag whether AI's own price beats any bookmaker on each side —
+  // useful for the AI row's trophy check.
+  const aiBeatsHome = fH != null && (maxHome == null || fH > maxHome)
+  const aiBeatsAway = fA != null && (maxAway == null || fA > maxAway)
+
   return <>
     <div className="tblwrap">
     <table className="mono">
       <thead><tr><th>BOOKMAKER</th><th>{home.abbr}</th><th>{away.abbr}</th><th>AI FAIR</th><th>AI PICK</th></tr></thead>
       <tbody>
+        {fH != null && fA != null && (
+          <tr className="ai-row">
+            <td>
+              <span className="bk"><i style={{ background: '#4da6ff', color: '#fff' }}>AI</i>Sharpline AI</span>
+            </td>
+            <td>
+              {aiBeatsHome && <span className="besttrophy" title="AI beats every book on this side">🏆 </span>}
+              {fH.toFixed(2)}
+            </td>
+            <td>
+              {aiBeatsAway && <span className="besttrophy" title="AI beats every book on this side">🏆 </span>}
+              {fA.toFixed(2)}
+            </td>
+            <td className="fair" style={{ color: '#7b8ba3' }}>—</td>
+            <td><span className="ai-model-tag">Model price</span></td>
+          </tr>
+        )}
         {bkList.map(bk => {
           const h = rows.find(r => r.bookmaker === bk && r.outcome === home.name)
           const a = rows.find(r => r.bookmaker === bk && r.outcome === away.name)
@@ -1787,7 +1812,7 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
     </table>
     </div>
     <BeatsBetfair rows={beats} />
-    <div className="foot"><span className="dot"></span>Prices update every 30 seconds · 🏆 = highest odds on this side · <b>AI PICK</b> = model recommends this side at this book's price</div>
+    <div className="foot"><span className="dot"></span>Prices update every 30 seconds · 🏆 = highest odds on this side · <b>Sharpline AI</b> = model's own tradeable price · <b>AI PICK</b> = model recommends this side at this book's price</div>
   </>
 }
 function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[]; home: EventDetail['event']['home']; away: EventDetail['event']['away'] }) {
