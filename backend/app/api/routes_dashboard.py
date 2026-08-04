@@ -143,6 +143,41 @@ def get_dashboard(
             if p is not None:
                 away_h2h_map[eid] = p
 
+    # Batch: average book spread on the home side and average total line —
+    # so the fixture strip can show the actual market number alongside
+    # the model's projected margin.
+    spread_rows = (
+        db.query(ModelOutput.event_id, ModelOutput.outcome, func.avg(ModelOutput.point))
+        .filter(
+            ModelOutput.event_id.in_(event_ids),
+            ModelOutput.market == "spreads",
+            ModelOutput.point != None,
+        )
+        .group_by(ModelOutput.event_id, ModelOutput.outcome)
+        .all()
+    )
+    book_home_spread_map: dict[str, float] = {}
+    for eid, outcome, avg_pt in spread_rows:
+        if avg_pt is None:
+            continue
+        # Match to the home team name of this event
+        ev = next((e for e in events if e.id == eid), None)
+        if ev and ev.home_team and outcome == ev.home_team.name:
+            book_home_spread_map[eid] = round(float(avg_pt), 1)
+
+    total_rows = (
+        db.query(ModelOutput.event_id, func.avg(ModelOutput.point))
+        .filter(
+            ModelOutput.event_id.in_(event_ids),
+            ModelOutput.market == "totals",
+            ModelOutput.outcome.ilike("over"),
+            ModelOutput.point != None,
+        )
+        .group_by(ModelOutput.event_id)
+        .all()
+    )
+    book_total_map: dict[str, float] = {eid: round(float(pt), 1) for eid, pt in total_rows if pt is not None}
+
     result_events: list[DashboardEvent] = []
     for event in events:
         summary = summary_map.get(event.id)
@@ -157,6 +192,8 @@ def get_dashboard(
             best_edge_pct=best_edge_map.get(event.id),
             projected_margin=summary.projected_margin if summary else None,
             projected_total=summary.projected_total if summary else None,
+            book_home_spread=book_home_spread_map.get(event.id),
+            book_total_line=book_total_map.get(event.id),
             home_h2h_price=home_h2h_map.get(event.id),
             away_h2h_price=away_h2h_map.get(event.id),
             home_win_prob=summary.home_win_prob if summary else None,

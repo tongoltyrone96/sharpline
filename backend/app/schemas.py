@@ -117,6 +117,8 @@ class DashboardEvent(BaseModel):
     best_edge_pct: float | None = None
     projected_margin: float | None = None
     projected_total: float | None = None
+    book_home_spread: float | None = None    # avg book spread on home side
+    book_total_line: float | None = None     # avg book total line
     home_h2h_price: float | None = None
     away_h2h_price: float | None = None
     home_win_prob: float | None = None
