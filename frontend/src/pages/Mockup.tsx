@@ -1260,7 +1260,22 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
                     </>
                   })()}
                 </span>
-                <span className="sp">Total <b>{e.projected_total != null ? e.projected_total.toFixed(1) : '–'}</b></span>
+                <span className="sp">
+                  {/* Show AI's OVER/UNDER call vs the market total line
+                      so the client can see the direction at a glance,
+                      not just a bare number. */}
+                  {e.projected_total != null && e.book_total_line != null ? (() => {
+                    const diff = e.projected_total - e.book_total_line
+                    const call = diff > 0.3 ? 'OVER' : diff < -0.3 ? 'UNDER' : null
+                    return <>
+                      Total {call && <b style={{ color: call === 'OVER' ? '#25d97b' : '#f4526a' }}>AI {call} </b>}
+                      <b>{e.projected_total.toFixed(1)}</b>
+                      <span style={{ color: '#7b8ba3', marginLeft: 4 }}>· Bk <b style={{ color: '#c3d0e2' }}>{e.book_total_line.toFixed(1)}</b></span>
+                    </>
+                  })() : (
+                    <>Total <b>{e.projected_total != null ? e.projected_total.toFixed(1) : '–'}</b></>
+                  )}
+                </span>
               </div>
             </div>
           )
