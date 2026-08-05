@@ -1261,14 +1261,16 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
                   })()}
                 </span>
                 <span className="sp">
-                  {/* Show AI's OVER/UNDER call vs the market total line
-                      so the client can see the direction at a glance,
-                      not just a bare number. */}
+                  {/* Show AI's OVER/UNDER call vs the market total. Uses
+                      totalDirection (same logic as the detail-page call),
+                      which folds in weather + matchup lean so it always
+                      returns a side — even when the raw numbers tie. */}
                   {e.projected_total != null && e.book_total_line != null ? (() => {
-                    const diff = e.projected_total - e.book_total_line
-                    const call = diff > 0.3 ? 'OVER' : diff < -0.3 ? 'UNDER' : null
+                    const dir = totalDirection(e.projected_total, e.book_total_line, null, e.home_abbr, e.away_abbr)
+                    const call = dir.side
+                    const col = call === 'OVER' ? '#25d97b' : '#f4526a'
                     return <>
-                      Total {call && <b style={{ color: call === 'OVER' ? '#25d97b' : '#f4526a' }}>AI {call} </b>}
+                      Total <b style={{ color: col }}>AI {call} </b>
                       <b>{e.projected_total.toFixed(1)}</b>
                       <span style={{ color: '#7b8ba3', marginLeft: 4 }}>· Bk <b style={{ color: '#c3d0e2' }}>{e.book_total_line.toFixed(1)}</b></span>
                     </>
