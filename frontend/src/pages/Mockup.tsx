@@ -526,6 +526,8 @@ const CSS = `
 .mck-root .gi .sd.r{flex-direction:row-reverse}
 .mck-root .gi .cr{width:19px;height:19px;flex:none}
 .mck-root .gi .ab{font-size:10.5px;font-weight:800;line-height:1}
+.mck-root .gi .ab.aiwin{color:#fbbf24;text-shadow:0 0 6px rgba(251,191,36,.45)}
+.mck-root .gi .ab.aiwin::after{content:' ★';font-size:9px;color:#fbbf24;opacity:.85}
 .mck-root .gi .vs{font-size:7px;color:var(--mdim2);font-weight:700}
 .mck-root .gi .r3{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--mdim2);font-weight:600}
 .mck-root .gi .r3 b{color:#c3d0e2;font-weight:700;font-family:'IBM Plex Mono',monospace}
@@ -1227,17 +1229,25 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
                   : <span className="tm">{day} {time}</span>}
                 <span className={'ed' + (hasV ? '' : ' no')}>{hasV ? `+${edge.toFixed(1)}%` : '—'}</span>
               </div>
-              <div className="r2">
-                <div className="sd">
-                  <Crest primary={e.home_color} secondary={e.home_secondary_color} abbr={e.home_abbr} teamName={e.home_team} className="cr" />
-                  <span className="ab">{e.home_abbr}</span>
-                </div>
-                <span className="vs">VS</span>
-                <div className="sd r">
-                  <Crest primary={e.away_color} secondary={e.away_secondary_color} abbr={e.away_abbr} teamName={e.away_team} className="cr" />
-                  <span className="ab">{e.away_abbr}</span>
-                </div>
-              </div>
+              {(() => {
+                // Highlight the side AI expects to win so the client can
+                // read the pick at a glance without doing the sign math.
+                const homeFav = e.projected_margin != null && e.projected_margin < 0
+                const awayFav = e.projected_margin != null && e.projected_margin > 0
+                return (
+                  <div className="r2">
+                    <div className="sd">
+                      <Crest primary={e.home_color} secondary={e.home_secondary_color} abbr={e.home_abbr} teamName={e.home_team} className="cr" />
+                      <span className={'ab' + (homeFav ? ' aiwin' : '')}>{e.home_abbr}</span>
+                    </div>
+                    <span className="vs">VS</span>
+                    <div className="sd r">
+                      <Crest primary={e.away_color} secondary={e.away_secondary_color} abbr={e.away_abbr} teamName={e.away_team} className="cr" />
+                      <span className={'ab' + (awayFav ? ' aiwin' : '')}>{e.away_abbr}</span>
+                    </div>
+                  </div>
+                )
+              })()}
               <div className="r3">
                 <span>
                   {/* Label the favourite side explicitly so the sign
