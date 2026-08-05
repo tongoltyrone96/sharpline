@@ -1240,11 +1240,25 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
               </div>
               <div className="r3">
                 <span>
-                  AI Line <b>{e.projected_margin != null ? sgn(e.projected_margin) : '–'}</b>
-                  {e.book_home_spread != null && <>
-                    <span style={{ color: '#55647a', margin: '0 4px' }}>·</span>
-                    <span style={{ color: '#7b8ba3' }}>Bk <b style={{ color: '#c3d0e2' }}>{sgn(e.book_home_spread)}</b></span>
-                  </>}
+                  {/* Label the favourite side explicitly so the sign
+                      matches the detail-page reading (e.g. "AI PEN -4.7"
+                      instead of a bare "+4.7" whose sign flips depending
+                      on which team is home). */}
+                  {e.projected_margin != null ? (() => {
+                    const homeFav = e.projected_margin < 0
+                    const favAbbr = homeFav ? e.home_abbr : e.away_abbr
+                    const line = '-' + Math.abs(e.projected_margin).toFixed(1)
+                    return <>AI {favAbbr} <b>{line}</b></>
+                  })() : <>AI <b>–</b></>}
+                  {e.book_home_spread != null && (() => {
+                    const homeFav = e.book_home_spread < 0
+                    const favAbbr = homeFav ? e.home_abbr : e.away_abbr
+                    const line = '-' + Math.abs(e.book_home_spread).toFixed(1)
+                    return <>
+                      <span style={{ color: '#55647a', margin: '0 4px' }}>·</span>
+                      <span style={{ color: '#7b8ba3' }}>Bk {favAbbr} <b style={{ color: '#c3d0e2' }}>{line}</b></span>
+                    </>
+                  })()}
                 </span>
                 <span className="sp">Total <b>{e.projected_total != null ? e.projected_total.toFixed(1) : '–'}</b></span>
               </div>
