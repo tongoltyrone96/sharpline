@@ -1250,39 +1250,26 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
               })()}
               <div className="r3">
                 <span>
-                  {/* Label the favourite side explicitly so the sign
-                      matches the detail-page reading (e.g. "AI PEN -4.7"
-                      instead of a bare "+4.7" whose sign flips depending
-                      on which team is home). */}
+                  {/* AI's spread call — names the favoured team so the
+                      sign is unambiguous. Book line lives on the detail
+                      page's Odds Comparison table, not repeated here. */}
                   {e.projected_margin != null ? (() => {
                     const homeFav = e.projected_margin < 0
                     const favAbbr = homeFav ? e.home_abbr : e.away_abbr
                     const line = '-' + Math.abs(e.projected_margin).toFixed(1)
                     return <>AI {favAbbr} <b>{line}</b></>
                   })() : <>AI <b>–</b></>}
-                  {e.book_home_spread != null && (() => {
-                    const homeFav = e.book_home_spread < 0
-                    const favAbbr = homeFav ? e.home_abbr : e.away_abbr
-                    const line = '-' + Math.abs(e.book_home_spread).toFixed(1)
-                    return <>
-                      <span style={{ color: '#55647a', margin: '0 4px' }}>·</span>
-                      <span style={{ color: '#7b8ba3' }}>Bk {favAbbr} <b style={{ color: '#c3d0e2' }}>{line}</b></span>
-                    </>
-                  })()}
                 </span>
                 <span className="sp">
-                  {/* Show AI's OVER/UNDER call vs the market total. Uses
-                      totalDirection (same logic as the detail-page call),
-                      which folds in weather + matchup lean so it always
-                      returns a side — even when the raw numbers tie. */}
+                  {/* AI's OVER/UNDER call using totalDirection (same
+                      logic as the detail-page). */}
                   {e.projected_total != null && e.book_total_line != null ? (() => {
                     const dir = totalDirection(e.projected_total, e.book_total_line, null, e.home_abbr, e.away_abbr)
                     const call = dir.side
                     const col = call === 'OVER' ? '#25d97b' : '#f4526a'
                     return <>
-                      Total <b style={{ color: col }}>AI {call} </b>
+                      <b style={{ color: col }}>AI {call} </b>
                       <b>{e.projected_total.toFixed(1)}</b>
-                      <span style={{ color: '#7b8ba3', marginLeft: 4 }}>· Bk <b style={{ color: '#c3d0e2' }}>{e.book_total_line.toFixed(1)}</b></span>
                     </>
                   })() : (
                     <>Total <b>{e.projected_total != null ? e.projected_total.toFixed(1) : '–'}</b></>
