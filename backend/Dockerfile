@@ -11,4 +11,6 @@ RUN pip install --no-cache-dir "."
 
 COPY . .
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Run idempotent seed on every start (fills any newly-added teams like
+# Parramatta Eels into the DB) then boot the API. Seed is safe to re-run.
+CMD ["sh", "-c", "python scripts/seed.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

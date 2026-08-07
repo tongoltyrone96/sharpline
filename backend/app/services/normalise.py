@@ -14,6 +14,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.models import ApiQuota, Bookmaker, Event, Odds, OddsHistory, Team
+from app.services.standings_service import _ALIASES, _norm
 
 log = logging.getLogger(__name__)
 
@@ -26,6 +27,39 @@ def _parse_ts(ts: str | None) -> datetime:
     if ts.endswith("Z"):
         ts = ts[:-1] + "+00:00"
     return datetime.fromisoformat(ts)
+
+
+def _resolve_team_id(team_name: str, team_map: dict[str, int]) -> int | None:
+    """Look up team id with normalization + alias fallback.
+
+    Handles feed variants like "Parramatta" vs "Parramatta Eels", or
+    "Sydney" vs "Sydney Swans" - the alias table already lives in
+    standings_service and covers both NRL and AFL short/long forms.
+    """
+    if not team_name:
+        return None
+
+    normalized_lookup = {_norm(name): tid for name, tid in team_map.items()}
+
+    key = _norm(team_name)
+    if key in normalized_lookup:
+        return normalized_lookup[key]
+
+    alias = _ALIASES.get(key)
+    if alias and alias in normalized_lookup:
+        return normalized_lookup[alias]
+
+    # Reverse alias: feed returned canonical, alias table maps a short form to it
+    for short, canonical in _ALIASES.items():
+        if canonical == key and short in normalized_lookup:
+            return normalized_lookup[short]
+
+    # Loose contains match as last resort (e.g. feed "Parramatta" vs DB "Parramatta Eels")
+    for name_key, tid in normalized_lookup.items():
+        if key and (key in name_key or name_key in key):
+            return tid
+
+    return None
 
 
 # ── Pure extraction ───────────────────────────────────────────────────────────
@@ -46,8 +80,8 @@ def extract_event_odds_rows(
     the API outcome object for that specific bookmaker.  The value is never
     averaged or replaced with a consensus line.
     """
-    home_id = team_id_map.get(event["home_team"])
-    away_id = team_id_map.get(event["away_team"])
+    home_id = _resolve_team_id(event["home_team"], team_id_map)
+    away_id = _resolve_team_id(event["away_team"], team_id_map)
 
     if home_id is None:
         log.warning("Unknown home team %r (sport_id=%s)", event["home_team"], sport_id)

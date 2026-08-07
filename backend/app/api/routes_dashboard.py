@@ -7,6 +7,7 @@ GET /api/v1/dashboard?sport=AFL&status=upcoming
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Query
@@ -21,6 +22,50 @@ from app.schemas import DashboardEvent, DashboardResponse, OpportunitiesResponse
 
 router = APIRouter(prefix="/api/v1", tags=["dashboard"])
 log = logging.getLogger(__name__)
+
+
+def _dedup_events(db: Session, events: list[Event]) -> list[Event]:
+    """Drop duplicate events for the same matchup within 48h.
+
+    The Odds API can return the same fixture twice under different IDs when a
+    game is rescheduled or dual-listed. Group by (sport, home_team, away_team);
+    for events in the group whose kickoffs are within 48 hours, keep the one
+    with the most odds rows in the database (the "richer" copy). Events with
+    unresolved teams (TBD) are never grouped.
+    """
+    if not events:
+        return events
+
+    ids = [e.id for e in events]
+    odds_counts = dict(
+        db.query(ModelOutput.event_id, func.count(ModelOutput.id))
+        .filter(ModelOutput.event_id.in_(ids))
+        .group_by(ModelOutput.event_id)
+        .all()
+    )
+
+    groups: dict[tuple, list[Event]] = defaultdict(list)
+    keep: list[Event] = []
+    for ev in events:
+        if ev.home_team_id is None or ev.away_team_id is None:
+            keep.append(ev)
+            continue
+        key = (ev.sport_id, ev.home_team_id, ev.away_team_id)
+        groups[key].append(ev)
+
+    window = timedelta(hours=48)
+    for group in groups.values():
+        group.sort(key=lambda e: e.commence_time)
+        cluster: list[Event] = [group[0]]
+        for ev in group[1:]:
+            if ev.commence_time - cluster[-1].commence_time <= window:
+                cluster.append(ev)
+            else:
+                keep.append(max(cluster, key=lambda e: odds_counts.get(e.id, 0)))
+                cluster = [ev]
+        keep.append(max(cluster, key=lambda e: odds_counts.get(e.id, 0)))
+
+    return sorted(keep, key=lambda e: e.commence_time)
 
 
 def _team_brief(team) -> TeamBrief:
@@ -72,6 +117,12 @@ def get_dashboard(
         q = q.filter(Event.status == status)
 
     events = q.order_by(Event.commence_time.asc()).all()
+
+    # Deduplicate: The Odds API occasionally returns the same matchup under
+    # two different event IDs (e.g. rescheduled game, dual listings). Prefer
+    # the copy with more odds data so the dashboard doesn't show a blank
+    # duplicate card next to the real one.
+    events = _dedup_events(db, events)
 
     # Collect event IDs for batch lookups
     event_ids = [e.id for e in events]

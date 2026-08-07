@@ -77,6 +77,7 @@ TEAMS = {
         dict(name='New Zealand Warriors',          abbr='NZW', primary="#000000", secondary="#C8102E", venue=None, lat=None, lon=None, indoor=False),
         dict(name='Newcastle Knights',             abbr='NEW', primary="#002B5C", secondary="#CC2136", venue=None, lat=None, lon=None, indoor=False),
         dict(name='North Queensland Cowboys',      abbr='NQC', primary="#003087", secondary="#C8A84B", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Parramatta Eels',               abbr='PAR', primary="#004C8C", secondary="#FFD700", venue=None, lat=None, lon=None, indoor=False),
         dict(name='Penrith Panthers',              abbr='PEN', primary="#000000", secondary="#FFFFFF", venue=None, lat=None, lon=None, indoor=False),
         dict(name='South Sydney Rabbitohs',        abbr='SOU', primary="#CC2136", secondary="#007A45", venue=None, lat=None, lon=None, indoor=False),
         dict(name='St George Illawarra Dragons',   abbr='SGI', primary="#CC2136", secondary="#FFFFFF", venue=None, lat=None, lon=None, indoor=False),
