@@ -152,10 +152,16 @@ def get_dashboard(
         .all()
     )
 
-    # Batch: best edge_pct per event
+    # Batch: best edge_pct per event.
+    # Cap at 20% — anything higher is almost always the feed misbehaving
+    # (longshot de-vig overshoot, stale prices) and misleads more than it
+    # informs. Same threshold the /opportunities endpoint uses.
     edge_rows = (
         db.query(ModelOutput.event_id, func.max(ModelOutput.edge_pct))
-        .filter(ModelOutput.event_id.in_(event_ids))
+        .filter(
+            ModelOutput.event_id.in_(event_ids),
+            ModelOutput.edge_pct <= 20,
+        )
         .group_by(ModelOutput.event_id)
         .all()
     )
