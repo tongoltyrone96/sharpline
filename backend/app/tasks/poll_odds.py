@@ -52,36 +52,51 @@ def poll_odds(self):
                 log.debug("skip %s — governor hold", sport.key)
                 continue
 
+            # Everything from fetch through normalise is wrapped per-sport so
+            # one sport failing (statement timeout on a big NFL payload, DB
+            # blip, whatever) never kills the whole sweep. Without this, a
+            # crash on the NFL slot means the remaining sports (MLB, NBA)
+            # never get processed on this pass.
             try:
-                payload, quota_headers = adapter.fetch_odds(sport.key)
-            except Exception as exc:
-                log.warning("fetch_odds %s failed: %s", sport.key, exc)
-                self.retry(exc=exc, countdown=60)
-                continue
+                try:
+                    payload, quota_headers = adapter.fetch_odds(sport.key)
+                except Exception as exc:
+                    log.warning("fetch_odds %s failed: %s", sport.key, exc)
+                    continue
 
-            if not payload:
-                log.info("%s returned empty payload (between rounds)", sport.key)
+                if not payload:
+                    log.info("%s returned empty payload (between rounds)", sport.key)
+                    governor.record_poll(sport)
+                    continue
+
+                stats = normalise_payload(db, payload, sport.id)
+                record_quota(db, "theoddsapi", quota_headers)
                 governor.record_poll(sport)
+
+                log.info(
+                    "polled %s: events=%d odds=%d history=%d remaining=%s",
+                    sport.key,
+                    stats["events"],
+                    stats["odds_upserted"],
+                    stats["history_rows"],
+                    quota_headers.get("x-requests-remaining"),
+                )
+
+                # Dispatch recompute for each event in the payload
+                for event_data in payload:
+                    eid = event_data.get("id")
+                    if eid:
+                        recompute_event_task.delay(eid)
+            except Exception as exc:
+                # normalise / record_quota / record_poll can hit DB timeouts
+                # on large sport payloads. Roll back so the session is clean
+                # for the next sport, log it, and move on.
+                log.exception("poll cycle for %s crashed: %s", sport.key, exc)
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
                 continue
-
-            stats = normalise_payload(db, payload, sport.id)
-            record_quota(db, "theoddsapi", quota_headers)
-            governor.record_poll(sport)
-
-            log.info(
-                "polled %s: events=%d odds=%d history=%d remaining=%s",
-                sport.key,
-                stats["events"],
-                stats["odds_upserted"],
-                stats["history_rows"],
-                quota_headers.get("x-requests-remaining"),
-            )
-
-            # Dispatch recompute for each event in the payload
-            for event_data in payload:
-                eid = event_data.get("id")
-                if eid:
-                    recompute_event_task.delay(eid)
 
     finally:
         db.close()

@@ -224,12 +224,12 @@ def seed() -> None:
         available_books = db.query(Bookmaker).filter_by(is_available=True).count()
         unavailable_books = db.query(Bookmaker).filter_by(is_available=False).count()
         print("\nVerification:")
-        print(f"  teams.count = {actual_teams} (expected 69)")
+        print(f"  teams.count = {actual_teams} (expected 97)")
         print(f"  bookmakers available = {available_books}, unavailable = {unavailable_books}")
         print(f"  model_params.count = {db.query(ModelParam).count()}")
 
-        if actual_teams != 69:
-            print(f"  WARNING: expected 69 teams, got {actual_teams}")
+        if actual_teams != 97:
+            print(f"  WARNING: expected 97 teams, got {actual_teams}")
 
     finally:
         db.close()

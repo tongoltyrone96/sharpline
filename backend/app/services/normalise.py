@@ -182,6 +182,33 @@ def normalise_payload(
     if fetched_at is None:
         fetched_at = datetime.now(tz=timezone.utc)
 
+    # Window filter: only ingest events within roughly the dashboard window
+    # (past 6h through +14d). NFL / MLB / NBA feeds return the full season
+    # in one shot (272+ events for NFL), which blew past the Postgres
+    # statement_timeout and rolled back the whole batch. We only ever show
+    # a 7-day slice on the dashboard anyway, so filtering here shrinks
+    # each write to ~10-30 events per sport — well under the timeout.
+    horizon_start = fetched_at - timedelta(hours=6)
+    horizon_end = fetched_at + timedelta(days=14)
+    filtered_payload = []
+    for event in payload:
+        ts = event.get("commence_time")
+        if not ts:
+            continue
+        try:
+            ct = _parse_ts(ts)
+        except Exception:
+            continue
+        if horizon_start <= ct <= horizon_end:
+            filtered_payload.append(event)
+
+    if len(filtered_payload) < len(payload):
+        log.info(
+            "normalise: sport_id=%s window-filtered %d → %d events",
+            sport_id, len(payload), len(filtered_payload),
+        )
+    payload = filtered_payload
+
     # Cache team name → id for this sport
     teams = db.query(Team).filter_by(sport_id=sport_id).all()
     team_map: dict[str, int] = {t.name: t.id for t in teams}

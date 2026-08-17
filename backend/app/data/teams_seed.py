@@ -28,8 +28,42 @@ TEAMS = {
         dict(name='Western Bulldogs',                 abbr='WBD', primary="#003087", secondary="#CC2136", venue=None, lat=None, lon=None, indoor=False),
     ],
     "MLB": [
-        dict(name='American League', abbr='AME', primary="#001F5B", secondary="#C8102E", venue=None, lat=None, lon=None, indoor=False),
-        dict(name='National League', abbr='NAT', primary="#C8102E", secondary="#001F5B", venue=None, lat=None, lon=None, indoor=False),
+        # AL East
+        dict(name='Baltimore Orioles',     abbr='BAL', primary="#DF4601", secondary="#000000", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Boston Red Sox',        abbr='BOS', primary="#BD3039", secondary="#0C2340", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='New York Yankees',      abbr='NYY', primary="#0C2340", secondary="#C4CED4", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Tampa Bay Rays',        abbr='TB',  primary="#092C5C", secondary="#8FBCE6", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Toronto Blue Jays',     abbr='TOR', primary="#134A8E", secondary="#1D2D5C", venue=None, lat=None, lon=None, indoor=False),
+        # AL Central
+        dict(name='Chicago White Sox',     abbr='CWS', primary="#27251F", secondary="#C4CED4", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Cleveland Guardians',   abbr='CLE', primary="#00385D", secondary="#E50022", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Detroit Tigers',        abbr='DET', primary="#0C2340", secondary="#FA4616", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Kansas City Royals',    abbr='KC',  primary="#004687", secondary="#BD9B60", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Minnesota Twins',       abbr='MIN', primary="#002B5C", secondary="#D31145", venue=None, lat=None, lon=None, indoor=False),
+        # AL West
+        dict(name='Houston Astros',        abbr='HOU', primary="#002D62", secondary="#EB6E1F", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Los Angeles Angels',    abbr='LAA', primary="#BA0021", secondary="#003263", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Athletics',             abbr='ATH', primary="#003831", secondary="#EFB21E", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Seattle Mariners',      abbr='SEA', primary="#0C2C56", secondary="#005C5C", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Texas Rangers',         abbr='TEX', primary="#003278", secondary="#C0111F", venue=None, lat=None, lon=None, indoor=False),
+        # NL East
+        dict(name='Atlanta Braves',        abbr='ATL', primary="#CE1141", secondary="#13274F", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Miami Marlins',         abbr='MIA', primary="#00A3E0", secondary="#EF3340", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='New York Mets',         abbr='NYM', primary="#002D72", secondary="#FF5910", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Philadelphia Phillies', abbr='PHI', primary="#E81828", secondary="#002D72", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Washington Nationals',  abbr='WSH', primary="#AB0003", secondary="#14225A", venue=None, lat=None, lon=None, indoor=False),
+        # NL Central
+        dict(name='Chicago Cubs',          abbr='CHC', primary="#0E3386", secondary="#CC3433", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Cincinnati Reds',       abbr='CIN', primary="#C6011F", secondary="#000000", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Milwaukee Brewers',     abbr='MIL', primary="#12284B", secondary="#FFC52F", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Pittsburgh Pirates',    abbr='PIT', primary="#FDB827", secondary="#27251F", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='St. Louis Cardinals',   abbr='STL', primary="#C41E3A", secondary="#0C2340", venue=None, lat=None, lon=None, indoor=False),
+        # NL West
+        dict(name='Arizona Diamondbacks',  abbr='ARI', primary="#A71930", secondary="#E3D4AD", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Colorado Rockies',      abbr='COL', primary="#333366", secondary="#C4CED4", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='Los Angeles Dodgers',   abbr='LAD', primary="#005A9C", secondary="#EF3E42", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='San Diego Padres',      abbr='SD',  primary="#2F241D", secondary="#FFC425", venue=None, lat=None, lon=None, indoor=False),
+        dict(name='San Francisco Giants',  abbr='SF',  primary="#FD5A1E", secondary="#27251F", venue=None, lat=None, lon=None, indoor=False),
     ],
     "NFL": [
         dict(name='Arizona Cardinals',    abbr='ARI', primary="#97233F", secondary="#000000", venue=None, lat=None, lon=None, indoor=False),
