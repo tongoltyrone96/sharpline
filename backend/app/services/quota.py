@@ -132,9 +132,15 @@ class QuotaGovernor:
         Blocks on:
           - sport.in_season is False
           - sport.is_available is False
-          - no event in active window (between rounds)
           - critical mode with no live game
           - lean mode with >24 h to next game
+
+        Chicken-and-egg fix: when a sport has NO events yet in the window,
+        we still allow a slow probe (interval_seconds() returns 21600s / 6h
+        for hours=None) so the sport can seed itself when the season starts.
+        Without this, sports like MLB / NFL that start after Sharpline's
+        first launch never get polled because governor would forever say
+        "no event, don't poll" and polling is the only way events land.
         """
         if not sport.in_season:
             log.debug("may_poll %s → False (not in season)", sport.key)
@@ -144,11 +150,17 @@ class QuotaGovernor:
             return False
 
         hours = self._nearest_hours(sport)
-        if hours is None:
-            log.debug("may_poll %s → False (no event in window)", sport.key)
-            return False
-
         current_mode = self.mode()
+
+        # No events yet — allow a slow bootstrap poll (throttled by
+        # interval_seconds() to once every 6 h), except in critical mode
+        # where we hoard credits for live games only.
+        if hours is None:
+            if current_mode == "critical":
+                log.debug("may_poll %s → False (critical mode, no live game)", sport.key)
+                return False
+            return True
+
         if current_mode == "critical" and hours >= 0.5:
             log.debug("may_poll %s → False (critical mode, no live game)", sport.key)
             return False
