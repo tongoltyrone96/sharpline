@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 
 from app.db import get_db
-from app.models import Event, Lineup, ModelOutput, ModelSummary, Sport, Weather
+from app.models import Event, Lineup, ModelOutput, ModelSummary, Odds, Sport, Weather
 from app.models import Bookmaker
 from app.schemas import DashboardEvent, DashboardResponse, OpportunitiesResponse, OpportunityRow, TeamBrief
 
@@ -235,6 +235,18 @@ def get_dashboard(
     )
     book_total_map: dict[str, float] = {eid: round(float(pt), 1) for eid, pt in total_rows if pt is not None}
 
+    # Batch: newest bookmaker-reported line-update timestamp per event.
+    # Powers the "N min ago" freshness badge on each fixture card so
+    # users can tell at a glance whether the prices they're seeing
+    # are current or a few minutes behind the live book.
+    last_update_rows = (
+        db.query(Odds.event_id, func.max(Odds.last_update))
+        .filter(Odds.event_id.in_(event_ids))
+        .group_by(Odds.event_id)
+        .all()
+    )
+    last_update_map = {eid: dt for eid, dt in last_update_rows if dt is not None}
+
     result_events: list[DashboardEvent] = []
     for event in events:
         summary = summary_map.get(event.id)
@@ -258,6 +270,7 @@ def get_dashboard(
             confidence=summary.confidence if summary else None,
             has_weather=event.id in weather_event_ids,
             has_lineups=event.id in lineup_event_ids,
+            last_odds_update=last_update_map.get(event.id),
         ))
 
     return DashboardResponse(events=result_events)

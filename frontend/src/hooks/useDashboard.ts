@@ -25,6 +25,7 @@ export interface DashboardEvent {
   home_win_prob: number | null
   away_win_prob: number | null
   confidence: number | null
+  last_odds_update: string | null
 }
 
 const SPORT_TITLE_TO_KEY: Record<string, string> = {
@@ -65,6 +66,7 @@ function transformEvent(raw: Record<string, unknown>): DashboardEvent {
     home_win_prob: (raw.home_win_prob as number | null) ?? null,
     away_win_prob: (raw.away_win_prob as number | null) ?? null,
     confidence: (raw.confidence as number | null) ?? null,
+    last_odds_update: (raw.last_odds_update as string | null) ?? null,
   }
 }
 

@@ -126,6 +126,7 @@ class DashboardEvent(BaseModel):
     confidence: float | None = None
     has_weather: bool = False
     has_lineups: bool = False
+    last_odds_update: datetime | None = None  # newest bookmaker line update for this event
 
     model_config = {"from_attributes": True}
 
