@@ -164,6 +164,17 @@ def _ensure_bookmakers(db: Session, payload: list[dict]) -> dict[str, int]:
     return id_map
 
 
+def _chunks(rows: list[dict], size: int):
+    for i in range(0, len(rows), size):
+        yield rows[i:i + size]
+
+
+# Postgres param limit is 65535. With ~10 columns per odds row, 500 rows
+# per statement stays well under the limit and keeps each statement fast
+# enough to fit inside Supabase's statement_timeout.
+_CHUNK_SIZE = 500
+
+
 def normalise_payload(
     db: Session,
     payload: list[dict],
@@ -173,50 +184,33 @@ def normalise_payload(
     """
     Persist a full odds API payload.
 
-    - Events: upserted by id
-    - Odds: upserted by (event_id, bookmaker_id, market, outcome) — point preserved [REQ-8]
-    - OddsHistory: always appended (never upserted)
+    - Events: bulk upserted by id (no horizon filter — the set is bounded
+      by the season size and rows are idempotent under upsert).
+    - Odds: bulk upserted by (event_id, bookmaker_id, market, outcome),
+      per-bookmaker point preserved verbatim [REQ-8].
+    - OddsHistory: append-only, bounded to events kicking off in
+      [now-3d, now+30d] so the table doesn't balloon with duplicate
+      rows for events months away that nobody will ever chart.
 
     Returns stats: {events, odds_upserted, history_rows, unknown_teams}.
     """
     if fetched_at is None:
         fetched_at = datetime.now(tz=timezone.utc)
 
-    # Window filter: only ingest events within roughly the dashboard window
-    # (past 6h through +14d). NFL / MLB / NBA feeds return the full season
-    # in one shot (272+ events for NFL), which blew past the Postgres
-    # statement_timeout and rolled back the whole batch. We only ever show
-    # a 7-day slice on the dashboard anyway, so filtering here shrinks
-    # each write to ~10-30 events per sport — well under the timeout.
-    horizon_start = fetched_at - timedelta(hours=6)
-    horizon_end = fetched_at + timedelta(days=14)
-    filtered_payload = []
-    for event in payload:
-        ts = event.get("commence_time")
-        if not ts:
-            continue
-        try:
-            ct = _parse_ts(ts)
-        except Exception:
-            continue
-        if horizon_start <= ct <= horizon_end:
-            filtered_payload.append(event)
-
-    if len(filtered_payload) < len(payload):
-        log.info(
-            "normalise: sport_id=%s window-filtered %d → %d events",
-            sport_id, len(payload), len(filtered_payload),
-        )
-    payload = filtered_payload
-
-    # Cache team name → id for this sport
     teams = db.query(Team).filter_by(sport_id=sport_id).all()
     team_map: dict[str, int] = {t.name: t.id for t in teams}
-
-    # Ensure all bookmakers in the payload exist in the DB
     bm_id_map = _ensure_bookmakers(db, payload)
 
     stats = {"events": 0, "odds_upserted": 0, "history_rows": 0, "unknown_teams": 0}
+
+    # History is append-only, so bound its growth to a practical window.
+    # Events / odds are upserted and stay bounded regardless of window.
+    history_start = fetched_at - timedelta(days=3)
+    history_end = fetched_at + timedelta(days=30)
+
+    all_event_rows: list[dict] = []
+    all_odds_rows: list[dict] = []
+    all_history_rows: list[dict] = []
 
     for event in payload:
         event_row, odds_rows, history_rows = extract_event_odds_rows(
@@ -226,8 +220,16 @@ def normalise_payload(
         if event_row["home_team_id"] is None or event_row["away_team_id"] is None:
             stats["unknown_teams"] += 1
 
-        # Upsert event
-        stmt = pg_insert(Event.__table__).values(**event_row)
+        all_event_rows.append(event_row)
+        all_odds_rows.extend(odds_rows)
+
+        ct = event_row["commence_time"]
+        if ct is not None and history_start <= ct <= history_end:
+            all_history_rows.extend(history_rows)
+
+    # Bulk upsert events (chunked)
+    for chunk in _chunks(all_event_rows, _CHUNK_SIZE):
+        stmt = pg_insert(Event.__table__).values(chunk)
         db.execute(
             stmt.on_conflict_do_update(
                 index_elements=["id"],
@@ -240,28 +242,28 @@ def normalise_payload(
                 },
             )
         )
-        stats["events"] += 1
+    stats["events"] = len(all_event_rows)
 
-        # Upsert odds — REQ-8: point for each bookmaker is stored separately
-        for row in odds_rows:
-            stmt = pg_insert(Odds.__table__).values(**row)
-            db.execute(
-                stmt.on_conflict_do_update(
-                    index_elements=["event_id", "bookmaker_id", "market", "outcome"],
-                    set_={
-                        "price": stmt.excluded.price,
-                        "point": stmt.excluded.point,
-                        "last_update": stmt.excluded.last_update,
-                        "fetched_at": stmt.excluded.fetched_at,
-                    },
-                )
+    # Bulk upsert odds (chunked) — REQ-8: per-bookmaker point preserved
+    for chunk in _chunks(all_odds_rows, _CHUNK_SIZE):
+        stmt = pg_insert(Odds.__table__).values(chunk)
+        db.execute(
+            stmt.on_conflict_do_update(
+                index_elements=["event_id", "bookmaker_id", "market", "outcome"],
+                set_={
+                    "price": stmt.excluded.price,
+                    "point": stmt.excluded.point,
+                    "last_update": stmt.excluded.last_update,
+                    "fetched_at": stmt.excluded.fetched_at,
+                },
             )
-        stats["odds_upserted"] += len(odds_rows)
+        )
+    stats["odds_upserted"] = len(all_odds_rows)
 
-        # History is append-only — captures every change for line-movement chart
-        if history_rows:
-            db.execute(OddsHistory.__table__.insert(), history_rows)
-            stats["history_rows"] += len(history_rows)
+    # Bulk insert history (append-only, already horizon-filtered above)
+    for chunk in _chunks(all_history_rows, _CHUNK_SIZE * 2):
+        db.execute(OddsHistory.__table__.insert(), chunk)
+    stats["history_rows"] = len(all_history_rows)
 
     db.commit()
     return stats
