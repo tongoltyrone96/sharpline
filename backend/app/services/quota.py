@@ -29,13 +29,15 @@ from app.models import ApiQuota, Event, ModelParam, Sport
 
 log = logging.getLogger(__name__)
 
-# Interval table: (rich_seconds, lean_seconds | None)
-#   None in lean mode means "don't poll at all for this time horizon"
+# Interval table: (upper_bound_hours, rich_seconds, lean_seconds | None)
+#   The first bucket whose upper bound the nearest kickoff falls under wins.
+#   None in lean mode means "don't poll at all for this time horizon".
 _INTERVALS = [
-    (1,   30,    1800),   # live / < 1 h
-    (6,   300,   7200),   # 1 – 6 h
-    (24,  1800,  21600),  # 6 – 24 h
-    (None, 21600, None),  # > 24 h  (rich: 6 h, lean: skip)
+    (1,    30,    1800),   # live / < 1 h        — 30 s   / 30 min
+    (6,    300,   7200),   # 1 – 6 h             — 5 min  / 2 h
+    (24,   1800,  21600),  # 6 – 24 h            — 30 min / 6 h
+    (72,   3600,  21600),  # 24 – 72 h           — 1 h    / 6 h
+    (None, 21600, None),   # > 72 h              — 6 h    / skip
 ]
 
 RESERVE_FLOOR_PCT = 0.10

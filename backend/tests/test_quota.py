@@ -109,9 +109,18 @@ class TestMayPoll:
         with _governor() as (gov, _):
             assert gov.may_poll(sport) is False
 
-    def test_blocks_when_no_events_in_window(self):
+    def test_bootstraps_when_no_events_in_window(self):
+        """No events yet is fine — governor allows a slow probe so a sport
+        can seed itself when its season starts. Chicken-and-egg fix, see
+        commit 8a0b2d9."""
         sport = _sport()
-        with _governor(hours_to_nearest=None) as (gov, _):
+        with _governor(hours_to_nearest=None, poll_mode="rich") as (gov, _):
+            assert gov.may_poll(sport) is True
+
+    def test_blocks_when_no_events_and_critical(self):
+        """Critical mode still blocks — no credits to spare on speculation."""
+        sport = _sport()
+        with _governor(credits_remaining=1500, hours_to_nearest=None, poll_mode="auto") as (gov, _):
             assert gov.may_poll(sport) is False
 
     def test_allows_rich_mode_with_event_2h_away(self):
@@ -166,9 +175,14 @@ class TestIntervalSeconds:
         with _governor(hours_to_nearest=12.0, poll_mode="rich") as (gov, _):
             assert gov.interval_seconds(sport) == 1800
 
-    def test_rich_over_24h(self):
+    def test_rich_24_to_72h(self):
         sport = _sport()
         with _governor(hours_to_nearest=30.0, poll_mode="rich") as (gov, _):
+            assert gov.interval_seconds(sport) == 3600
+
+    def test_rich_over_72h(self):
+        sport = _sport()
+        with _governor(hours_to_nearest=96.0, poll_mode="rich") as (gov, _):
             assert gov.interval_seconds(sport) == 21600
 
     def test_lean_live_game(self):
