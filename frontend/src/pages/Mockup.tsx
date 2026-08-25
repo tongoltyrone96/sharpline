@@ -642,7 +642,7 @@ const CSS = `
 .mck-root td:first-child{text-align:left}
 .mck-root .bk{display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:600;color:#c9d5e5}
 .mck-root .bk i{width:14px;height:14px;border-radius:3px;display:grid;place-items:center;font-size:6px;font-weight:800;font-style:normal;color:#fff;flex:none}
-.mck-root .bk-ts{font-size:8.5px;color:#6f7c92;font-weight:400;letter-spacing:.02em;margin-left:2px;white-space:nowrap}
+.mck-root .bk-ts{font-size:8.5px;color:#6f7c92;font-weight:400;letter-spacing:.02em;margin-left:4px}
 .mck-root .fair{color:#b6c4d9;font-weight:600}
 .mck-root .val{display:flex;flex-direction:column;align-items:flex-end;font-size:11px;font-weight:700;line-height:1.35}
 .mck-root .up{color:var(--mgreen)}
@@ -797,6 +797,12 @@ const CSS = `
   .mck-root .mcol>#pMove .pb{height:240px !important;min-height:240px !important;flex:none !important}
   .mck-root #pLineMv .pb,
   .mck-root #pTotMv .pb{height:160px !important;min-height:160px !important;flex:none !important}
+
+  /* Odds Comparison: on phone let the panel body grow with content and use
+     the page scroll instead of an internal 520px scroll. The desktop cap
+     collapses the tblwrap under flex layout on narrow widths, hiding the
+     table body entirely — the only thing still visible was Beats Betfair. */
+  .mck-root #pOdds .pb{max-height:none !important;overflow-y:visible !important}
 
   /* Stacks used by other components stay column too */
   .mck-root .stk{flex-direction:column}
