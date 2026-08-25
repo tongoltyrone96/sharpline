@@ -13,6 +13,7 @@ interface MarketRow {
   fair_price: number | null
   edge_pct: number | null
   is_best: boolean
+  last_update: string | null
 }
 interface EventDetail {
   event: {
@@ -641,6 +642,7 @@ const CSS = `
 .mck-root td:first-child{text-align:left}
 .mck-root .bk{display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:600;color:#c9d5e5}
 .mck-root .bk i{width:14px;height:14px;border-radius:3px;display:grid;place-items:center;font-size:6px;font-weight:800;font-style:normal;color:#fff;flex:none}
+.mck-root .bk-ts{font-size:8.5px;color:#6f7c92;font-weight:500;margin-top:2px;padding-left:19px;line-height:1;letter-spacing:.02em}
 .mck-root .fair{color:#b6c4d9;font-weight:600}
 .mck-root .val{display:flex;flex-direction:column;align-items:flex-end;font-size:11px;font-weight:700;line-height:1.35}
 .mck-root .up{color:var(--mgreen)}
@@ -1829,9 +1831,13 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
           const pickAway = aEdge > 0 && aEdge > hEdge
           const bestHome = h?.price != null && maxHome != null && Math.abs(h.price - maxHome) < 0.001
           const bestAway = a?.price != null && maxAway != null && Math.abs(a.price - maxAway) < 0.001
+          const ts = h?.last_update ?? a?.last_update
           return (
             <tr key={bk}>
-              <td><span className="bk"><i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>{bk}</span></td>
+              <td>
+                <span className="bk"><i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>{bk}</span>
+                {ts && <div className="bk-ts" title={`Line last updated ${fmtAgo(ts)}`}>· {fmtAgo(ts)}</div>}
+              </td>
               <td className={pickHome ? 'pickcell' : ''}>
                 {bestHome && <span className="besttrophy" title="Highest odds">🏆 </span>}
                 {h?.price.toFixed(2) ?? '–'}
@@ -1899,9 +1905,13 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
             else if (hEdge > 0 && hEdge >= aEdge) pick = 'h'
             else if (aEdge > 0) pick = 'a'
           }
+          const ts = h?.last_update ?? a?.last_update
           return (
             <tr key={bk}>
-              <td><span className="bk"><i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>{bk}</span></td>
+              <td>
+                <span className="bk"><i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>{bk}</span>
+                {ts && <div className="bk-ts" title={`Line last updated ${fmtAgo(ts)}`}>· {fmtAgo(ts)}</div>}
+              </td>
               <td className={pick === 'h' ? 'pickcell' : ''}>{h?.point != null ? sgn(h.point) : '–'}</td>
               <td className={pick === 'h' ? 'pickcell' : ''}>
                 {bestHome && <span className="besttrophy" title="Highest odds">🏆 </span>}
@@ -1969,9 +1979,13 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
             if (tot > line + 0.1) pick = 'o'
             else if (tot < line - 0.1) pick = 'u'
           }
+          const ts = o?.last_update ?? u?.last_update
           return (
             <tr key={bk}>
-              <td><span className="bk"><i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>{bk}</span></td>
+              <td>
+                <span className="bk"><i style={{ background: ic.c, color: ic.t }}>{ic.a}</i>{bk}</span>
+                {ts && <div className="bk-ts" title={`Line last updated ${fmtAgo(ts)}`}>· {fmtAgo(ts)}</div>}
+              </td>
               <td>{line.toFixed(1)}</td>
               <td className={pick === 'o' ? 'pickcell' : ''}>
                 {bestOver && <span className="besttrophy" title="Highest odds">🏆 </span>}

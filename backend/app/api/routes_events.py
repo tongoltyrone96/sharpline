@@ -124,6 +124,16 @@ def get_event_detail(
             factors=summary.factors_json or {},
         )
 
+    # Look up the bookmaker-reported line-update time for each cell in the
+    # comparison table. Keyed by (bookmaker_id, market, outcome) so a single
+    # scan of the event's odds rows can be joined against every model_output.
+    odds_ts_rows = (
+        db.query(Odds.bookmaker_id, Odds.market, Odds.outcome, Odds.last_update)
+        .filter(Odds.event_id == event_id)
+        .all()
+    )
+    ts_map = {(bm_id, mkt, oc): ts for bm_id, mkt, oc, ts in odds_ts_rows}
+
     # Build markets dict grouped by market key, sorted by edge_pct desc
     markets: dict[str, list[MarketRow]] = defaultdict(list)
     for mo, bm in mo_rows:
@@ -135,6 +145,7 @@ def get_event_detail(
             fair_price=mo.fair_price,
             edge_pct=mo.edge_pct,
             is_best=mo.is_best,
+            last_update=ts_map.get((mo.bookmaker_id, mo.market, mo.outcome)),
         )
         markets[mo.market].append(row)
 

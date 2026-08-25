@@ -63,6 +63,7 @@ class MarketRow(BaseModel):
     fair_price: float | None = None
     edge_pct: float | None = None
     is_best: bool = False
+    last_update: datetime | None = None  # bookmaker's own reported line-update time
 
     model_config = {"from_attributes": True}
 
