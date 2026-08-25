@@ -19,19 +19,6 @@ function derivePattern(color: string): 'hoop' | 'stripe' | 'vstripe' | 'chevron'
   return patterns[Math.abs(hash) % patterns.length]
 }
 
-function fmtFreshness(iso: string | null): string | null {
-  if (!iso) return null
-  const then = Date.parse(iso)
-  if (Number.isNaN(then)) return null
-  const secs = Math.max(0, Math.round((Date.now() - then) / 1000))
-  if (secs < 60) return `${secs}s ago`
-  const mins = Math.round(secs / 60)
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.round(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  return `${Math.round(hrs / 24)}d ago`
-}
-
 export default function FixtureCard({ event, selected, onClick, snapOnMobile }: FixtureCardProps) {
   const isLive = event.status === 'live' || event.status === 'in_progress'
   const sportColor = getSportColor(event.sport_key)
@@ -41,7 +28,6 @@ export default function FixtureCard({ event, selected, onClick, snapOnMobile }: 
   const awayColor2 = event.away_secondary_color || '#C0C0C0'
   const homePattern = derivePattern(event.home_color + 'h')
   const awayPattern = derivePattern(event.away_color + 'a')
-  const freshness = fmtFreshness(event.last_odds_update)
 
   return (
     <div
@@ -74,14 +60,6 @@ export default function FixtureCard({ event, selected, onClick, snapOnMobile }: 
         }}>
           {isLive ? 'LIVE' : fmtTime(event.commence_time)}
         </span>
-        {freshness && (
-          <span
-            title={`Bookmaker line last updated ${freshness}`}
-            style={{ fontSize: 9, color: 'var(--text-3)', opacity: 0.75 }}
-          >
-            · {freshness}
-          </span>
-        )}
         {event.best_edge_pct != null && (
           <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: 'var(--green)' }}>
             {fmtEdge(event.best_edge_pct)}

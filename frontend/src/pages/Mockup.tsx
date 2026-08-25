@@ -1227,6 +1227,15 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
                 {badge
                   ? <span className={'gi-live ' + (isLive ? 'on' : 'done')}>{badge}</span>
                   : <span className="tm">{day} {time}</span>}
+                {e.last_odds_update && (
+                  <span
+                    className="fresh"
+                    title={`Bookmaker line last updated ${fmtAgo(e.last_odds_update)}`}
+                    style={{ fontSize: 9, color: 'var(--text-3, #7a7a85)', opacity: 0.7, marginLeft: 4 }}
+                  >
+                    · {fmtAgo(e.last_odds_update)}
+                  </span>
+                )}
                 <span className={'ed' + (hasV ? '' : ' no')}>{hasV ? `+${edge.toFixed(1)}%` : '—'}</span>
               </div>
               {(() => {
