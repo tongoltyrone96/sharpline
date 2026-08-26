@@ -94,6 +94,10 @@ def get_dashboard(
     # short review window after full time.
     window_start = now - timedelta(hours=4)
 
+    # Sport.is_available is the admin's kill-switch — when a sport is
+    # toggled off we honour it here so games from that sport disappear
+    # from the dashboard immediately, not just when their kickoff time
+    # falls out of the window hours later.
     q = (
         db.query(Event)
         .options(
@@ -105,6 +109,7 @@ def get_dashboard(
         .filter(
             Event.commence_time >= window_start,
             Event.commence_time <= cutoff,
+            Sport.is_available == True,
         )
     )
 
@@ -302,7 +307,12 @@ def get_opportunities(
     upcoming_ids = [
         r[0]
         for r in db.query(Event.id)
-        .filter(Event.commence_time >= now, Event.commence_time <= cutoff)
+        .join(Sport, Event.sport_id == Sport.id)
+        .filter(
+            Event.commence_time >= now,
+            Event.commence_time <= cutoff,
+            Sport.is_available == True,
+        )
         .all()
     ]
 
