@@ -115,7 +115,13 @@ def _upsert_sport(db, data: dict) -> Sport:
         obj = Sport(**data)
         db.add(obj)
     else:
+        # Preserve admin-controlled runtime toggles — in_season and
+        # is_available are the levers the operator uses to add or remove
+        # a sport from the app without a deploy. Overwriting them on
+        # every seed pass would silently revert those decisions.
         for k, v in data.items():
+            if k in ("in_season", "is_available"):
+                continue
             setattr(obj, k, v)
     return obj
 
