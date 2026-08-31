@@ -204,6 +204,27 @@ The returned dicts must match the schema that `backend/app/tasks/poll_odds.py` e
 
 ---
 
+## Data retention
+
+`odds_history` is append-only and backs the line-movement charts. Two things
+keep it bounded:
+
+- **Only real movement is recorded.** A history row is written when a
+  bookmaker's price or point differs from the value already stored for that
+  bookmaker/market/outcome. Over a sample production round, 95 % of the rows
+  being written were byte-identical to the row before them; those are no
+  longer stored, and no line movement is lost.
+- **Old rows are pruned nightly** by `app.tasks.prune_history`. The window is
+  the `model_params` row `odds_history_retention_days`, editable at `/admin` →
+  Model Parameters with no redeploy. Default 90 days; values under 7 are
+  ignored so a mistyped `0` cannot empty the table. Deletes run in 20 k
+  batches, at most 1 M rows per night, to stay inside Supabase's
+  `statement_timeout`.
+
+To reclaim space from rows recorded before this was in place, lower
+`odds_history_retention_days` and wait for the next nightly run.
+
+
 ## Known limitations
 
 | Item | Status |
@@ -217,3 +238,4 @@ The returned dicts must match the schema that `backend/app/tasks/poll_odds.py` e
 | **Lineup data** | Best-effort unofficial scrape from ESPN and NRL.com. May be incomplete or delayed. |
 | **Weather** | OpenWeatherMap free tier; venue conditions updated every 30 minutes. |
 | **XGBoost model** | Infrastructure present but not yet trained. De-vig consensus is the active model. |
+| **`odds_history` size** | Bounded, but only from 2026-08-31 onward. Rows recorded before then include one per bookmaker per poll whether or not the price moved, which is why the table reached 8.8 M rows. See *Data retention* below. |
