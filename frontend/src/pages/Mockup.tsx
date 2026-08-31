@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDashboard, DashboardEvent } from '../hooks/useDashboard'
-import { suggestedBet, Suggestion, isDecisiveGame, MIN_EDGE_PCT, MAX_EDGE_PCT, MIN_MODEL_PROB } from '../lib/suggestedBet'
+import { suggestedBet, Suggestion, isDecisiveGame, hasRealEdge, MIN_EDGE_PCT, MAX_EDGE_PCT, MIN_MODEL_PROB } from '../lib/suggestedBet'
 import { totalDirection, totalsEdges } from '../lib/totalDirection'
 import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult, getTeamRatings, TeamRatings, getTeamPower, TeamPower, getEventLineups, EventLineups, LineupPlayer, getStatus } from '../lib/api'
 
@@ -1671,6 +1671,8 @@ function OddsComparison({ md }: { md: EventDetail }) {
   )
 }
 function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[]; home: EventDetail['event']['home']; away: EventDetail['event']['away'] }) {
+  // One bar for the whole page: no AI PICK badges on a coin-flip fixture.
+  const tableDecisive = isDecisiveGame(md.model?.home_win_prob)
   const rows = md.markets?.h2h ?? []
   const fH = md.model?.fair_home_price, fA = md.model?.fair_away_price
   // Best-price detection — the trophy icon marks whoever offers the
@@ -1728,8 +1730,11 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
           const ic = iconFor(bk)
           const hEdge = h?.edge_pct ?? 0
           const aEdge = a?.edge_pct ?? 0
-          const pickHome = hEdge > 0 && hEdge >= aEdge
-          const pickAway = aEdge > 0 && aEdge > hEdge
+          // Same bar as every other panel: a decisive game and a real edge.
+          // The old rule was edge > 0, which badged +0.1% rows as an AI PICK
+          // on games the rest of the page was calling "no strong bet".
+          const pickHome = tableDecisive && hasRealEdge(hEdge) && hEdge >= aEdge
+          const pickAway = tableDecisive && hasRealEdge(aEdge) && aEdge > hEdge
           const bestHome = h?.price != null && maxHome != null && Math.abs(h.price - maxHome) < 0.001
           const bestAway = a?.price != null && maxAway != null && Math.abs(a.price - maxAway) < 0.001
           const ts = h?.last_update ?? a?.last_update
@@ -1765,10 +1770,12 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
     </table>
     </div>
     <BeatsBetfair rows={beats} />
-    <div className="foot"><span className="dot"></span>Prices update every 30 seconds · 🏆 = highest odds on this side · <b>Sharpline AI</b> = model's own tradeable price · <b>AI PICK</b> = model recommends this side at this book's price</div>
+    <div className="foot"><span className="dot"></span>Prices update every 30 seconds · 🏆 = highest odds on this side · <b>Sharpline AI</b> = model's own tradeable price · <b>AI PICK</b> = model recommends this side at this book's price, at {MIN_EDGE_PCT}% edge or better</div>
   </>
 }
 function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[]; home: EventDetail['event']['home']; away: EventDetail['event']['away'] }) {
+  // One bar for the whole page: no AI PICK badges on a coin-flip fixture.
+  const tableDecisive = isDecisiveGame(md.model?.home_win_prob)
   const rows = md.markets?.spreads ?? []
   const mu = md.model?.projected_margin
   const homePrices = rows.filter(r => r.outcome === home.name && r.price > 0).map(r => r.price)
@@ -1801,13 +1808,15 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
           const aEdge = a?.edge_pct ?? 0
           const bestHome = h?.price != null && maxHome != null && Math.abs(h.price - maxHome) < 0.001
           const bestAway = a?.price != null && maxAway != null && Math.abs(a.price - maxAway) < 0.001
-          // AI covers home iff projected margin > home line at this book
+          // Direction comes from the edge, which the backend already computes
+          // against the model's projection — so a side the model dislikes
+          // cannot show a positive edge. The old rule leaned on mu vs the book
+          // line, which is ~0 because the projection IS the market line, so it
+          // badged rounding noise as an AI PICK.
           let pick: 'h' | 'a' | null = null
-          if (mu != null) {
-            if (h?.point != null && mu > h.point && hEdge >= 0) pick = 'h'
-            else if (a?.point != null && -mu > a.point && aEdge >= 0) pick = 'a'
-            else if (hEdge > 0 && hEdge >= aEdge) pick = 'h'
-            else if (aEdge > 0) pick = 'a'
+          if (tableDecisive) {
+            if (hasRealEdge(hEdge) && hEdge >= aEdge) pick = 'h'
+            else if (hasRealEdge(aEdge)) pick = 'a'
           }
           const ts = h?.last_update ?? a?.last_update
           return (
@@ -1843,10 +1852,12 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
     </table>
     </div>
     <BeatsBetfair rows={beats} />
-    <div className="note8">Each book priced at its own line · 🏆 = highest price on this side · <b>AI PICK</b> uses the model's projected margin vs this book's spread.</div>
+    <div className="note8">Each book priced at its own line · 🏆 = highest price on this side · <b>AI PICK</b> = {MIN_EDGE_PCT}% edge or better on this book's line.</div>
   </>
 }
 function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
+  // One bar for the whole page: no AI PICK badges on a coin-flip fixture.
+  const tableDecisive = isDecisiveGame(md.model?.home_win_prob)
   const rows = md.markets?.totals ?? []
   const tot = md.model?.projected_total
   const overPrices = rows.filter(r => r.outcome.toLowerCase() === 'over' && r.price > 0).map(r => r.price)
@@ -1880,11 +1891,13 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
           const uEdge = u?.edge_pct ?? 0
           const bestOver = o?.price != null && maxOver != null && Math.abs(o.price - maxOver) < 0.001
           const bestUnder = u?.price != null && maxUnder != null && Math.abs(u.price - maxUnder) < 0.001
-          // AI recommends OVER at this book if projected total > this book's line
+          // Edge-led, same as the other two tables. The old rule compared the
+          // projected total to this book's line; that projection is the market
+          // line, so it fired on rounding noise.
           let pick: 'o' | 'u' | null = null
-          if (tot != null) {
-            if (tot > line + 0.1) pick = 'o'
-            else if (tot < line - 0.1) pick = 'u'
+          if (tableDecisive) {
+            if (hasRealEdge(oEdge) && oEdge >= uEdge) pick = 'o'
+            else if (hasRealEdge(uEdge)) pick = 'u'
           }
           const ts = o?.last_update ?? u?.last_update
           return (
@@ -1910,7 +1923,7 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
               <td>
                 {pick === 'o' && o && <span className="aipick">✓ OVER {line.toFixed(1)} @ {o.price.toFixed(2)}</span>}
                 {pick === 'u' && u && <span className="aipick">✓ UNDER {line.toFixed(1)} @ {u.price.toFixed(2)}</span>}
-                {!pick && <span className="nopick">on the line</span>}
+                {!pick && <span className="nopick">—</span>}
               </td>
             </tr>
           )

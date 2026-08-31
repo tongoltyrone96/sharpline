@@ -49,6 +49,15 @@ export const MIN_MODEL_PROB = 0.58     // per-row model probability, for panels 
  * binary floating point, which would otherwise reject a game sitting exactly
  * on the threshold.
  */
+/**
+ * Does a single priced row carry a real edge? Shared by every panel and by the
+ * AI PICK column in the odds tables, so "the model likes this" means the same
+ * thing everywhere on the page.
+ */
+export function hasRealEdge(edge: number | null | undefined, min = MIN_EDGE_PCT): edge is number {
+  return edge != null && edge >= min && edge < MAX_EDGE_PCT
+}
+
 export function isDecisiveGame(homeWinProb: number | null | undefined, min = MIN_DECISIVENESS): boolean {
   if (homeWinProb == null) return false
   return Math.abs(homeWinProb - 0.5) + 1e-9 >= min

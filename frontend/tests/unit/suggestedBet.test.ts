@@ -11,6 +11,7 @@ import {
   SuggestInput,
   SuggestRow,
   MIN_DECISIVENESS,
+  hasRealEdge,
 } from '../../src/lib/suggestedBet'
 
 const HOME = 'Penrith Panthers'
@@ -190,5 +191,24 @@ describe('gate overrides', () => {
     const i = input({ h2h: [row({ edge_pct: 3.0 })] })
     expect(suggestedBet(i)).not.toBeNull()
     expect(suggestedBet(i, { minEdgePct: 5 })).toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// hasRealEdge — shared by the panels and the odds tables' AI PICK column
+// ---------------------------------------------------------------------------
+
+describe('hasRealEdge', () => {
+  it('rejects the noise the odds tables used to badge as an AI PICK', () => {
+    for (const e of [null, undefined, -3, 0, 0.1, 1.9]) {
+      expect(hasRealEdge(e as number | null), `edge=${e}`).toBe(false)
+    }
+  })
+
+  it('accepts a real edge and rejects a stale-feed one', () => {
+    expect(hasRealEdge(2.0)).toBe(true)
+    expect(hasRealEdge(12.1)).toBe(true)
+    expect(hasRealEdge(20)).toBe(false)
+    expect(hasRealEdge(29.2)).toBe(false)
   })
 })
