@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDashboard, DashboardEvent } from '../hooks/useDashboard'
 import { suggestedBet, Suggestion, isDecisiveGame, MIN_EDGE_PCT, MAX_EDGE_PCT, MIN_MODEL_PROB } from '../lib/suggestedBet'
+import { totalDirection, totalsEdges } from '../lib/totalDirection'
 import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult, getTeamRatings, TeamRatings, getTeamPower, TeamPower, getEventLineups, EventLineups, LineupPlayer, getStatus } from '../lib/api'
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -287,68 +288,6 @@ function suggestionFor(md: EventDetail): Suggestion | null {
     spreads:     md.markets?.spreads ?? [],
     totals:      md.markets?.totals ?? [],
   })
-}
-
-// Weather → total-points lean score. Positive = OVER lean, negative = UNDER lean.
-function weatherLean(w: EventDetail['weather']): { score: number; label: string | null } {
-  if (!w) return { score: 0, label: null }
-  let score = 0
-  const parts: string[] = []
-  const cond = (w.condition || '').toLowerCase()
-  if (w.rain_prob >= 0.3 || cond.includes('rain') || cond.includes('shower')) {
-    score -= 1.4
-    parts.push('rain')
-  }
-  if (w.wind_kmh > 25) { score -= 1.2; parts.push('strong wind') }
-  else if (w.wind_kmh > 15) { score -= 0.6; parts.push('wind') }
-  if (w.is_indoor) { score += 0.4; parts.push('indoor') }
-  else if (cond.includes('clear')) { score += 0.4; parts.push('clear sky') }
-  return { score, label: parts.length ? parts.join(', ') : null }
-}
-
-// Combined total-points direction using projected/line gap + weather + matchup.
-// Always returns OVER or UNDER (never null) — the client explicitly asked for a
-// directional call every game, using all available data as a tiebreaker.
-// factors returned are only the ones that SUPPORT the winning side, so we
-// never surface a contradictory reason like 'rain' next to an OVER call.
-// Inputs are observed data only: the model-vs-line gap and real weather.
-function totalDirection(
-  projected: number | null,
-  avgLine: number | null,
-  weather: EventDetail['weather'],
-): { side: 'OVER' | 'UNDER'; strength: number; factors: string[] } {
-  const contributions: { label: string; score: number }[] = []
-  let net = 0
-  if (projected != null && avgLine != null) {
-    const gap = projected - avgLine
-    const contribution = gap * 2   // primary signal, weighted higher than tiebreakers
-    net += contribution
-    if (Math.abs(gap) >= 0.05) {
-      contributions.push({
-        label: `model ${gap > 0 ? 'above' : 'below'} line by ${Math.abs(gap).toFixed(1)}`,
-        score: contribution,
-      })
-    }
-  }
-  const wl = weatherLean(weather)
-  net += wl.score
-  if (wl.label) contributions.push({ label: wl.label, score: wl.score })
-  // Tiny epsilon: if truly zero after all factors, use projected gap sign directly (fallback)
-  if (net === 0 && projected != null && avgLine != null) net = projected - avgLine
-  if (net === 0) net = 0.01   // final safety — never truly zero
-  const side: 'OVER' | 'UNDER' = net > 0 ? 'OVER' : 'UNDER'
-  // Only keep factors whose sign matches the winning direction, so the label
-  // never reads a reason that contradicts the call. Sort by magnitude so the
-  // strongest reason comes first.
-  const supporting = contributions
-    .filter(c => (side === 'OVER' ? c.score > 0 : c.score < 0))
-    .sort((a, b) => Math.abs(b.score) - Math.abs(a.score))
-    .map(c => c.label)
-  return {
-    side,
-    strength: Math.abs(net),
-    factors: supporting,
-  }
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -1231,19 +1170,13 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
                   })() : <>AI <b>–</b></>}
                 </span>
                 <span className="sp">
-                  {/* AI's OVER/UNDER call using totalDirection (same
-                      logic as the detail-page). */}
-                  {e.projected_total != null && e.book_total_line != null ? (() => {
-                    const dir = totalDirection(e.projected_total, e.book_total_line, null)
-                    const call = dir.side
-                    const col = call === 'OVER' ? '#25d97b' : '#f4526a'
-                    return <>
-                      <b style={{ color: col }}>AI {call} </b>
-                      <b>{e.projected_total.toFixed(1)}</b>
-                    </>
-                  })() : (
-                    <>Total <b>{e.projected_total != null ? e.projected_total.toFixed(1) : '–'}</b></>
-                  )}
+                  {/* Line only — no OVER/UNDER call here. The dashboard
+                      payload carries neither per-side edges nor weather, so
+                      the strip cannot reproduce the detail page's call; when
+                      it guessed from the projection alone the two contradicted
+                      each other on a third of fixtures. Open the game for the
+                      call. */}
+                  Total <b>{e.projected_total != null ? e.projected_total.toFixed(1) : '–'}</b>
                 </span>
               </div>
             </div>
@@ -1401,12 +1334,21 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
   // Uses the same combined signal as the confidence strip (projected/line gap
   // + weather + matchup) so the bar never sits at 50/50 while the confidence
   // pick says OVER/UNDER. Client asked for a directional call using all data.
+  const totalEdges = totalsEdges(md.markets?.totals ?? [])
+  const totalDir = totalDirection({
+    projectedTotal: tot, bookLine: avgLine,
+    overEdge: totalEdges.overEdge, underEdge: totalEdges.underEdge,
+    weather: md.weather,
+  })
+  // Signal is in edge-percentage points. Live leans run about 0-3 points, so
+  // an 8-point gap is treated as a full swing — a 2.9-point lean then reads
+  // ~68% rather than the ~91% a tighter divisor would imply.
+  const OU_FULL_SWING = 8
+  const hasTotalsMarket = tot != null && avgLine != null
   let overPct: number | null = null
-  if (tot != null && avgLine != null) {
-    const dir = totalDirection(tot, avgLine, md.weather)
-    // Map strength → percentage. strength of 2 = full swing.
-    const signed = dir.side === 'OVER' ? dir.strength : -dir.strength
-    overPct = Math.max(8, Math.min(92, 50 + (signed / 2) * 50))
+  if (hasTotalsMarket && totalDir.side != null) {
+    const signed = totalDir.side === 'OVER' ? totalDir.strength : -totalDir.strength
+    overPct = Math.max(8, Math.min(92, 50 + (signed / OU_FULL_SWING) * 50))
   }
 
   const homeSpreadPoints = (md.markets?.spreads ?? [])
@@ -1430,8 +1372,8 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
   // then find the best-edge book on THAT side so the badge never contradicts
   // the AI CONFIDENCE PICKS strip below.
   let ouCall: { label: string; color: string; bg: string } | null = null
-  if (tot != null && avgLine != null) {
-    const dir = totalDirection(tot, avgLine, md.weather)
+  if (tot != null && avgLine != null && totalDir.side != null) {
+    const dir = totalDir
     const col = dir.side === 'OVER' ? '#25d97b' : '#f4526a'
     // Look for a bookmaker offering positive edge on the SAME side the AI likes
     const totalRows = md.markets?.totals ?? []
@@ -1627,7 +1569,7 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
                 <div style={{ width: `${overPct}%`, background: 'linear-gradient(90deg, #0f8f4d, #25d97b)', height: '100%' }} />
                 <div style={{ width: `${100 - overPct}%`, background: 'linear-gradient(90deg, #f4526a, #c02a44)', height: '100%' }} />
                 <div style={{ position: 'absolute', top: -2, bottom: -2, left: '50%', width: 2, background: 'rgba(255,255,255,.6)', transform: 'translateX(-50%)', zIndex: 1, borderRadius: 1 }} />
-              </> : <div style={{ width: '100%', textAlign: 'center', fontSize: 8, color: '#55647a', lineHeight: '12px' }}>no total data</div>}
+              </> : <div style={{ width: '100%', textAlign: 'center', fontSize: 8, color: '#55647a', lineHeight: '12px' }}>{hasTotalsMarket ? 'no lean either way' : 'no total data'}</div>}
             </div>
             <span style={{
               color: overPct != null ? '#f4526a' : '#55647a', fontSize: 12, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace',
@@ -2720,22 +2662,23 @@ function AIConfidenceStrip({ md }: { md: EventDetail }) {
     .map(r => r.point as number)
   const avgLine = totalLines.length ? totalLines.reduce((s, v) => s + v, 0) / totalLines.length : null
   let totalPick: { side: string; color: string; detail: string } | null = null
-  if (tot != null && avgLine != null) {
-    const dir = totalDirection(tot, avgLine, md.weather)
-    const factorTxt = dir.factors.length ? dir.factors.join(' · ') : `proj ${tot.toFixed(1)} vs line ${avgLine.toFixed(1)}`
-    totalPick = {
-      side: `${dir.side} ${avgLine.toFixed(1)}`,
-      color: dir.side === 'OVER' ? '#25d97b' : '#f4526a',
-      detail: factorTxt,
-    }
-  } else if (tot != null) {
-    // No book line — still use weather + matchup to decide
-    const dir = totalDirection(tot, null, md.weather)
-    totalPick = {
-      side: `${dir.side} ${tot.toFixed(1)}`,
-      color: dir.side === 'OVER' ? '#25d97b' : '#f4526a',
-      detail: dir.factors.join(' · ') || `proj ${tot.toFixed(1)}`,
-    }
+  if (tot != null) {
+    const te = totalsEdges(md.markets?.totals ?? [])
+    const dir = totalDirection({
+      projectedTotal: tot, bookLine: avgLine,
+      overEdge: te.overEdge, underEdge: te.underEdge,
+      weather: md.weather,
+    })
+    const line = avgLine ?? tot
+    totalPick = dir.side == null
+      // Both sides priced the same and no weather to separate them — say so
+      // instead of inventing a direction.
+      ? { side: `NO LEAN ${line.toFixed(1)}`, color: '#7b8ba3', detail: 'both sides priced the same' }
+      : {
+          side: `${dir.side} ${line.toFixed(1)}`,
+          color: dir.side === 'OVER' ? '#25d97b' : '#f4526a',
+          detail: dir.factors.length ? dir.factors.join(' · ') : `line ${line.toFixed(1)}`,
+        }
   }
 
   return (
