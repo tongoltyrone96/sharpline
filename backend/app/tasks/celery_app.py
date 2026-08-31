@@ -16,6 +16,7 @@ celery_app = Celery(
         "app.tasks.poll_weather",
         "app.tasks.poll_lineups",
         "app.tasks.recompute",
+        "app.tasks.prune_history",
     ],
 )
 

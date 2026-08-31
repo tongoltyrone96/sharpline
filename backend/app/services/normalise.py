@@ -3,6 +3,7 @@ Odds payload normaliser.
 
 Public surface:
   extract_event_odds_rows(...)  — pure function, no DB, testable in isolation
+  changed_history_rows(...)     — pure function; drops unchanged history rows
   normalise_payload(...)        — writes to DB; calls extract internally
   record_quota(...)             — persists x-requests-* headers to api_quota
 """
@@ -131,6 +132,44 @@ def extract_event_odds_rows(
     return event_row, odds_rows, history_rows
 
 
+# ── History de-duplication ────────────────────────────────────────────────────
+
+# Prices are doubles that round-trip unchanged, so an exact compare would do;
+# the epsilon just guards against a float that took a different path.
+_PRICE_EPS = 1e-9
+
+HistoryKey = tuple[str, int, str, str]  # event_id, bookmaker_id, market, outcome
+
+
+def changed_history_rows(
+    history_rows: list[dict],
+    current: dict[HistoryKey, tuple[float, float | None]],
+) -> list[dict]:
+    """
+    Keep only the history rows whose price or point actually moved.
+
+    odds_history is append-only and exists to chart line movement. Writing a
+    row on every poll regardless of whether anything changed is what grew the
+    table to 8.8 M rows / 1.4 GB in seven weeks — the overwhelming majority of
+    them identical to the row before. A bookmaker that has not moved its price
+    since the last poll carries no new information, so it is not recorded.
+
+    `current` maps each key to the (price, point) already stored in `odds`,
+    which is by definition the last value we saw for it.
+    """
+    out: list[dict] = []
+    for r in history_rows:
+        key: HistoryKey = (r["event_id"], r["bookmaker_id"], r["market"], r["outcome"])
+        prev = current.get(key)
+        if prev is None:
+            out.append(r)                      # first sighting — always record
+            continue
+        prev_price, prev_point = prev
+        if abs(prev_price - r["price"]) > _PRICE_EPS or prev_point != r["point"]:
+            out.append(r)
+    return out
+
+
 # ── DB operations ─────────────────────────────────────────────────────────────
 
 def _ensure_bookmakers(db: Session, payload: list[dict]) -> dict[str, int]:
@@ -192,7 +231,8 @@ def normalise_payload(
       [now-3d, now+30d] so the table doesn't balloon with duplicate
       rows for events months away that nobody will ever chart.
 
-    Returns stats: {events, odds_upserted, history_rows, unknown_teams}.
+    Returns stats: {events, odds_upserted, history_rows, history_skipped,
+    unknown_teams}.
     """
     if fetched_at is None:
         fetched_at = datetime.now(tz=timezone.utc)
@@ -201,7 +241,22 @@ def normalise_payload(
     team_map: dict[str, int] = {t.name: t.id for t in teams}
     bm_id_map = _ensure_bookmakers(db, payload)
 
-    stats = {"events": 0, "odds_upserted": 0, "history_rows": 0, "unknown_teams": 0}
+    stats = {"events": 0, "odds_upserted": 0, "history_rows": 0,
+             "history_skipped": 0, "unknown_teams": 0}
+
+    # Snapshot what we already hold for these events, so history can record
+    # only genuine movement. Read before the odds upsert overwrites it.
+    event_ids = [e["id"] for e in payload if e.get("id")]
+    current: dict[HistoryKey, tuple[float, float | None]] = {}
+    for id_chunk in _chunks(event_ids, _CHUNK_SIZE):
+        rows = (
+            db.query(Odds.event_id, Odds.bookmaker_id, Odds.market, Odds.outcome,
+                     Odds.price, Odds.point)
+            .filter(Odds.event_id.in_(id_chunk))
+            .all()
+        )
+        for ev_id, bm_id, market, outcome, price, point in rows:
+            current[(ev_id, bm_id, market, outcome)] = (price, point)
 
     # History is append-only, so bound its growth to a practical window.
     # Events / odds are upserted and stay bounded regardless of window.
@@ -260,10 +315,13 @@ def normalise_payload(
         )
     stats["odds_upserted"] = len(all_odds_rows)
 
-    # Bulk insert history (append-only, already horizon-filtered above)
-    for chunk in _chunks(all_history_rows, _CHUNK_SIZE * 2):
+    # Bulk insert history (append-only, horizon-filtered above, and reduced to
+    # rows that actually moved — see changed_history_rows).
+    moved = changed_history_rows(all_history_rows, current)
+    stats["history_skipped"] = len(all_history_rows) - len(moved)
+    for chunk in _chunks(moved, _CHUNK_SIZE * 2):
         db.execute(OddsHistory.__table__.insert(), chunk)
-    stats["history_rows"] = len(all_history_rows)
+    stats["history_rows"] = len(moved)
 
     db.commit()
     return stats

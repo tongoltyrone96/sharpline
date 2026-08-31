@@ -104,6 +104,8 @@ MODEL_PARAMS += [
          description="1=use XGBoost model (only after calibration; see §5.5)"),
     dict(key="budget_monthly", value=20000.0, sport_key=None,
          description="Total API credits in the billing cycle (used by Quota Governor)"),
+    dict(key="odds_history_retention_days", value=90.0, sport_key=None,
+         description="Days of odds_history kept; older rows pruned nightly (minimum 7)"),
 ]
 
 
