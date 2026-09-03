@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDashboard, DashboardEvent } from '../hooks/useDashboard'
+import { suggestedBet, Suggestion, isDecisiveGame, hasRealEdge, MIN_EDGE_PCT, MAX_EDGE_PCT, MIN_MODEL_PROB } from '../lib/suggestedBet'
+import { totalDirection, totalsEdges } from '../lib/totalDirection'
 import { getEvent, getEventHistory, HistoryPoint, getTeamStanding, Standing, getTeamForm, FormResult, getH2H, H2HResult, getTeamRatings, TeamRatings, getTeamPower, TeamPower, getEventLineups, EventLineups, LineupPlayer, getStatus } from '../lib/api'
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -174,6 +176,7 @@ function useEventLineups(eventId: string | undefined): EventLineups | null {
   }, [eventId])
   return row
 }
+
 function fakeForm(abbr: string): ('W'|'L')[] {
   const s = seedFrom(abbr + 'f')
   return [0,1,2,3,4].map(i => ((s >> (i * 3)) & 1) ? 'W' : 'L') as ('W'|'L')[]
@@ -185,30 +188,6 @@ function fakeH2H(id: string): { hw: number; aw: number; last: ('h'|'a')[] } {
   const last: ('h'|'a')[] = []
   for (let i = 0; i < 10; i++) last.push(((s >> i) & 1) ? 'h' : 'a')
   return { hw, aw, last }
-}
-function fakeAdjPct(abbr: string): number {
-  const s = seedFrom(abbr + 'adj')
-  return (s % 7) - 3 // -3..+3
-}
-function fakeMetrics(homeAbbr: string, awayAbbr: string) {
-  const hs = seedFrom(homeAbbr + 'metrics'), as = seedFrom(awayAbbr + 'metrics')
-  const rng = (seed: number, min: number, max: number) => min + (seed % 1000) / 1000 * (max - min)
-  const homeAtk = rng(hs, 95, 115), awayAtk = rng(as, 95, 115)
-  const homeDef = rng(hs >> 3, 95, 120), awayDef = rng(as >> 3, 95, 120)
-  const homeET = rng(hs >> 6, 1.5, 3.4), awayET = rng(as >> 6, 1.5, 3.4)
-  const homeCmp = Math.round(rng(hs >> 9, 74, 88)), awayCmp = Math.round(rng(as >> 9, 74, 88))
-  const homePos = Math.round(rng(hs >> 12, 45, 55)), awayPos = 100 - homePos
-  const homeTer = Math.round(rng(hs >> 15, 44, 56)), awayTer = 100 - homeTer
-  const homePen = rng(hs >> 18, 5.0, 8.5), awayPen = rng(as >> 18, 5.0, 8.5)
-  return [
-    { label: 'Attack Rating',     h: homeAtk.toFixed(1), a: awayAtk.toFixed(1), homeAdv: homeAtk > awayAtk },
-    { label: 'Defence Rating',    h: homeDef.toFixed(1), a: awayDef.toFixed(1), homeAdv: homeDef < awayDef },
-    { label: 'Expected Tries',    h: homeET.toFixed(1),  a: awayET.toFixed(1),  homeAdv: homeET > awayET },
-    { label: 'Completion Rate',   h: homeCmp + '%',      a: awayCmp + '%',      homeAdv: homeCmp > awayCmp },
-    { label: 'Possession %',      h: homePos + '%',      a: awayPos + '%',      homeAdv: homePos > awayPos },
-    { label: 'Territory %',       h: homeTer + '%',      a: awayTer + '%',      homeAdv: homeTer > awayTer },
-    { label: 'Penalties Conceded',h: homePen.toFixed(1), a: awayPen.toFixed(1), homeAdv: homePen < awayPen },
-  ]
 }
 function fakePower(homeAbbr: string, awayAbbr: string): { home: number; away: number } {
   const hs = seedFrom(homeAbbr + 'pow') % 16, as = seedFrom(awayAbbr + 'pow') % 16
@@ -293,111 +272,22 @@ function projectedScore(mu: number | null, tot: number | null): { home: number; 
   const away = Math.max(0, Math.round((tot + mu) / 2))
   return { home, away }
 }
-function bestBet(md: EventDetail): { edge: number; text: string; bk: string; mkt: string } | null {
-  const rows: Array<{ e: number; t: string; b: string; m: string }> = []
-  for (const r of md.markets?.h2h ?? []) {
-    if (r.edge_pct != null && r.edge_pct > 0 && r.edge_pct < 20) {
-      rows.push({ e: r.edge_pct, t: `${r.outcome} to win @ ${r.price.toFixed(2)}`, b: r.bookmaker, m: 'H2H' })
-    }
-  }
-  for (const r of md.markets?.spreads ?? []) {
-    if (r.edge_pct != null && r.edge_pct > 0 && r.edge_pct < 20 && r.point != null) {
-      rows.push({ e: r.edge_pct, t: `${r.outcome} ${sgn(r.point)} @ ${r.price.toFixed(2)}`, b: r.bookmaker, m: 'Line' })
-    }
-  }
-  for (const r of md.markets?.totals ?? []) {
-    if (r.edge_pct != null && r.edge_pct > 0 && r.edge_pct < 20 && r.point != null) {
-      rows.push({ e: r.edge_pct, t: `${r.outcome} ${r.point.toFixed(1)} @ ${r.price.toFixed(2)}`, b: r.bookmaker, m: 'Totals' })
-    }
-  }
-  if (!rows.length) return null
-  rows.sort((a, b) => b.e - a.e)
-  return { edge: rows[0].e, text: rows[0].t, bk: rows[0].b, mkt: rows[0].m }
-}
-
-// Weather → total-points lean score. Positive = OVER lean, negative = UNDER lean.
-function weatherLean(w: EventDetail['weather']): { score: number; label: string | null } {
-  if (!w) return { score: 0, label: null }
-  let score = 0
-  const parts: string[] = []
-  const cond = (w.condition || '').toLowerCase()
-  if (w.rain_prob >= 0.3 || cond.includes('rain') || cond.includes('shower')) {
-    score -= 1.4
-    parts.push('rain')
-  }
-  if (w.wind_kmh > 25) { score -= 1.2; parts.push('strong wind') }
-  else if (w.wind_kmh > 15) { score -= 0.6; parts.push('wind') }
-  if (w.is_indoor) { score += 0.4; parts.push('indoor') }
-  else if (cond.includes('clear')) { score += 0.4; parts.push('clear sky') }
-  return { score, label: parts.length ? parts.join(', ') : null }
-}
-
-// Matchup metrics → total-points lean. Positive = OVER, negative = UNDER.
-// Uses each rating's own midpoint so the OVER / UNDER call isn't systematically
-// biased by the different rating ranges (attack 95-115 vs defence 95-120).
-function matchupLean(homeAbbr: string, awayAbbr: string): { score: number; label: string | null } {
-  const m = fakeMetrics(homeAbbr, awayAbbr)
-  const hAtk = parseFloat(String(m[0].h)) || 0
-  const aAtk = parseFloat(String(m[0].a)) || 0
-  const hDef = parseFloat(String(m[1].h)) || 0
-  const aDef = parseFloat(String(m[1].a)) || 0
-  // Attack Rating range 95-115 → midpoint 105
-  // Defence Rating range 95-120 → midpoint 107.5
-  const atkDelta = ((hAtk - 105) + (aAtk - 105)) / 8
-  const defDelta = ((hDef - 107.5) + (aDef - 107.5)) / 8
-  const score = atkDelta - defDelta
-  const label = score > 0.35 ? 'attack strong' : score < -0.35 ? 'defence strong' : null
-  return { score, label }
-}
-
-// Combined total-points direction using projected/line gap + weather + matchup.
-// Always returns OVER or UNDER (never null) — the client explicitly asked for a
-// directional call every game, using all available data as a tiebreaker.
-// factors returned are only the ones that SUPPORT the winning side, so we
-// never surface a contradictory reason like 'attack strong' next to an UNDER call.
-function totalDirection(
-  projected: number | null,
-  avgLine: number | null,
-  weather: EventDetail['weather'],
-  homeAbbr: string,
-  awayAbbr: string,
-): { side: 'OVER' | 'UNDER'; strength: number; factors: string[] } {
-  const contributions: { label: string; score: number }[] = []
-  let net = 0
-  if (projected != null && avgLine != null) {
-    const gap = projected - avgLine
-    const contribution = gap * 2   // primary signal, weighted higher than tiebreakers
-    net += contribution
-    if (Math.abs(gap) >= 0.05) {
-      contributions.push({
-        label: `model ${gap > 0 ? 'above' : 'below'} line by ${Math.abs(gap).toFixed(1)}`,
-        score: contribution,
-      })
-    }
-  }
-  const wl = weatherLean(weather)
-  net += wl.score
-  if (wl.label) contributions.push({ label: wl.label, score: wl.score })
-  const ml = matchupLean(homeAbbr, awayAbbr)
-  net += ml.score
-  if (ml.label) contributions.push({ label: ml.label, score: ml.score })
-  // Tiny epsilon: if truly zero after all factors, use projected gap sign directly (fallback)
-  if (net === 0 && projected != null && avgLine != null) net = projected - avgLine
-  if (net === 0) net = 0.01   // final safety — never truly zero
-  const side: 'OVER' | 'UNDER' = net > 0 ? 'OVER' : 'UNDER'
-  // Only keep factors whose sign matches the winning direction, so the label
-  // never reads 'rain · attack strong → UNDER' (rain supports UNDER, attack
-  // strong contradicts it). Sort by magnitude so the strongest reason comes
-  // first.
-  const supporting = contributions
-    .filter(c => (side === 'OVER' ? c.score > 0 : c.score < 0))
-    .sort((a, b) => Math.abs(b.score) - Math.abs(a.score))
-    .map(c => c.label)
-  return {
-    side,
-    strength: Math.abs(net),
-    factors: supporting,
-  }
+// ── Suggested bet ───────────────────────────────────────────────────────────
+// Gate + selection live in lib/suggestedBet.ts so the thresholds are unit
+// testable without mounting this page. This wrapper only adapts EventDetail
+// to that module's structural input.
+function suggestionFor(md: EventDetail): Suggestion | null {
+  const m = md.model
+  if (!m) return null
+  return suggestedBet({
+    homeName:    md.event.home.name,
+    awayName:    md.event.away.name,
+    homeWinProb: m.home_win_prob,
+    awayWinProb: m.away_win_prob,
+    h2h:         md.markets?.h2h ?? [],
+    spreads:     md.markets?.spreads ?? [],
+    totals:      md.markets?.totals ?? [],
+  })
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -520,7 +410,7 @@ const CSS = `
 .mck-root .gi .gi-live{font-size:9px;font-weight:800;letter-spacing:.08em;padding:1px 5px;border-radius:3px;line-height:1.3}
 .mck-root .gi .gi-live.on{background:rgba(239,68,68,.18);color:#f87171;box-shadow:0 0 6px rgba(239,68,68,.35)}
 .mck-root .gi .gi-live.done{background:rgba(123,139,163,.18);color:#c3d0e2}
-.mck-root .gi .ed{margin-left:auto;font-size:10px;font-weight:800;color:var(--mgreen)}
+.mck-root .gi .ed{margin-left:auto;font-size:10px;font-weight:800;color:var(--mdim)}
 .mck-root .gi .ed.no{color:var(--mdim2);font-weight:600}
 .mck-root .gi .r2{display:flex;align-items:center;gap:5px}
 .mck-root .gi .sd{display:flex;align-items:center;gap:4px;flex:1;min-width:0}
@@ -764,6 +654,8 @@ const CSS = `
 .mck-root .bsc .n{font-size:16px;font-weight:800}
 .mck-root .bv{background:#0d2a1a;border:1px solid #1b6b3f;color:var(--mgreen);font-size:9.5px;font-weight:800;padding:3px 7px;border-radius:5px}
 .mck-root .bbet{font-size:11px;font-weight:700;color:#d6e0ee;white-space:nowrap}
+.mck-root .bbet.nobet{color:var(--mdim);font-weight:600;white-space:normal}
+.mck-root .bmkt{color:var(--mblue);font-weight:800}
 
 @media(max-width:1240px){ .mck-root .rm{grid-template-columns:1fr 1fr} .mck-root .rh{grid-template-columns:1fr} .mck-root .srch{width:104px} }
 
@@ -1278,19 +1170,13 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
                   })() : <>AI <b>–</b></>}
                 </span>
                 <span className="sp">
-                  {/* AI's OVER/UNDER call using totalDirection (same
-                      logic as the detail-page). */}
-                  {e.projected_total != null && e.book_total_line != null ? (() => {
-                    const dir = totalDirection(e.projected_total, e.book_total_line, null, e.home_abbr, e.away_abbr)
-                    const call = dir.side
-                    const col = call === 'OVER' ? '#25d97b' : '#f4526a'
-                    return <>
-                      <b style={{ color: col }}>AI {call} </b>
-                      <b>{e.projected_total.toFixed(1)}</b>
-                    </>
-                  })() : (
-                    <>Total <b>{e.projected_total != null ? e.projected_total.toFixed(1) : '–'}</b></>
-                  )}
+                  {/* Line only — no OVER/UNDER call here. The dashboard
+                      payload carries neither per-side edges nor weather, so
+                      the strip cannot reproduce the detail page's call; when
+                      it guessed from the projection alone the two contradicted
+                      each other on a third of fixtures. Open the game for the
+                      call. */}
+                  Total <b>{e.projected_total != null ? e.projected_total.toFixed(1) : '–'}</b>
                 </span>
               </div>
             </div>
@@ -1448,12 +1334,21 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
   // Uses the same combined signal as the confidence strip (projected/line gap
   // + weather + matchup) so the bar never sits at 50/50 while the confidence
   // pick says OVER/UNDER. Client asked for a directional call using all data.
+  const totalEdges = totalsEdges(md.markets?.totals ?? [])
+  const totalDir = totalDirection({
+    projectedTotal: tot, bookLine: avgLine,
+    overEdge: totalEdges.overEdge, underEdge: totalEdges.underEdge,
+    weather: md.weather,
+  })
+  // Signal is in edge-percentage points. Live leans run about 0-3 points, so
+  // an 8-point gap is treated as a full swing — a 2.9-point lean then reads
+  // ~68% rather than the ~91% a tighter divisor would imply.
+  const OU_FULL_SWING = 8
+  const hasTotalsMarket = tot != null && avgLine != null
   let overPct: number | null = null
-  if (tot != null && avgLine != null) {
-    const dir = totalDirection(tot, avgLine, md.weather, home.abbr, away.abbr)
-    // Map strength → percentage. strength of 2 = full swing.
-    const signed = dir.side === 'OVER' ? dir.strength : -dir.strength
-    overPct = Math.max(8, Math.min(92, 50 + (signed / 2) * 50))
+  if (hasTotalsMarket && totalDir.side != null) {
+    const signed = totalDir.side === 'OVER' ? totalDir.strength : -totalDir.strength
+    overPct = Math.max(8, Math.min(92, 50 + (signed / OU_FULL_SWING) * 50))
   }
 
   const homeSpreadPoints = (md.markets?.spreads ?? [])
@@ -1477,8 +1372,8 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
   // then find the best-edge book on THAT side so the badge never contradicts
   // the AI CONFIDENCE PICKS strip below.
   let ouCall: { label: string; color: string; bg: string } | null = null
-  if (tot != null && avgLine != null) {
-    const dir = totalDirection(tot, avgLine, md.weather, home.abbr, away.abbr)
+  if (tot != null && avgLine != null && totalDir.side != null) {
+    const dir = totalDir
     const col = dir.side === 'OVER' ? '#25d97b' : '#f4526a'
     // Look for a bookmaker offering positive edge on the SAME side the AI likes
     const totalRows = md.markets?.totals ?? []
@@ -1674,7 +1569,7 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
                 <div style={{ width: `${overPct}%`, background: 'linear-gradient(90deg, #0f8f4d, #25d97b)', height: '100%' }} />
                 <div style={{ width: `${100 - overPct}%`, background: 'linear-gradient(90deg, #f4526a, #c02a44)', height: '100%' }} />
                 <div style={{ position: 'absolute', top: -2, bottom: -2, left: '50%', width: 2, background: 'rgba(255,255,255,.6)', transform: 'translateX(-50%)', zIndex: 1, borderRadius: 1 }} />
-              </> : <div style={{ width: '100%', textAlign: 'center', fontSize: 8, color: '#55647a', lineHeight: '12px' }}>no total data</div>}
+              </> : <div style={{ width: '100%', textAlign: 'center', fontSize: 8, color: '#55647a', lineHeight: '12px' }}>{hasTotalsMarket ? 'no lean either way' : 'no total data'}</div>}
             </div>
             <span style={{
               color: overPct != null ? '#f4526a' : '#55647a', fontSize: 12, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace',
@@ -1776,6 +1671,8 @@ function OddsComparison({ md }: { md: EventDetail }) {
   )
 }
 function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[]; home: EventDetail['event']['home']; away: EventDetail['event']['away'] }) {
+  // One bar for the whole page: no AI PICK badges on a coin-flip fixture.
+  const tableDecisive = isDecisiveGame(md.model?.home_win_prob)
   const rows = md.markets?.h2h ?? []
   const fH = md.model?.fair_home_price, fA = md.model?.fair_away_price
   // Best-price detection — the trophy icon marks whoever offers the
@@ -1833,8 +1730,11 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
           const ic = iconFor(bk)
           const hEdge = h?.edge_pct ?? 0
           const aEdge = a?.edge_pct ?? 0
-          const pickHome = hEdge > 0 && hEdge >= aEdge
-          const pickAway = aEdge > 0 && aEdge > hEdge
+          // Same bar as every other panel: a decisive game and a real edge.
+          // The old rule was edge > 0, which badged +0.1% rows as an AI PICK
+          // on games the rest of the page was calling "no strong bet".
+          const pickHome = tableDecisive && hasRealEdge(hEdge) && hEdge >= aEdge
+          const pickAway = tableDecisive && hasRealEdge(aEdge) && aEdge > hEdge
           const bestHome = h?.price != null && maxHome != null && Math.abs(h.price - maxHome) < 0.001
           const bestAway = a?.price != null && maxAway != null && Math.abs(a.price - maxAway) < 0.001
           const ts = h?.last_update ?? a?.last_update
@@ -1870,10 +1770,12 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
     </table>
     </div>
     <BeatsBetfair rows={beats} />
-    <div className="foot"><span className="dot"></span>Prices update every 30 seconds · 🏆 = highest odds on this side · <b>Sharpline AI</b> = model's own tradeable price · <b>AI PICK</b> = model recommends this side at this book's price</div>
+    <div className="foot"><span className="dot"></span>Prices update every 30 seconds · 🏆 = highest odds on this side · <b>Sharpline AI</b> = model's own tradeable price · <b>AI PICK</b> = model recommends this side at this book's price, at {MIN_EDGE_PCT}% edge or better</div>
   </>
 }
 function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[]; home: EventDetail['event']['home']; away: EventDetail['event']['away'] }) {
+  // One bar for the whole page: no AI PICK badges on a coin-flip fixture.
+  const tableDecisive = isDecisiveGame(md.model?.home_win_prob)
   const rows = md.markets?.spreads ?? []
   const mu = md.model?.projected_margin
   const homePrices = rows.filter(r => r.outcome === home.name && r.price > 0).map(r => r.price)
@@ -1906,13 +1808,15 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
           const aEdge = a?.edge_pct ?? 0
           const bestHome = h?.price != null && maxHome != null && Math.abs(h.price - maxHome) < 0.001
           const bestAway = a?.price != null && maxAway != null && Math.abs(a.price - maxAway) < 0.001
-          // AI covers home iff projected margin > home line at this book
+          // Direction comes from the edge, which the backend already computes
+          // against the model's projection — so a side the model dislikes
+          // cannot show a positive edge. The old rule leaned on mu vs the book
+          // line, which is ~0 because the projection IS the market line, so it
+          // badged rounding noise as an AI PICK.
           let pick: 'h' | 'a' | null = null
-          if (mu != null) {
-            if (h?.point != null && mu > h.point && hEdge >= 0) pick = 'h'
-            else if (a?.point != null && -mu > a.point && aEdge >= 0) pick = 'a'
-            else if (hEdge > 0 && hEdge >= aEdge) pick = 'h'
-            else if (aEdge > 0) pick = 'a'
+          if (tableDecisive) {
+            if (hasRealEdge(hEdge) && hEdge >= aEdge) pick = 'h'
+            else if (hasRealEdge(aEdge)) pick = 'a'
           }
           const ts = h?.last_update ?? a?.last_update
           return (
@@ -1948,10 +1852,12 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
     </table>
     </div>
     <BeatsBetfair rows={beats} />
-    <div className="note8">Each book priced at its own line · 🏆 = highest price on this side · <b>AI PICK</b> uses the model's projected margin vs this book's spread.</div>
+    <div className="note8">Each book priced at its own line · 🏆 = highest price on this side · <b>AI PICK</b> = {MIN_EDGE_PCT}% edge or better on this book's line.</div>
   </>
 }
 function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
+  // One bar for the whole page: no AI PICK badges on a coin-flip fixture.
+  const tableDecisive = isDecisiveGame(md.model?.home_win_prob)
   const rows = md.markets?.totals ?? []
   const tot = md.model?.projected_total
   const overPrices = rows.filter(r => r.outcome.toLowerCase() === 'over' && r.price > 0).map(r => r.price)
@@ -1985,11 +1891,13 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
           const uEdge = u?.edge_pct ?? 0
           const bestOver = o?.price != null && maxOver != null && Math.abs(o.price - maxOver) < 0.001
           const bestUnder = u?.price != null && maxUnder != null && Math.abs(u.price - maxUnder) < 0.001
-          // AI recommends OVER at this book if projected total > this book's line
+          // Edge-led, same as the other two tables. The old rule compared the
+          // projected total to this book's line; that projection is the market
+          // line, so it fired on rounding noise.
           let pick: 'o' | 'u' | null = null
-          if (tot != null) {
-            if (tot > line + 0.1) pick = 'o'
-            else if (tot < line - 0.1) pick = 'u'
+          if (tableDecisive) {
+            if (hasRealEdge(oEdge) && oEdge >= uEdge) pick = 'o'
+            else if (hasRealEdge(uEdge)) pick = 'u'
           }
           const ts = o?.last_update ?? u?.last_update
           return (
@@ -2015,7 +1923,7 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
               <td>
                 {pick === 'o' && o && <span className="aipick">✓ OVER {line.toFixed(1)} @ {o.price.toFixed(2)}</span>}
                 {pick === 'u' && u && <span className="aipick">✓ UNDER {line.toFixed(1)} @ {u.price.toFixed(2)}</span>}
-                {!pick && <span className="nopick">on the line</span>}
+                {!pick && <span className="nopick">—</span>}
               </td>
             </tr>
           )
@@ -2767,22 +2675,23 @@ function AIConfidenceStrip({ md }: { md: EventDetail }) {
     .map(r => r.point as number)
   const avgLine = totalLines.length ? totalLines.reduce((s, v) => s + v, 0) / totalLines.length : null
   let totalPick: { side: string; color: string; detail: string } | null = null
-  if (tot != null && avgLine != null) {
-    const dir = totalDirection(tot, avgLine, md.weather, home.abbr, away.abbr)
-    const factorTxt = dir.factors.length ? dir.factors.join(' · ') : `proj ${tot.toFixed(1)} vs line ${avgLine.toFixed(1)}`
-    totalPick = {
-      side: `${dir.side} ${avgLine.toFixed(1)}`,
-      color: dir.side === 'OVER' ? '#25d97b' : '#f4526a',
-      detail: factorTxt,
-    }
-  } else if (tot != null) {
-    // No book line — still use weather + matchup to decide
-    const dir = totalDirection(tot, null, md.weather, home.abbr, away.abbr)
-    totalPick = {
-      side: `${dir.side} ${tot.toFixed(1)}`,
-      color: dir.side === 'OVER' ? '#25d97b' : '#f4526a',
-      detail: dir.factors.join(' · ') || `proj ${tot.toFixed(1)}`,
-    }
+  if (tot != null) {
+    const te = totalsEdges(md.markets?.totals ?? [])
+    const dir = totalDirection({
+      projectedTotal: tot, bookLine: avgLine,
+      overEdge: te.overEdge, underEdge: te.underEdge,
+      weather: md.weather,
+    })
+    const line = avgLine ?? tot
+    totalPick = dir.side == null
+      // Both sides priced the same and no weather to separate them — say so
+      // instead of inventing a direction.
+      ? { side: `NO LEAN ${line.toFixed(1)}`, color: '#7b8ba3', detail: 'both sides priced the same' }
+      : {
+          side: `${dir.side} ${line.toFixed(1)}`,
+          color: dir.side === 'OVER' ? '#25d97b' : '#f4526a',
+          detail: dir.factors.length ? dir.factors.join(' · ') : `line ${line.toFixed(1)}`,
+        }
   }
 
   return (
@@ -2824,6 +2733,8 @@ function AIConfidenceStrip({ md }: { md: EventDetail }) {
 // ───────────────────────────────────────────────────────────────────────────
 function RecommendedBets({ md }: { md: EventDetail }) {
   const { home, away } = md.event
+  // Same game-level gate every other bet panel uses: no picks on a coin flip.
+  const decisive = isDecisiveGame(md.model?.home_win_prob)
 
   interface Pick {
     edge: number
@@ -2837,7 +2748,7 @@ function RecommendedBets({ md }: { md: EventDetail }) {
   const picks: Pick[] = []
 
   for (const r of md.markets?.h2h ?? []) {
-    if (r.edge_pct != null && r.edge_pct >= 1 && r.edge_pct < 25) {
+    if (decisive && r.edge_pct != null && r.edge_pct >= MIN_EDGE_PCT && r.edge_pct < MAX_EDGE_PCT) {
       const isHome = r.outcome === home.name
       const abbr = isHome ? home.abbr : away.abbr
       picks.push({
@@ -2849,7 +2760,7 @@ function RecommendedBets({ md }: { md: EventDetail }) {
     }
   }
   for (const r of md.markets?.spreads ?? []) {
-    if (r.edge_pct != null && r.edge_pct >= 1 && r.edge_pct < 25 && r.point != null) {
+    if (decisive && r.edge_pct != null && r.edge_pct >= MIN_EDGE_PCT && r.edge_pct < MAX_EDGE_PCT && r.point != null) {
       const isHome = r.outcome === home.name
       const abbr = isHome ? home.abbr : away.abbr
       picks.push({
@@ -2861,7 +2772,7 @@ function RecommendedBets({ md }: { md: EventDetail }) {
     }
   }
   for (const r of md.markets?.totals ?? []) {
-    if (r.edge_pct != null && r.edge_pct >= 1 && r.edge_pct < 25 && r.point != null) {
+    if (decisive && r.edge_pct != null && r.edge_pct >= MIN_EDGE_PCT && r.edge_pct < MAX_EDGE_PCT && r.point != null) {
       picks.push({
         edge: r.edge_pct, price: r.price, fair: r.fair_price ?? null,
         bookmaker: r.bookmaker, market: 'TOTAL',
@@ -2879,13 +2790,13 @@ function RecommendedBets({ md }: { md: EventDetail }) {
         <span className="pt">AI Recommended Bets</span>
         <span className="q">?</span>
         <span style={{ marginLeft: 'auto', fontSize: 9, color: '#7b8ba3', fontWeight: 600, letterSpacing: '.04em' }}>
-          {top.length ? `${top.length} pick${top.length === 1 ? '' : 's'} with edge above 1%` : 'No edges detected'}
+          {top.length ? `${top.length} pick${top.length === 1 ? '' : 's'} with edge above ${MIN_EDGE_PCT}%` : 'No strong bets'}
         </span>
       </div>
       <div className="pb">
         {top.length === 0 ? (
           <div style={{ padding: '20px 12px', textAlign: 'center', color: '#7b8ba3', fontSize: 11 }}>
-            Market prices are in line with the model. No recommended bets right now.
+            No strong bets — this game is too close, or the prices are in line with the model.
           </div>
         ) : (
           <div className="recbets">
@@ -2924,6 +2835,12 @@ function AIAlignedPicks({ md }: { md: EventDetail }) {
   const { home, away } = md.event
   const m = md.model
   if (!m) return null
+  // Same game-level gate as every other bet panel — 45%-55% fixtures show
+  // nothing at all, which is what the client asked for.
+  if (!isDecisiveGame(m.home_win_prob)) return null
+  // A row must also clear MIN_MODEL_PROB on its own. The old bar was 0.55,
+  // which is exactly the "55% is not enough" the client called out.
+  const MAX_FAIR_PRICE = 1 / MIN_MODEL_PROB
 
   interface Aligned {
     market: 'H2H' | 'LINE' | 'TOTAL'
@@ -2941,7 +2858,7 @@ function AIAlignedPicks({ md }: { md: EventDetail }) {
   for (const r of md.markets?.h2h ?? []) {
     const isHome = r.outcome === home.name
     const modelProb = isHome ? m.home_win_prob : m.away_win_prob
-    if (modelProb == null || modelProb < 0.55) continue
+    if (modelProb == null || modelProb < MIN_MODEL_PROB) continue
     picks.push({
       market: 'H2H', selection: `${isHome ? home.abbr : away.abbr} to win`,
       price: r.price, fair: r.fair_price ?? null, bookmaker: r.bookmaker,
@@ -2962,8 +2879,7 @@ function AIAlignedPicks({ md }: { md: EventDetail }) {
     // Require a comfortable margin — at least 0.5 points of cushion
     const cushion = isHome ? Math.abs(r.point - mu) : Math.abs(r.point - (-mu))
     if (cushion < 0.5) continue
-    // Fair price implied prob >= 52%
-    if (r.fair_price == null || r.fair_price > 1.92) continue
+    if (r.fair_price == null || r.fair_price > MAX_FAIR_PRICE) continue
     picks.push({
       market: 'LINE', selection: `${isHome ? home.abbr : away.abbr} ${sgn(r.point)}`,
       price: r.price, fair: r.fair_price ?? null, bookmaker: r.bookmaker,
@@ -2978,7 +2894,7 @@ function AIAlignedPicks({ md }: { md: EventDetail }) {
     const side = r.outcome.toLowerCase()
     const modelPicks = tot > r.point + 0.5 ? 'over' : tot < r.point - 0.5 ? 'under' : null
     if (modelPicks !== side) continue
-    if (r.fair_price == null || r.fair_price > 1.92) continue
+    if (r.fair_price == null || r.fair_price > MAX_FAIR_PRICE) continue
     picks.push({
       market: 'TOTAL', selection: `${r.outcome} ${r.point.toFixed(1)}`,
       price: r.price, fair: r.fair_price ?? null, bookmaker: r.bookmaker,
@@ -3054,7 +2970,7 @@ function BottomBar({ md }: { md: EventDetail }) {
   const fav = homeFav ? home : away
   const favCol = safeCol(fav.primary_color, homeFav ? hp : ap)
   const score = projectedScore(m.projected_margin, m.projected_total)
-  const best = bestBet(md)
+  const best = suggestionFor(md)
   return (
     <div className="bottom" style={{ background: `linear-gradient(90deg, ${hd}55, #0d1320 45%, ${ad}55)` }}>
       <div className="bc">
@@ -3075,13 +2991,17 @@ function BottomBar({ md }: { md: EventDetail }) {
         </div>
       ) : <div className="bc"></div>}
       <div className="bc">
-        <span className="bcap">BEST VALUE BET</span>
+        <span className="bcap">
+          SUGGESTED BET{best ? <span className="bmkt"> · {best.mkt}</span> : null}
+        </span>
         {best ? (
           <>
             <span className="bbet">{best.text} <span style={{ color: '#7b8ba3', fontWeight: 500 }}>({best.bk})</span></span>
             <span className="bv mono">+{best.edge.toFixed(1)}%</span>
           </>
-        ) : <span className="bbet" style={{ color: '#7b8ba3' }}>No edge above 2%</span>}
+        ) : (
+          <span className="bbet nobet">No strong bet — too close to call</span>
+        )}
       </div>
     </div>
   )

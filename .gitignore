@@ -72,3 +72,7 @@ screenshot_compare.mjs
 frontend/take_shots.mjs
 frontend/test-results/
 recon/
+
+# Vercel CLI link + local env pulled by `vercel link`
+.vercel
+.env.local
