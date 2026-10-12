@@ -12,11 +12,12 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.db import get_db
-from app.models import ApiQuota, Bookmaker, Event, Lineup, ModelOutput, ModelParam, Team
+from app.models import ApiQuota, Bookmaker, Event, Lineup, ModelOutput, ModelParam, Sport, Team
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 _security = HTTPBasic()
@@ -189,6 +190,22 @@ class TeamPatch(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Sport schemas
+# ---------------------------------------------------------------------------
+
+class SportAdminOut(BaseModel):
+    id: int
+    key: str
+    title: str
+    is_on: bool
+    upcoming_games: int   # fixtures in the dashboard's 7-day window
+
+
+class SportPatch(BaseModel):
+    is_on: bool
+
+
+# ---------------------------------------------------------------------------
 # Event brief schema
 # ---------------------------------------------------------------------------
 
@@ -308,6 +325,65 @@ def clear_event_manual_lineups(
         Lineup.source == "manual",
     ).delete()
     db.commit()
+
+
+# ===========================================================================
+# Sports on / off
+# ===========================================================================
+#
+# One switch per sport. The poller needs in_season AND is_available; the
+# dashboard filters on is_available. So "off" clears is_available — games
+# vanish from the dashboard at once and odds stop being fetched, saving
+# credits — and "on" sets both, so a sport whose in_season was cleared comes
+# back too. Seeding never overwrites either flag.
+
+def _sport_out(sport: Sport, upcoming: dict[int, int]) -> SportAdminOut:
+    return SportAdminOut(
+        id=sport.id,
+        key=sport.key,
+        title=sport.title,
+        is_on=bool(sport.is_available and sport.in_season),
+        upcoming_games=upcoming.get(sport.id, 0),
+    )
+
+
+def _upcoming_by_sport(db: Session) -> dict[int, int]:
+    now = datetime.now(tz=timezone.utc)
+    rows = (
+        db.query(Event.sport_id, func.count(Event.id))
+        .filter(Event.commence_time >= now, Event.commence_time <= now + timedelta(days=7))
+        .group_by(Event.sport_id)
+        .all()
+    )
+    return {sport_id: n for sport_id, n in rows}
+
+
+@router.get("/sports", response_model=list[SportAdminOut])
+def list_sports_admin(
+    db: Session = Depends(get_db),
+    _: None = Depends(_require_admin),
+):
+    upcoming = _upcoming_by_sport(db)
+    sports = db.query(Sport).order_by(Sport.poll_priority, Sport.id).all()
+    return [_sport_out(s, upcoming) for s in sports]
+
+
+@router.patch("/sports/{sport_id}", response_model=SportAdminOut)
+def update_sport(
+    sport_id: int,
+    body: SportPatch,
+    db: Session = Depends(get_db),
+    _: None = Depends(_require_admin),
+):
+    sport = db.get(Sport, sport_id)
+    if not sport:
+        raise HTTPException(status_code=404, detail="Sport not found")
+    sport.is_available = body.is_on
+    if body.is_on:
+        sport.in_season = True
+    db.commit()
+    db.refresh(sport)
+    return _sport_out(sport, _upcoming_by_sport(db))
 
 
 # ===========================================================================

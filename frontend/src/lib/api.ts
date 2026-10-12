@@ -205,6 +205,12 @@ async function adminFetch(url: string, password: string, options: RequestInit = 
   return res.json()
 }
 
+export const adminGetSports = (pw: string) =>
+  adminFetch('/admin/sports', pw)
+
+export const adminPatchSport = (pw: string, id: number, isOn: boolean) =>
+  adminFetch(`/admin/sports/${id}`, pw, { method: 'PATCH', body: JSON.stringify({ is_on: isOn }) })
+
 export const adminGetBookmakers = (pw: string) =>
   adminFetch('/admin/bookmakers', pw)
 

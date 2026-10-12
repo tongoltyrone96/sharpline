@@ -368,6 +368,7 @@ test('admin panel: adding a bookmaker fires POST request', async ({ page }) => {
   await pwInput.fill('changeme')
   await page.getByRole('button', { name: 'Sign In' }).click()
   await expect(page.getByRole('button', { name: 'Bookmakers' })).toBeVisible({ timeout: 10000 })
+  await page.getByRole('button', { name: 'Bookmakers' }).click()
   await page.waitForTimeout(800)
 
   // Fill in the add bookmaker form

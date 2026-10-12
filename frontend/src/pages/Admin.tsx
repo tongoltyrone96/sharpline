@@ -8,11 +8,13 @@ import {
   adminGetEvents,
   adminGetLineups,
   adminGetParams,
+  adminGetSports,
   adminGetSystem,
   adminGetTeams,
   adminPatchBookmaker,
   adminPatchLineup,
   adminPatchParam,
+  adminPatchSport,
   adminPatchTeam,
 } from '../lib/api'
 
@@ -119,6 +121,84 @@ function useAdminAuth() {
   }
 
   return { password, authed, checking, attempt, logout }
+}
+
+// ---------------------------------------------------------------------------
+// Sports — one on/off switch per sport
+// ---------------------------------------------------------------------------
+
+interface SportRow {
+  id: number; key: string; title: string; is_on: boolean; upcoming_games: number
+}
+
+function SportsTab({ pw }: { pw: string }) {
+  const [rows, setRows] = useState<SportRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState<number | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try { setRows(await adminGetSports(pw)) } catch (e: any) { toast(e.message, false) }
+    setLoading(false)
+  }, [pw])
+
+  useEffect(() => { load() }, [load])
+
+  const toggle = async (s: SportRow) => {
+    setSaving(s.id)
+    try {
+      const updated: SportRow = await adminPatchSport(pw, s.id, !s.is_on)
+      setRows(r => r.map(x => x.id === s.id ? updated : x))
+      toast(`${s.title} switched ${updated.is_on ? 'on' : 'off'}`)
+    } catch (e: any) { toast(e.message, false) }
+    setSaving(null)
+  }
+
+  return (
+    <div>
+      <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 6, color: 'var(--text)' }}>Sports</h3>
+      <p style={{ fontSize: 12, color: 'var(--text-3)', margin: '0 0 16px', lineHeight: 1.6 }}>
+        Off: the sport's games leave the dashboard straight away and its odds stop being fetched,
+        which saves API credits. On: odds are fetched again within a minute; games appear as soon
+        as bookmakers price them. A sport with 0 games in the next 7 days is usually out of season.
+      </p>
+      {loading ? <div style={{ color: 'var(--text-3)', fontSize: 12 }}>Loading…</div> : (
+        <table style={{ width: '100%', maxWidth: 560, borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              {['Sport', 'Games next 7 days', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(s => (
+              <tr key={s.id}>
+                <td style={cell}>
+                  <span style={{ fontWeight: 700 }}>{s.title}</span>
+                  <code style={{ fontSize: 10.5, color: 'var(--text-3)', marginLeft: 8 }}>{s.key}</code>
+                </td>
+                <td style={{ ...cell, color: s.upcoming_games ? 'var(--text)' : 'var(--text-3)' }}>{s.upcoming_games}</td>
+                <td style={cell}>
+                  <button
+                    onClick={() => toggle(s)}
+                    disabled={saving === s.id}
+                    aria-pressed={s.is_on}
+                    style={{
+                      ...btn(s.is_on ? 'primary' : 'ghost'),
+                      minWidth: 72,
+                      background: s.is_on ? 'var(--green)' : 'var(--panel)',
+                      border: s.is_on ? 'none' : '1px solid var(--line)',
+                    }}
+                  >
+                    {saving === s.id ? '…' : s.is_on ? 'ON' : 'OFF'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -813,12 +893,12 @@ function InlineNumberEdit({ value, step, min, max, onSave }: {
 // Main Admin component
 // ---------------------------------------------------------------------------
 
-const TABS = ['Bookmakers', 'Model Parameters', 'Lineups', 'Teams', 'System'] as const
+const TABS = ['Sports', 'Bookmakers', 'Model Parameters', 'Lineups', 'Teams', 'System'] as const
 type Tab = typeof TABS[number]
 
 export default function Admin() {
   const { password, authed, checking, attempt, logout } = useAdminAuth()
-  const [tab, setTab] = useState<Tab>('Bookmakers')
+  const [tab, setTab] = useState<Tab>('Sports')
   const [pwInput, setPwInput] = useState('')
 
   if (!authed) {
@@ -907,6 +987,7 @@ export default function Admin() {
         background: 'var(--panel-2)', border: '1px solid var(--line)',
         borderRadius: 12, padding: 24,
       }}>
+        {tab === 'Sports'           && <SportsTab pw={password} />}
         {tab === 'Bookmakers'       && <BookmakersTab pw={password} />}
         {tab === 'Model Parameters' && <ParamsTab pw={password} />}
         {tab === 'Lineups'          && <LineupsTab pw={password} />}
