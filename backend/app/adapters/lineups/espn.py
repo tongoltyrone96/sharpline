@@ -105,19 +105,21 @@ def _match_side(espn_name: str, home_team: str, away_team: str) -> str | None:
     """
     Fuzzy-match ESPN team name against our home/away team strings.
     ESPN uses "New England Patriots"; we store "New England Patriots".
-    Falls back to checking if any word of ESPN name appears in our name.
+    Falls back to the nickname (last word), so "LA Clippers" still finds
+    "Los Angeles Clippers". Sharing any other word is not enough: that put
+    New York Jets injuries on the Giants and Lakers injuries on the Clippers.
     """
     espn_lower = espn_name.lower()
     if home_team.lower() in espn_lower or espn_lower in home_team.lower():
         return "home"
     if away_team.lower() in espn_lower or espn_lower in away_team.lower():
         return "away"
-    # Word-level fallback
-    espn_words = set(espn_lower.split())
-    home_words = set(home_team.lower().split())
-    away_words = set(away_team.lower().split())
-    if espn_words & home_words:
+    espn_words = espn_lower.split()
+    if not espn_words:
+        return None
+    nickname = espn_words[-1]
+    if home_team.lower().split()[-1:] == [nickname]:
         return "home"
-    if espn_words & away_words:
+    if away_team.lower().split()[-1:] == [nickname]:
         return "away"
     return None

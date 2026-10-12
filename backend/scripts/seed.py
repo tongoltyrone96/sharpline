@@ -29,12 +29,13 @@ SPORTS = [
     dict(key="aussierules_afl",      title="AFL", in_season=True,  is_available=True,  poll_priority=2),
     dict(key="americanfootball_nfl", title="NFL", in_season=True,  is_available=True,  poll_priority=3),
     dict(key="baseball_mlb",         title="MLB", in_season=True,  is_available=True,  poll_priority=4),
-    # Off-season: in feed, key exists, activates automatically in October
-    dict(key="basketball_nba",       title="NBA", in_season=False, is_available=True,  poll_priority=5),
-    # Not in this feed at all — seeded so they can be enabled if a data source
-    # ever adds them. Flip is_available=True in the DB to surface them in the UI.
-    # dict(key="basketball_nbl", ...),   # not in The Odds API — omitted from seed
-    # dict(key="icehockey_nhl",  ...),   # not in The Odds API — omitted from seed
+    dict(key="basketball_nba",       title="NBA", in_season=True,  is_available=True,  poll_priority=5),
+    # NBL and NHL are in The Odds API; the July 2026 recon missed them because
+    # /sports hides off-season keys unless asked for all=true.
+    dict(key="basketball_nbl",       title="NBL", in_season=True,  is_available=True,  poll_priority=6),
+    dict(key="icehockey_nhl",        title="NHL", in_season=True,  is_available=True,  poll_priority=7),
+    # in_season / is_available above only apply to a fresh database —
+    # _upsert_sport() never overwrites them on an existing row.
 ]
 
 # ── Bookmakers ────────────────────────────────────────────────────────────────
@@ -61,6 +62,8 @@ BOOKMAKERS = [
 _SIGMA = [
     ("americanfootball_nfl", 13.5, 10.0),
     ("basketball_nba",       11.5, 13.0),
+    ("basketball_nbl",       12.0, 13.0),
+    ("icehockey_nhl",         2.0,  1.8),
     ("rugbyleague_nrl",      13.0, 11.0),
     ("aussierules_afl",      28.0, 22.0),
     ("baseball_mlb",          4.2,  3.0),
@@ -142,7 +145,8 @@ def _upsert_team(db, sport: Sport, data: dict) -> Team:
         venue_name=venue_info.get("venue"),
         venue_lat=venue_info.get("lat"),
         venue_lon=venue_info.get("lon"),
-        is_indoor=venue_info.get("indoor", False),
+        # venues.py wins; otherwise the team's own flag (indoor sports).
+        is_indoor=venue_info.get("indoor", data.get("indoor", False)),
     )
     if obj is None:
         obj = Team(**row)
@@ -232,12 +236,12 @@ def seed() -> None:
         available_books = db.query(Bookmaker).filter_by(is_available=True).count()
         unavailable_books = db.query(Bookmaker).filter_by(is_available=False).count()
         print("\nVerification:")
-        print(f"  teams.count = {actual_teams} (expected 97)")
+        print(f"  teams.count = {actual_teams} (expected at least {team_count})")
         print(f"  bookmakers available = {available_books}, unavailable = {unavailable_books}")
         print(f"  model_params.count = {db.query(ModelParam).count()}")
 
-        if actual_teams != 97:
-            print(f"  WARNING: expected 97 teams, got {actual_teams}")
+        if actual_teams < team_count:
+            print(f"  WARNING: expected at least {team_count} teams, got {actual_teams}")
 
     finally:
         db.close()

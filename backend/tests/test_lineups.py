@@ -264,6 +264,13 @@ class TestESPNHelpers:
     def test_match_side_no_match(self):
         assert _match_side("Green Bay Packers", "Kansas City Chiefs", "Baltimore Ravens") is None
 
+    def test_match_side_shared_city_is_not_a_match(self):
+        assert _match_side("New York Jets", "New York Giants", "Dallas Cowboys") is None
+        assert _match_side("Los Angeles Lakers", "Los Angeles Clippers", "Denver Nuggets") is None
+
+    def test_match_side_nickname(self):
+        assert _match_side("LA Clippers", "Denver Nuggets", "Los Angeles Clippers") == "away"
+
     def test_espn_parses_injuries(self):
         payload = {
             "items": [
