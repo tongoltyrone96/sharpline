@@ -51,22 +51,6 @@ function fmtDayTime(iso: string): { day: string; time: string } {
   return { day, time: `${hh12}:${mm} ${ampm}` }
 }
 
-function seedFrom(str: string): number {
-  let h = 0
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0
-  return Math.abs(h)
-}
-function fakeLadder(abbr: string): string {
-  const p = ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th','11th','12th','13th','14th']
-  return p[seedFrom(abbr + 'l') % p.length]
-}
-function fakeRecord(abbr: string): string {
-  const s = seedFrom(abbr + 'r')
-  const w = 3 + (s % 10)
-  const l = 3 + ((s >> 4) % 9)
-  return `${w}W – ${l}L`
-}
-
 function ordinal(n: number): string {
   if (n <= 0) return `${n}`
   const s = ['th', 'st', 'nd', 'rd']
@@ -90,7 +74,7 @@ function realRecord(s: Standing | null | undefined): string | null {
 /**
  * Fetches ladder + season record for one team from the backend and returns
  * the raw Standing object. Never throws — if the source is unavailable the
- * hook resolves to null and the caller falls back to seeded placeholder.
+ * hook resolves to null and the caller shows nothing for it.
  */
 function useTeamStanding(teamName: string | undefined, sportKey: string | undefined): Standing | null {
   const [row, setRow] = useState<Standing | null>(null)
@@ -177,23 +161,6 @@ function useEventLineups(eventId: string | undefined): EventLineups | null {
   return row
 }
 
-function fakeForm(abbr: string): ('W'|'L')[] {
-  const s = seedFrom(abbr + 'f')
-  return [0,1,2,3,4].map(i => ((s >> (i * 3)) & 1) ? 'W' : 'L') as ('W'|'L')[]
-}
-function fakeH2H(id: string): { hw: number; aw: number; last: ('h'|'a')[] } {
-  const s = seedFrom(id + 'h2h')
-  const hw = 3 + (s % 6)
-  const aw = 10 - hw
-  const last: ('h'|'a')[] = []
-  for (let i = 0; i < 10; i++) last.push(((s >> i) & 1) ? 'h' : 'a')
-  return { hw, aw, last }
-}
-function fakePower(homeAbbr: string, awayAbbr: string): { home: number; away: number } {
-  const hs = seedFrom(homeAbbr + 'pow') % 16, as = seedFrom(awayAbbr + 'pow') % 16
-  const h = 1 + hs, a = 1 + as
-  return { home: h === a ? h + 1 : h, away: a }
-}
 function splitName(name: string): { city: string; short: string } {
   if (!name) return { city: '', short: '' }
   const parts = name.trim().split(/\s+/)
@@ -928,10 +895,10 @@ function weatherIconKind(w: EventDetail['weather']): string {
 // Sidebar
 // ───────────────────────────────────────────────────────────────────────────
 function Sidebar({ onNavigate, roundConf }: {
-  onNavigate: (s: string) => void; roundConf: number
+  onNavigate: (s: string) => void; roundConf: number | null
 }) {
-  const label = roundConf >= 82 ? 'HIGH' : roundConf >= 65 ? 'MEDIUM' : 'LOW'
-  const dash = (roundConf / 100) * 251
+  const label = roundConf == null ? 'NO DATA' : roundConf >= 82 ? 'HIGH' : roundConf >= 65 ? 'MEDIUM' : 'LOW'
+  const dash = ((roundConf ?? 0) / 100) * 251
   // [target-id, label, svg-path, kind]
   // Special targets: '__top' scrolls to top of page, 'admin' opens the
   // admin route. Everything else looks up the corresponding panel by
@@ -988,9 +955,9 @@ function Sidebar({ onNavigate, roundConf }: {
           <circle cx={50} cy={50} r={40} stroke="#1a2333" strokeWidth={9} fill="none" />
           <circle cx={50} cy={50} r={40} stroke="#25d97b" strokeWidth={9} fill="none" strokeLinecap="round"
                   strokeDasharray={`${dash.toFixed(0)} 251`} transform="rotate(-90 50 50)" />
-          <text x={50} y={58} textAnchor="middle" fontFamily="Inter" fontSize={26} fontWeight={800} fill="#e7eef8">{roundConf}%</text>
+          <text x={50} y={58} textAnchor="middle" fontFamily="Inter" fontSize={26} fontWeight={800} fill="#e7eef8">{roundConf == null ? '–' : `${roundConf}%`}</text>
         </svg>
-        <div className="vh" style={{ color: roundConf >= 82 ? '#25d97b' : '#f5a524' }}>{label}</div>
+        <div className="vh" style={{ color: roundConf == null ? '#55647a' : roundConf >= 82 ? '#25d97b' : '#f5a524' }}>{label}</div>
         <div className="s">Avg across<br />live fixtures</div>
       </div>
     </aside>
@@ -1199,14 +1166,15 @@ function Hero({ md }: { md: EventDetail }) {
   const hn = splitName(home.name), an = splitName(away.name)
   const { day, time } = fmtDayTime(md.event.commence_time)
   const wk = weatherIconKind(md.weather)
-  // Real ladder + record when available; falls back to seeded placeholder so
-  // the layout never blanks out while the standings API is warming up.
+  // Real ladder + record only. Sports with no standings source (NFL, NBA,
+  // NBL, NHL, MLB) show neither rather than a number made up from the team
+  // abbreviation.
   const homeStanding = useTeamStanding(home.name, md.event.sport)
   const awayStanding = useTeamStanding(away.name, md.event.sport)
-  const homeLadder   = realLadder(homeStanding) ?? fakeLadder(home.abbr)
-  const homeRecord   = realRecord(homeStanding) ?? fakeRecord(home.abbr)
-  const awayLadder   = realLadder(awayStanding) ?? fakeLadder(away.abbr)
-  const awayRecord   = realRecord(awayStanding) ?? fakeRecord(away.abbr)
+  const homeLadder   = realLadder(homeStanding)
+  const homeRecord   = realRecord(homeStanding)
+  const awayLadder   = realLadder(awayStanding)
+  const awayRecord   = realRecord(awayStanding)
 
   return (
     <div className="hero" style={{
@@ -1219,8 +1187,8 @@ function Hero({ md }: { md: EventDetail }) {
         <div>
           <div className="city">{hn.city}</div>
           <div className="tn">{hn.short.toUpperCase()}</div>
-          <div className="tmeta" style={{ color: safeCol(home.primary_color, '#4da6ff'), fontWeight: 800 }}>{homeLadder}</div>
-          <div className="tmeta mono" style={{ fontSize: 11, marginTop: 2 }}>{homeRecord}</div>
+          {homeLadder && <div className="tmeta" style={{ color: safeCol(home.primary_color, '#4da6ff'), fontWeight: 800 }}>{homeLadder}</div>}
+          {homeRecord && <div className="tmeta mono" style={{ fontSize: 11, marginTop: 2 }}>{homeRecord}</div>}
         </div>
       </div>
       <div className="hmid">
@@ -1241,8 +1209,8 @@ function Hero({ md }: { md: EventDetail }) {
         <div>
           <div className="city">{an.city}</div>
           <div className="tn">{an.short.toUpperCase()}</div>
-          <div className="tmeta" style={{ color: safeCol(away.primary_color, '#8b5cf6'), fontWeight: 800 }}>{awayLadder}</div>
-          <div className="tmeta mono" style={{ fontSize: 11, marginTop: 2 }}>{awayRecord}</div>
+          {awayLadder && <div className="tmeta" style={{ color: safeCol(away.primary_color, '#8b5cf6'), fontWeight: 800 }}>{awayLadder}</div>}
+          {awayRecord && <div className="tmeta mono" style={{ fontSize: 11, marginTop: 2 }}>{awayRecord}</div>}
         </div>
       </div>
     </div>
@@ -1939,17 +1907,6 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
 // ───────────────────────────────────────────────────────────────────────────
 // Movement charts
 // ───────────────────────────────────────────────────────────────────────────
-function seriesTo(end: number, start: number, n: number, amp: number): number[] {
-  const pts: number[] = []
-  for (let i = 0; i < n; i++) {
-    const t = i / (n - 1)
-    let v = start + (end - start) * (1 - Math.pow(1 - t, 1.7))
-    v += Math.sin(i * 1.9) * amp * (1 - t)
-    pts.push(v)
-  }
-  pts[n - 1] = end
-  return pts
-}
 function poly(vals: number[], x0: number, x1: number, y0: number, y1: number, vmin: number, vmax: number): string {
   return vals.map((v, i) => {
     const x = x0 + (x1 - x0) * i / (vals.length - 1)
@@ -1981,17 +1938,19 @@ function WinProbMovement({ md }: { md: EventDetail }) {
   const homeProbs = downsampleHistory(history, p =>
     p.price > 0 ? Math.max(3, Math.min(97, (1 / p.price) * 100)) : null,
   )
-  const isReal = homeProbs.values.length >= 4
-
-  let hS: number[], aS: number[]
-  if (isReal) {
-    hS = homeProbs.values
-    aS = hS.map(v => 100 - v)
-  } else {
-    const end = Math.round((md.model?.home_win_prob ?? 0.5) * 100)
-    const start = end + (end < 50 ? 9 : -9)
-    hS = seriesTo(end, start, 12, 1.1); aS = hS.map(v => 100 - v)
+  // Too little recorded movement to draw — say so rather than plot a
+  // synthetic curve that looks like real market history.
+  if (homeProbs.values.length < 4) {
+    return (
+      <div className="p" id="pMove">
+        <div className="ph"><span className="pt">Win Probability Movement</span></div>
+        <div className="pb"><div className="empty" style={{ padding: '28px 0' }}>Not enough price history yet</div></div>
+      </div>
+    )
   }
+
+  const hS = homeProbs.values
+  const aS = hS.map(v => 100 - v)
   const lo = Math.max(5, Math.min(...hS, ...aS) - 10)
   const hi = Math.min(100, Math.max(...hS, ...aS) + 10)
   const hLast = hS[hS.length - 1], aLast = aS[aS.length - 1]
@@ -1999,9 +1958,7 @@ function WinProbMovement({ md }: { md: EventDetail }) {
   const yPct = (v: number) => (1 - (v - lo) / (hi - lo || 1)) * 100
   const pts = (vals: number[]) => vals.map((v, i) => `${(i / (vals.length - 1) * 100).toFixed(2)},${yPct(v).toFixed(2)}`).join(' ')
   const yLabels = [0, 1, 2, 3, 4].map(i => Math.round(hi - (hi - lo) * i / 4))
-  const xLabels = isReal
-    ? timeAxisLabels(homeProbs.timestamps[0])
-    : ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
+  const xLabels = timeAxisLabels(homeProbs.timestamps[0])
 
   return (
     <div className="p" id="pMove">
@@ -2088,12 +2045,10 @@ function timeAxisLabels(firstIso: string | undefined): string[] {
 function LineTotalStack({ md }: { md: EventDetail }) {
   const { home, away } = md.event
   const ap = safeCol(away.primary_color, '#8b5cf6')
-  const mu = md.model?.projected_margin ?? 0
-  const tot = md.model?.projected_total ?? 40
 
   // Real line-history for the home team's spread. If we have enough
-  // recorded odds we plot the actual market movement; otherwise fall
-  // back to the previous synthetic curve so the panel still renders.
+  // recorded odds we plot the actual market movement; otherwise the panel
+  // says so instead of drawing a synthetic curve.
   const [lineHistory, setLineHistory] = useState<HistoryPoint[]>([])
   useEffect(() => {
     getEventHistory(md.event.id, { market: 'spreads', outcome: home.name })
@@ -2104,9 +2059,7 @@ function LineTotalStack({ md }: { md: EventDetail }) {
   const realLine = downsampleHistory(lineHistory, p => p.point)
   const lineIsReal = realLine.values.length >= 4
 
-  const lS = lineIsReal
-    ? realLine.values
-    : seriesTo(mu, mu + (mu < 0 ? 1.2 : -1.2), 12, 0.12)
+  const lS = realLine.values
   const llo = Math.min(...lS) - 2.5, lhi = Math.max(...lS) + 2.5
   const lLast = lS[lS.length - 1]
 
@@ -2125,16 +2078,12 @@ function LineTotalStack({ md }: { md: EventDetail }) {
   const totalIsReal = realTot.values.length >= 4
   const totalHasAny = totalHistory.length > 0 || md.model?.projected_total != null
 
-  const tS = totalIsReal ? realTot.values : seriesTo(tot, tot - 3.5, 12, 0.3)
+  const tS = realTot.values
   const tlo = Math.min(...tS) - 2, thi = Math.max(...tS) + 2
   const tLast = tS[tS.length - 1]
 
-  const lXLabels = lineIsReal
-    ? timeAxisLabels(realLine.timestamps[0])
-    : ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
-  const tXLabels = totalIsReal
-    ? timeAxisLabels(realTot.timestamps[0])
-    : ['-24h', '-12h', '-6h', '-3h', '-1h', 'Now']
+  const lXLabels = timeAxisLabels(realLine.timestamps[0])
+  const tXLabels = timeAxisLabels(realTot.timestamps[0])
 
   const lYPct = (v: number) => (1 - (v - llo) / (lhi - llo || 1)) * 100
   const lPts = lS.map((v, i) => `${(i / (lS.length - 1) * 100).toFixed(2)},${lYPct(v).toFixed(2)}`).join(' ')
@@ -2146,10 +2095,11 @@ function LineTotalStack({ md }: { md: EventDetail }) {
 
   return (
     <>
+      {lineIsReal ? (
       <div className="p" id="pLineMv">
         <div className="ph">
           <span className="pt">Line Movement</span>
-          <span className="hv mono" style={{ color: ap }}>{lineIsReal ? sgn(lLast) : sgn(mu)}</span>
+          <span className="hv mono" style={{ color: ap }}>{sgn(lLast)}</span>
         </div>
         <div className="pb">
           <div className="chg">
@@ -2176,6 +2126,16 @@ function LineTotalStack({ md }: { md: EventDetail }) {
           </div>
         </div>
       </div>
+      ) : (
+        <div className="p" id="pLineMv">
+          <div className="ph"><span className="pt">Line Movement</span></div>
+          <div className="pb" style={{ minHeight: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#55647a', fontSize: 12, textAlign: 'center', padding: 16 }}>
+            {lineHistory.length > 0 || md.model?.projected_margin != null
+              ? 'Collecting line samples…'
+              : 'No line market offered for this fixture.'}
+          </div>
+        </div>
+      )}
       {totalIsReal ? (
         <div className="p" id="pTotMv">
           <div className="ph">
@@ -2413,9 +2373,9 @@ function H2HFormStack({ md }: { md: EventDetail }) {
   const { home, away } = md.event
   const hp = safeCol(home.primary_color, '#4da6ff'), ap = safeCol(away.primary_color, '#8b5cf6')
   const hd = darken(hp, 0.7), ad = darken(ap, 0.7)
-  const seededH2H = fakeH2H(md.event.id)
-  // Real values from backend services; fall back to seeded placeholders when
-  // the endpoint is unavailable or the team isn't matched.
+  // Real values from backend services only. The backend has history for AFL
+  // and NRL; for every other league these panels say so instead of showing
+  // results made up from the team abbreviation.
   const homeStanding = useTeamStanding(home.name, md.event.sport)
   const awayStanding = useTeamStanding(away.name, md.event.sport)
   const homeForm     = useTeamForm(home.name, md.event.sport, 5)
@@ -2425,15 +2385,21 @@ function H2HFormStack({ md }: { md: EventDetail }) {
     ? {
         hw: realH2H.home_wins,
         aw: realH2H.away_wins,
-        last: (realH2H.last.length
-          ? realH2H.last.slice(0, 10).map(g => (g.for_home_side === 'H' ? 'h' : 'a') as 'h' | 'a')
-          : seededH2H.last),
+        last: realH2H.last.slice(0, 10).map(g =>
+          (g.for_home_side === 'H' ? 'h' : g.for_home_side === 'A' ? 'a' : 'd') as 'h' | 'a' | 'd'),
       }
-    : seededH2H
+    : null
+  const hasForm = (homeForm?.length ?? 0) > 0 || (awayForm?.length ?? 0) > 0
+  const noData = (text: string) => (
+    <div className="pb" style={{ minHeight: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#55647a', fontSize: 12, textAlign: 'center', padding: 16 }}>
+      {text}
+    </div>
+  )
   return (
     <>
       <div className="p" id="pH2h">
         <div className="ph"><span className="pt">H2H History (Last 10)</span></div>
+        {!h2h ? noData('No head-to-head history available for this league.') : (
         <div className="pb">
           <div className="h2h">
             <div className="s" style={{ background: hd }}>
@@ -2448,15 +2414,16 @@ function H2HFormStack({ md }: { md: EventDetail }) {
           </div>
           <div className="chips">
             {h2h.last.map((w, i) => {
-              const isH = w === 'h'
-              const bg = isH ? hp : ap
-              return <span key={i} className="chip" style={{ background: bg }}>W</span>
+              const bg = w === 'h' ? hp : w === 'a' ? ap : '#3a4558'
+              return <span key={i} className="chip" style={{ background: bg }}>{w === 'd' ? 'D' : 'W'}</span>
             })}
           </div>
         </div>
+        )}
       </div>
       <div className="p" id="pForm">
         <div className="ph"><span className="pt">Recent Form</span></div>
+        {!hasForm ? noData('Recent form not available for this league.') : (
         <div className="pb">
           <div className="fg">
             {(['home', 'away'] as const).map(k => {
@@ -2464,14 +2431,11 @@ function H2HFormStack({ md }: { md: EventDetail }) {
               const col = k === 'home' ? hp : ap
               const dcol = k === 'home' ? hd : ad
               const realForm = k === 'home' ? homeForm : awayForm
-              // Real form when we have it (already 'W'/'L'/'D'), otherwise seeded W/L.
-              const form: Array<'W' | 'L' | 'D'> = (realForm && realForm.length > 0)
-                ? realForm.slice(0, 5)
-                : fakeForm(t.abbr)
+              const form: Array<'W' | 'L' | 'D'> = (realForm ?? []).slice(0, 5)
               // 2 pts per win, 1 pt per draw (AFL & NRL both use this scoring)
               const pts = form.filter(f => f === 'W').length * 2 + form.filter(f => f === 'D').length
               const standing = k === 'home' ? homeStanding : awayStanding
-              const ladder = realLadder(standing) ?? fakeLadder(t.abbr)
+              const ladder = realLadder(standing) ?? ''
               return (
                 <div key={k} className="fgc" style={{ borderColor: `${col}33` }}>
                   <div className="fghdr" style={{ background: `linear-gradient(90deg, ${dcol}, ${dcol}44)`, borderBottom: `1px solid ${col}55` }}>
@@ -2479,14 +2443,17 @@ function H2HFormStack({ md }: { md: EventDetail }) {
                     <span className="fghdr-lad">{ladder}</span>
                   </div>
                   <div className="row5">
-                    {form.map((f, i) => <span key={i} className={'f ' + f.toLowerCase()}>{f}</span>)}
+                    {form.length > 0
+                      ? form.map((f, i) => <span key={i} className={'f ' + f.toLowerCase()}>{f}</span>)
+                      : <span style={{ color: '#55647a', fontSize: 11 }}>No recent results</span>}
                   </div>
-                  <div className="fs"><span>FORM GUIDE</span><span className="mono">{pts}/10</span></div>
+                  <div className="fs"><span>FORM GUIDE</span><span className="mono">{form.length > 0 ? `${pts}/${form.length * 2}` : '–'}</span></div>
                 </div>
               )
             })}
           </div>
         </div>
+        )}
       </div>
     </>
   )
@@ -2579,11 +2546,11 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
     rows.push({ label: 'Defence Rating', h: hd.toFixed(1), a: ad.toFixed(1), homeAdv: hd > ad })
   }
 
-  const seededPow = fakePower(home.abbr, away.abbr)
+  // Power ranks exist for AFL (Elo) and NRL only; elsewhere the panel says so.
   const pow = (homePower && awayPower)
     ? { home: homePower.rank, away: awayPower.rank }
-    : seededPow
-  const homePowerWins = pow.home < pow.away
+    : null
+  const homePowerWins = pow != null && pow.home < pow.away
   const powBg = `linear-gradient(90deg, ${homePowerWins ? hp : darken(hp,0.85)}22 0%, #0d1320 50%, ${homePowerWins ? darken(ap,0.85) : ap}22 100%)`
   return (
     <>
@@ -2607,7 +2574,7 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
               </div>
             )) : (
               <div className="mtxrow" style={{ color: '#55647a', fontSize: 12, gridColumn: '1 / -1', textAlign: 'center', padding: '18px 0' }}>
-                Loading ratings…
+                No team ratings available for this league.
               </div>
             )}
           </div>
@@ -2615,11 +2582,17 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
       </div>
       <div className="p" id="pPower">
         <div className="ph"><span className="pt">Power Ranking</span></div>
-        <div className="pb pw" style={{ background: powBg }}>
-          <span className="pwn" style={{ color: hp }}>{pow.home}</span>
-          <span className="pwx">POWER RANKING</span>
-          <span className="pwn" style={{ color: ap }}>{pow.away}</span>
-        </div>
+        {pow ? (
+          <div className="pb pw" style={{ background: powBg }}>
+            <span className="pwn" style={{ color: hp }}>{pow.home}</span>
+            <span className="pwx">POWER RANKING</span>
+            <span className="pwn" style={{ color: ap }}>{pow.away}</span>
+          </div>
+        ) : (
+          <div className="pb" style={{ color: '#55647a', fontSize: 12, textAlign: 'center', padding: '18px 16px' }}>
+            No power ranking available for this league.
+          </div>
+        )}
       </div>
     </>
   )
@@ -3090,7 +3063,7 @@ function MockupInner() {
   const roundConf = useMemo(() => {
     const list = (sport === 'ALL' ? events : events.filter(e => (e.sport_title || '').toUpperCase() === sport))
       .filter(e => e.confidence != null) as (DashboardEvent & { confidence: number })[]
-    if (!list.length) return 83
+    if (!list.length) return null
     const avg = list.reduce((s, e) => s + e.confidence, 0) / list.length
     return Math.round(avg * 100)
   }, [events, sport])
