@@ -74,6 +74,12 @@ function withoutPicks(md: EventDetail): EventDetail {
   }
 }
 
+// Mirrors FIXED_LINE_SPORT_PREFIXES in backend/app/services/model.py: these
+// sports get no model line or total, only head-to-head pricing.
+function hasFixedLines(sportKey: string): boolean {
+  return sportKey.startsWith('baseball_') || sportKey.startsWith('icehockey_')
+}
+
 /** A fixture card's edge, which only means something before kickoff. */
 function preGameEdge(e: DashboardEvent): number {
   return gamePhase(e.commence_time) === 'pre' ? (e.best_edge_pct ?? 0) : 0
@@ -2445,16 +2451,14 @@ function H2HFormStack({ md }: { md: EventDetail }) {
       }
     : null
   const hasForm = (homeForm?.length ?? 0) > 0 || (awayForm?.length ?? 0) > 0
-  const noData = (text: string) => (
-    <div className="pb" style={{ minHeight: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#55647a', fontSize: 12, textAlign: 'center', padding: 16 }}>
-      {text}
-    </div>
-  )
+  // Panels with nothing to show are left out rather than drawn empty: a page
+  // of "not available" boxes read as "no data" to the client.
+  if (!h2h && !hasForm) return null
   return (
     <>
+      {h2h && (
       <div className="p" id="pH2h">
         <div className="ph"><span className="pt">H2H History (Last 10)</span></div>
-        {!h2h ? noData('No head-to-head history available for this league.') : (
         <div className="pb">
           <div className="h2h">
             <div className="s" style={{ background: hd }}>
@@ -2474,11 +2478,11 @@ function H2HFormStack({ md }: { md: EventDetail }) {
             })}
           </div>
         </div>
-        )}
       </div>
+      )}
+      {hasForm && (
       <div className="p" id="pForm">
         <div className="ph"><span className="pt">Recent Form</span></div>
-        {!hasForm ? noData('Recent form not available for this league.') : (
         <div className="pb">
           <div className="fg">
             {(['home', 'away'] as const).map(k => {
@@ -2508,8 +2512,8 @@ function H2HFormStack({ md }: { md: EventDetail }) {
             })}
           </div>
         </div>
-        )}
       </div>
+      )}
     </>
   )
 }
@@ -2601,14 +2605,16 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
     rows.push({ label: 'Defence Rating', h: hd.toFixed(1), a: ad.toFixed(1), homeAdv: hd > ad })
   }
 
-  // Power ranks exist for AFL (Elo) and NRL only; elsewhere the panel says so.
+  // Power ranks exist for AFL (Elo) and NRL only; elsewhere the panel is left out.
   const pow = (homePower && awayPower)
     ? { home: homePower.rank, away: awayPower.rank }
     : null
   const homePowerWins = pow != null && pow.home < pow.away
   const powBg = `linear-gradient(90deg, ${homePowerWins ? hp : darken(hp,0.85)}22 0%, #0d1320 50%, ${homePowerWins ? darken(ap,0.85) : ap}22 100%)`
+  if (rows.length === 0 && !pow) return null
   return (
     <>
+      {rows.length > 0 && (
       <div className="p" id="pMetrics">
         <div className="ph"><span className="pt">AI Key Matchup Metrics</span><span className="q">?</span></div>
         <div className="pb">
@@ -2618,7 +2624,7 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
             <span style={{ color: ap }}>{away.abbr}</span>
           </div>
           <div className="mtxbody">
-            {rows.length > 0 ? rows.map((r, i) => (
+            {rows.map((r, i) => (
               <div key={i} className="mtxrow">
                 <span className="mv" style={{ color: hp }}>{r.h}</span>
                 <span className="ml">{r.label}</span>
@@ -2627,28 +2633,21 @@ function MatchupMetricsStack({ md }: { md: EventDetail }) {
                 </span>
                 <span className="mv r" style={{ color: ap }}>{r.a}</span>
               </div>
-            )) : (
-              <div className="mtxrow" style={{ color: '#55647a', fontSize: 12, gridColumn: '1 / -1', textAlign: 'center', padding: '18px 0' }}>
-                No team ratings available for this league.
-              </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
+      )}
+      {pow && (
       <div className="p" id="pPower">
         <div className="ph"><span className="pt">Power Ranking</span></div>
-        {pow ? (
-          <div className="pb pw" style={{ background: powBg }}>
-            <span className="pwn" style={{ color: hp }}>{pow.home}</span>
-            <span className="pwx">POWER RANKING</span>
-            <span className="pwn" style={{ color: ap }}>{pow.away}</span>
-          </div>
-        ) : (
-          <div className="pb" style={{ color: '#55647a', fontSize: 12, textAlign: 'center', padding: '18px 16px' }}>
-            No power ranking available for this league.
-          </div>
-        )}
+        <div className="pb pw" style={{ background: powBg }}>
+          <span className="pwn" style={{ color: hp }}>{pow.home}</span>
+          <span className="pwx">POWER RANKING</span>
+          <span className="pwn" style={{ color: ap }}>{pow.away}</span>
+        </div>
       </div>
+      )}
     </>
   )
 }
@@ -3094,7 +3093,14 @@ function MockupInner() {
       e.home_team.toUpperCase() !== 'TBD' && e.away_team.toUpperCase() !== 'TBD'
     )
     const scoped = sport === 'ALL' ? eligible : eligible.filter(e => (e.sport_title || '').toUpperCase() === sport)
-    const match = scoped.find(e => TEAM_LOGOS[e.home_team] && TEAM_LOGOS[e.away_team]) ?? scoped[0]
+    // Open on the fixture with the most to show: one that hasn't started
+    // (value calls are pre-game only), then a sport with a model line and
+    // total (not MLB / NHL), then logos on both sides. Ties keep kickoff order.
+    const score = (e: DashboardEvent) =>
+      (gamePhase(e.commence_time) === 'pre' ? 4 : 0) +
+      (hasFixedLines(e.sport_key) ? 0 : 2) +
+      (TEAM_LOGOS[e.home_team] && TEAM_LOGOS[e.away_team] ? 1 : 0)
+    const match = scoped.reduce<DashboardEvent | undefined>((best, e) => (!best || score(e) > score(best) ? e : best), undefined)
     if (match && (!selectedId || !eligible.find(e => e.id === selectedId))) setSelectedId(match.id)
   }, [events, sport, selectedId])
 
