@@ -35,6 +35,8 @@ interface EventDetail {
     humidity: number; condition: string; is_indoor: boolean
   } | null
   lineups: Array<{ team: string; player_name?: string; player?: string; status: string; reason?: string; position?: string | null }>
+  /** Set client-side by withoutPicks() once kickoff has passed. */
+  started?: boolean
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -49,6 +51,32 @@ function fmtDayTime(iso: string): { day: string; time: string } {
   const ampm = hh >= 12 ? 'PM' : 'AM'
   const hh12 = hh % 12 || 12
   return { day, time: `${hh12}:${mm} ${ampm}` }
+}
+
+// 'pre' until kickoff, 'live' for ~2.5 h after it, then 'final'. Event.status
+// never leaves 'upcoming' on the backend, so the clock is the only signal.
+const LIVE_MINUTES = 150
+function gamePhase(iso: string): 'pre' | 'live' | 'final' {
+  const mins = (Date.now() - new Date(iso).getTime()) / 60000
+  return mins <= 0 ? 'pre' : mins < LIVE_MINUTES ? 'live' : 'final'
+}
+
+// Once a game starts the books suspend or lag (a 1.00 placeholder, a quote
+// minutes stale), so any edge against the consensus is an artefact: a
+// finished game was showing "+57% vs Betfair" and an AI PICK. Odds and
+// probabilities stay on screen; the value calls built on edge_pct do not.
+function withoutPicks(md: EventDetail): EventDetail {
+  const strip = (rows?: MarketRow[]) => rows?.map(r => ({ ...r, edge_pct: null, is_best: false }))
+  return {
+    ...md,
+    started: true,
+    markets: { h2h: strip(md.markets?.h2h), spreads: strip(md.markets?.spreads), totals: strip(md.markets?.totals) },
+  }
+}
+
+/** A fixture card's edge, which only means something before kickoff. */
+function preGameEdge(e: DashboardEvent): number {
+  return gamePhase(e.commence_time) === 'pre' ? (e.best_edge_pct ?? 0) : 0
 }
 
 function ordinal(n: number): string {
@@ -171,7 +199,32 @@ function safeCol(c: string | null | undefined, fallback: string): string {
   if (!c) return fallback
   const s = c.trim().toLowerCase()
   if (s === '#000000' || s === '#fff' || s === '#ffffff' || s === '#000') return fallback
-  return c
+  return liftDark(c)
+}
+// Team colours double as text and chart colours on a near-black page, where
+// very dark ones (navy, bottle green, charcoal) vanish. Raise those to a
+// readable lightness and keep the hue; anything already lighter is untouched.
+const MIN_LIGHTNESS = 0.4
+function liftDark(hex: string): string {
+  const h = hex.trim().replace('#', '')
+  if (!/^[0-9a-f]{6}$/i.test(h)) return hex
+  const r = parseInt(h.slice(0, 2), 16) / 255, g = parseInt(h.slice(2, 4), 16) / 255, b = parseInt(h.slice(4, 6), 16) / 255
+  const max = Math.max(r, g, b), min = Math.min(r, g, b)
+  const l = (max + min) / 2
+  if (l >= MIN_LIGHTNESS) return hex
+  const d = max - min
+  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1))
+  let hue = 0   // in sixths of the colour wheel, 0..6
+  if (d !== 0) {
+    if (max === r) hue = ((g - b) / d + 6) % 6
+    else if (max === g) hue = (b - r) / d + 2
+    else hue = (r - g) / d + 4
+  }
+  const c = (1 - Math.abs(2 * MIN_LIGHTNESS - 1)) * s
+  const x = c * (1 - Math.abs(hue % 2 - 1))
+  const m = MIN_LIGHTNESS - c / 2
+  const rgb = [[c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x]][Math.floor(hue) % 6]
+  return '#' + rgb.map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('')
 }
 function darken(hex: string, amt = 0.65): string {
   const h = hex.replace('#', '')
@@ -1052,8 +1105,8 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
     const q = filter.search.trim().toLowerCase()
     if (q) list = list.filter(e =>
       (e.home_team + ' ' + e.away_team + ' ' + (e.home_abbr || '') + ' ' + (e.away_abbr || '')).toLowerCase().includes(q))
-    if (filter.valueOnly) list = list.filter(e => (e.best_edge_pct ?? 0) >= 2)
-    if (filter.sort === 'edge') list.sort((a, b) => (b.best_edge_pct ?? 0) - (a.best_edge_pct ?? 0))
+    if (filter.valueOnly) list = list.filter(e => preGameEdge(e) >= 2)
+    if (filter.sort === 'edge') list.sort((a, b) => preGameEdge(b) - preGameEdge(a))
     else if (filter.sort === 'conf') list.sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))
     else list.sort((a, b) => new Date(a.commence_time).getTime() - new Date(b.commence_time).getTime())
     return list
@@ -1075,18 +1128,16 @@ function FixturesStrip({ events, selectedId, onSelect, filter }: {
         )}
         {filtered.map(e => {
           const { day, time } = fmtDayTime(e.commence_time)
-          const edge = e.best_edge_pct ?? 0
+          // No edge chip once the game has started — see withoutPicks().
+          const edge = preGameEdge(e)
           const hasV = edge >= 2
           // A game is considered LIVE from kickoff up to ~2.5h later
           // (average AFL / NRL match). After that we still show it (per
           // client request to keep the whole game visible) but label it
           // as FINAL rather than LIVE.
-          const kickMs = new Date(e.commence_time).getTime()
-          const nowMs = Date.now()
-          const minsSinceKick = (nowMs - kickMs) / 60000
-          const isLive = minsSinceKick > 0 && minsSinceKick < 150
-          const isFinal = minsSinceKick >= 150 && minsSinceKick < 4 * 60
-          const badge = isLive ? 'LIVE' : isFinal ? 'FINAL' : null
+          const phase = gamePhase(e.commence_time)
+          const isLive = phase === 'live'
+          const badge = isLive ? 'LIVE' : phase === 'final' ? 'FINAL' : null
           return (
             <div key={e.id} className={'gi' + (selectedId === e.id ? ' on' : '')} onClick={() => onSelect(e.id)}>
               <div className="r1">
@@ -1235,7 +1286,7 @@ function Prediction({ md }: { md: EventDetail }) {
     <div className="p pred">
       <div className="pr1">
         <div className="pt">AI Prediction</div>
-        <span className="tag">{md.event.status === 'live' ? 'LIVE' : 'PRE GAME'}</span>
+        <span className="tag">{{ pre: 'PRE GAME', live: 'LIVE', final: 'FINAL' }[gamePhase(md.event.commence_time)]}</span>
       </div>
       <div className="lay">
         <div>
@@ -1430,9 +1481,11 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
         <div className="ph">
           <span className="pt">AI Line</span>
           <span className="q">?</span>
-          <span className="aicall" style={{ color: coverCall.color, background: coverCall.bg, borderColor: `${coverCall.color}55` }}>
-            {coverCall.label}
-          </span>
+          {!md.started && (
+            <span className="aicall" style={{ color: coverCall.color, background: coverCall.bg, borderColor: `${coverCall.color}55` }}>
+              {coverCall.label}
+            </span>
+          )}
         </div>
         <div className="pb">
           <div className="lc">
@@ -1477,7 +1530,7 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
         <div className="ph">
           <span className="pt">AI Total Points</span>
           <span className="q">?</span>
-          {ouCall && (
+          {ouCall && !md.started && (
             <span className="aicall" style={{ color: ouCall.color, background: ouCall.bg, borderColor: `${ouCall.color}55` }}>
               {ouCall.label}
             </span>
@@ -1739,7 +1792,7 @@ function H2HTable({ md, bkList, home, away }: { md: EventDetail; bkList: string[
       </tbody>
     </table>
     </div>
-    <BeatsBetfair rows={beats} />
+    <BeatsBetfair rows={md.started ? [] : beats} />
     <div className="foot"><span className="dot"></span>Prices update every 30 seconds · 🏆 = highest odds on this side · <b>Sharpline AI</b> = model's own tradeable price · <b>AI PICK</b> = model recommends this side at this book's price, at {MIN_EDGE_PCT}% edge or better</div>
   </>
 }
@@ -1821,7 +1874,7 @@ function LineTable({ md, bkList, home, away }: { md: EventDetail; bkList: string
       </tbody>
     </table>
     </div>
-    <BeatsBetfair rows={beats} />
+    <BeatsBetfair rows={md.started ? [] : beats} />
     <div className="note8">Each book priced at its own line · 🏆 = highest price on this side · <b>AI PICK</b> = {MIN_EDGE_PCT}% edge or better on this book's line.</div>
   </>
 }
@@ -1901,7 +1954,7 @@ function TotalTable({ md, bkList }: { md: EventDetail; bkList: string[] }) {
       </tbody>
     </table>
     </div>
-    <BeatsBetfair rows={beats} />
+    <BeatsBetfair rows={md.started ? [] : beats} />
     <div className="note8">Each book priced at its own line · 🏆 = highest price on this side · <b>AI PICK</b> uses the model's projected total vs this book's line.</div>
   </>
 }
@@ -2617,7 +2670,9 @@ function AIConfidenceStrip({ md }: { md: EventDetail }) {
   // H2H directional pick
   const pH = Math.round(m.home_win_prob * 100)
   const pA = 100 - pH
-  const h2hFav = pH >= pA
+  // Unrounded, like every other panel: at 49.8 / 50.2 the rounded figures tie
+  // and this strip named the opposite team to "AI Predicted Winner".
+  const h2hFav = m.home_win_prob >= m.away_win_prob
   const h2hAbbr = h2hFav ? home.abbr : away.abbr
   const h2hColor = h2hFav ? hp : ap
   const h2hProb = h2hFav ? pH : pA
@@ -2767,13 +2822,15 @@ function RecommendedBets({ md }: { md: EventDetail }) {
         <span className="pt">AI Recommended Bets</span>
         <span className="q">?</span>
         <span style={{ marginLeft: 'auto', fontSize: 9, color: '#7b8ba3', fontWeight: 600, letterSpacing: '.04em' }}>
-          {top.length ? `${top.length} pick${top.length === 1 ? '' : 's'} with edge above ${MIN_EDGE_PCT}%` : 'No strong bets'}
+          {top.length ? `${top.length} pick${top.length === 1 ? '' : 's'} with edge above ${MIN_EDGE_PCT}%` : md.started ? 'Game started' : 'No strong bets'}
         </span>
       </div>
       <div className="pb">
         {top.length === 0 ? (
           <div style={{ padding: '20px 12px', textAlign: 'center', color: '#7b8ba3', fontSize: 11 }}>
-            No strong bets — this game is too close, or the prices are in line with the model.
+            {md.started
+              ? 'This game has started — value bets are shown before kickoff only.'
+              : 'No strong bets — this game is too close, or the prices are in line with the model.'}
           </div>
         ) : (
           <div className="recbets">
@@ -2812,6 +2869,8 @@ function AIAlignedPicks({ md }: { md: EventDetail }) {
   const { home, away } = md.event
   const m = md.model
   if (!m) return null
+  // Pre-game only, like the value bets above it.
+  if (md.started) return null
   // Same game-level gate as every other bet panel — 45%-55% fixtures show
   // nothing at all, which is what the client asked for.
   if (!isDecisiveGame(m.home_win_prob)) return null
@@ -2977,7 +3036,7 @@ function BottomBar({ md }: { md: EventDetail }) {
             <span className="bv mono">+{best.edge.toFixed(1)}%</span>
           </>
         ) : (
-          <span className="bbet nobet">No strong bet — too close to call</span>
+          <span className="bbet nobet">{md.started ? 'Game has started — no bet' : 'No strong bet — too close to call'}</span>
         )}
       </div>
     </div>
@@ -3040,7 +3099,7 @@ function MockupInner() {
   }, [events, sport, selectedId])
 
   // Load detail for selected fixture
-  const [detail, setDetail] = useState<EventDetail | null>(null)
+  const [rawDetail, setDetail] = useState<EventDetail | null>(null)
   useEffect(() => {
     if (!selectedId) { setDetail(null); return }
     getEvent(selectedId).then(setDetail).catch(() => setDetail(null))
@@ -3049,6 +3108,12 @@ function MockupInner() {
     }, 30_000)
     return () => clearInterval(t)
   }, [selectedId])
+  // Every panel reads this copy. It is re-derived on each 30 s refetch, so a
+  // game crossing kickoff loses its value calls within one poll.
+  const detail = useMemo(
+    () => rawDetail && gamePhase(rawDetail.event.commence_time) !== 'pre' ? withoutPicks(rawDetail) : rawDetail,
+    [rawDetail],
+  )
 
   // Backend last-poll timestamp — drives the "Last Updated" header. Poll
   // once a minute so the "N mins ago" text stays fresh.
@@ -3081,7 +3146,7 @@ function MockupInner() {
       e.home_team.toUpperCase() !== 'TBD' && e.away_team.toUpperCase() !== 'TBD'
     )
     if (sport !== 'ALL') list = list.filter(e => (e.sport_title || '').toUpperCase() === sport)
-    if (valueOnly) list = list.filter(e => (e.best_edge_pct ?? 0) >= 2)
+    if (valueOnly) list = list.filter(e => preGameEdge(e) >= 2)
     list.sort((a, b) => new Date(a.commence_time).getTime() - new Date(b.commence_time).getTime())
     return list
   }, [events, sport, valueOnly])

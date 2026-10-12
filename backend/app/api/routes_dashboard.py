@@ -263,7 +263,9 @@ def get_dashboard(
             home=_team_brief(event.home_team),
             away=_team_brief(event.away_team),
             sport=event.sport.title if event.sport else "",
-            best_edge_pct=best_edge_map.get(event.id),
+            # Pre-game only: once a game starts, books suspend or lag and the
+            # edge against consensus is an artefact (finished games showed +18%).
+            best_edge_pct=best_edge_map.get(event.id) if event.commence_time > now else None,
             projected_margin=summary.projected_margin if summary else None,
             projected_total=summary.projected_total if summary else None,
             book_home_spread=book_home_spread_map.get(event.id),
