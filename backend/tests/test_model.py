@@ -339,6 +339,95 @@ class TestAwayFavouriteSignConvention:
         assert proj["projected_margin"] < 0
 
 
+# ── NHL / MLB market shapes (live NJD v OTT, 2026-10-12) ─────────────────────
+
+def _row(bk, market, outcome, price, point=None):
+    return {"bookmaker_key": bk, "market": market, "outcome": outcome,
+            "price": price, "point": point, "devig_weight": 1.0}
+
+
+class TestMixedH2HShapes:
+    """TABtouch quotes NHL h2h 3-way (regulation, with Draw); the rest 2-way."""
+
+    def _rows(self):
+        return [
+            _row("sportsbet", "h2h", "New Jersey Devils", 1.80),
+            _row("sportsbet", "h2h", "Ottawa Senators",   2.05),
+            _row("tab",       "h2h", "New Jersey Devils", 1.82),
+            _row("tab",       "h2h", "Ottawa Senators",   2.02),
+            _row("tabtouch",  "h2h", "New Jersey Devils", 2.20),
+            _row("tabtouch",  "h2h", "Ottawa Senators",   2.63),
+            _row("tabtouch",  "h2h", "Draw",              4.10),
+        ]
+
+    def test_three_way_book_is_left_out(self):
+        from app.services.model import comparable_h2h_rows
+        kept = comparable_h2h_rows(self._rows())
+        assert {r["bookmaker_key"] for r in kept} == {"sportsbet", "tab"}
+
+    def test_no_phantom_edge_on_three_way_prices(self):
+        outputs = compute_model_outputs(self._rows(), 2.0, 1.8, home_name="New Jersey Devils")
+        h2h = [o for o in outputs if o["market"] == "h2h"]
+        assert {o["bookmaker_key"] for o in h2h} == {"sportsbet", "tab"}
+        assert all(o["edge_pct"] < 5 for o in h2h)
+
+    def test_single_shape_is_untouched(self):
+        from app.services.model import comparable_h2h_rows
+        rows = self._rows()[:4]
+        assert comparable_h2h_rows(rows) == rows
+
+
+class TestFixedLines:
+    """Puck line is always ±1.5 and every book sits on 5.5 goals; the price
+    carries the information, which the point-averaging projections ignore."""
+
+    def _rows(self):
+        return [
+            _row("tabtouch",  "spreads", "New Jersey Devils", 2.90, -1.5),
+            _row("tabtouch",  "spreads", "Ottawa Senators",   1.38,  1.5),
+            _row("sportsbet", "spreads", "New Jersey Devils", 2.77, -1.5),
+            _row("sportsbet", "spreads", "Ottawa Senators",   1.42,  1.5),
+            _row("tabtouch",  "totals",  "Over",              1.68,  5.5),
+            _row("tabtouch",  "totals",  "Under",             2.12,  5.5),
+            _row("sportsbet", "totals",  "Over",              1.77,  5.5),
+            _row("sportsbet", "totals",  "Under",             2.06,  5.5),
+            _row("sportsbet", "h2h",     "New Jersey Devils", 1.80),
+            _row("sportsbet", "h2h",     "Ottawa Senators",   2.05),
+        ]
+
+    def test_lines_shown_without_model_price(self):
+        outputs = compute_model_outputs(self._rows(), 2.0, 1.8,
+                                        home_name="New Jersey Devils", fixed_lines=True)
+        lines = [o for o in outputs if o["market"] in ("spreads", "totals")]
+        assert len(lines) == 8
+        assert all(o["fair_price"] is None and o["edge_pct"] is None for o in lines)
+        assert all(o["edge_pct"] is not None for o in outputs if o["market"] == "h2h")
+
+    def test_no_projected_margin_or_total(self):
+        from app.services.model import compute_projections
+        proj = compute_projections(self._rows(), 2.0, 1.8,
+                                   home_name="New Jersey Devils", fixed_lines=True)
+        assert proj["projected_margin"] is None
+        assert proj["projected_total"] is None
+        assert proj["h2h_probs"]
+
+    def test_without_flag_the_phantom_edges_exist(self):
+        """Documents the bug the flag exists for."""
+        outputs = compute_model_outputs(self._rows(), 2.0, 1.8, home_name="New Jersey Devils")
+        njd = [o for o in outputs if o["market"] == "spreads" and o["outcome"] == "New Jersey Devils"]
+        under = [o for o in outputs if o["market"] == "totals" and o["outcome"] == "Under"]
+        assert max(o["edge_pct"] for o in njd) > 30
+        assert max(o["edge_pct"] for o in under) > 2
+
+    def test_sport_keys(self):
+        from app.services.model import has_fixed_lines
+        assert has_fixed_lines("icehockey_nhl")
+        assert has_fixed_lines("baseball_mlb")
+        assert not has_fixed_lines("basketball_nba")
+        assert not has_fixed_lines("americanfootball_nfl")
+        assert not has_fixed_lines(None)
+
+
 # ── Rationale ─────────────────────────────────────────────────────────────────
 
 class TestRationale:

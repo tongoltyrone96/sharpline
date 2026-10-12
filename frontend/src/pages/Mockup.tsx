@@ -1277,6 +1277,8 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
   const { home, away } = md.event
   const hp = safeCol(home.primary_color, '#4da6ff'), ap = safeCol(away.primary_color, '#8b5cf6')
   const pH = Math.round(m.home_win_prob * 100), pA = 100 - pH
+  // null for sports with a fixed ±1.5 handicap (MLB, NHL): no model line.
+  const hasMu = m.projected_margin != null
   const mu = m.projected_margin ?? 0
   const tot = m.projected_total
 
@@ -1329,7 +1331,7 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
   // (mu vs avgHomeSpread) shifts it a little more.
   const winProbHome = Math.round(m.home_win_prob * 100)
   let homeCoverPct: number | null = winProbHome
-  if (avgHomeSpread != null) {
+  if (avgHomeSpread != null && hasMu) {
     const gap = mu - avgHomeSpread
     homeCoverPct = Math.max(8, Math.min(92, winProbHome + (gap / 3) * 15))
   } else {
@@ -1388,7 +1390,7 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
     coverCall = {
       label: best
         ? `AI: ${favAbbrLine} ${sgn(best.line)} · ${best.book} +${best.edge.toFixed(1)}%`
-        : `AI: ${favAbbrLine} ${sgn(favLineNum)}`,
+        : hasMu ? `AI: ${favAbbrLine} ${sgn(favLineNum)}` : `AI: ${favAbbrLine}`,
       color: favColLine,
       bg: `${favColLine}22`,
     }
@@ -1435,9 +1437,9 @@ function ThreeMetrics({ md }: { md: EventDetail }) {
         <div className="pb">
           <div className="lc">
             <Crest primary={hp} secondary={darken(hp)} abbr={home.abbr} teamName={home.name} className="mc" />
-            <div className="v mono" style={{ color: hp }}>{sgn(mu)}</div>
+            <div className="v mono" style={{ color: hp }}>{hasMu ? sgn(mu) : '–'}</div>
             <div className="lb">AI LINE</div>
-            <div className="v mono" style={{ color: ap }}>{sgn(-mu)}</div>
+            <div className="v mono" style={{ color: ap }}>{hasMu ? sgn(-mu) : '–'}</div>
             <Crest primary={ap} secondary={darken(ap)} abbr={away.abbr} teamName={away.name} className="mc" />
           </div>
           <div className="leanbar" style={{
@@ -2625,17 +2627,19 @@ function AIConfidenceStrip({ md }: { md: EventDetail }) {
   // client-facing directional summary the AI's "who wins" and "who to back
   // on the line" should point the same way. The detail line shows the
   // model's own spread for context.)
-  const mu = m.projected_margin ?? 0
+  const mu = m.projected_margin
   const homeSpreadPoints = (md.markets?.spreads ?? [])
     .filter(r => r.outcome === home.name && r.point != null)
     .map(r => r.point as number)
   const avgHomeSpread = homeSpreadPoints.length ? homeSpreadPoints.reduce((a, b) => a + b, 0) / homeSpreadPoints.length : null
+  const bookText = avgHomeSpread != null ? `book ${sgn(h2hFav ? avgHomeSpread : -avgHomeSpread)}` : null
   const linePick = {
     abbr: h2hFav ? home.abbr : away.abbr,
     color: h2hFav ? hp : ap,
-    detail: avgHomeSpread != null
-      ? `model line ${sgn(h2hFav ? mu : -mu)} vs book ${sgn(h2hFav ? avgHomeSpread : -avgHomeSpread)}`
-      : `model line ${sgn(h2hFav ? mu : -mu)}`,
+    // No model line for fixed ±1.5 handicaps (MLB, NHL) — show the book's only.
+    detail: mu == null
+      ? (bookText ?? 'no line market')
+      : `model line ${sgn(h2hFav ? mu : -mu)}` + (bookText ? ` vs ${bookText}` : ''),
   }
 
   // TOTAL directional pick — ALWAYS OVER or UNDER, never neutral.

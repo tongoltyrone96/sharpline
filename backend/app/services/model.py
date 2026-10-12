@@ -18,12 +18,63 @@ Public surface:
 from __future__ import annotations
 
 import logging
+from collections import Counter
 
 from scipy.stats import norm
 
 from app.services.devig import devig_h2h, devig_spreads, devig_totals
 
 log = logging.getLogger(__name__)
+
+
+# Low-scoring sports where the books keep the line fixed and move the price:
+# the handicap is always ±1.5 (run line / puck line) and the total sits on the
+# same half-run / half-goal at every book (e.g. 5.5 at 1.73 / 2.11).
+# project_margin() and project_total() average the books' points and ignore
+# price, so here they just echo the line and price every book as a coin flip
+# at it — 45–60% phantom edges on the handicap, 5–10% on the total. Until
+# there is a price-aware projection, these sports' spreads and totals carry
+# no model price.
+FIXED_LINE_SPORT_PREFIXES = ("baseball_", "icehockey_")
+
+
+def has_fixed_lines(sport_key: str | None) -> bool:
+    return bool(sport_key) and sport_key.startswith(FIXED_LINE_SPORT_PREFIXES)
+
+
+def _unpriced(r: dict) -> dict:
+    """An output row the odds table can show, with no model price."""
+    return {
+        "bookmaker_key": r["bookmaker_key"],
+        "market": r["market"],
+        "outcome": r["outcome"],
+        "point": r["point"],
+        "offered_price": r["price"],
+        "fair_price": None,
+        "edge_pct": None,
+        "factors_json": {},
+    }
+
+
+def comparable_h2h_rows(h2h_rows: list[dict]) -> list[dict]:
+    """
+    Keep only the bookmakers quoting the same h2h market as most books do.
+
+    Some AU books list NHL h2h as a 3-way regulation-time market (with a
+    Draw) while the rest quote 2-way including overtime. Averaging the two
+    puts each team's consensus probability between the 3-way and 2-way
+    figures, so the 3-way books' team prices look 15–20% too generous.
+    On a tie the shape without a Draw wins.
+    """
+    outcomes_by_book: dict[str, set[str]] = {}
+    for r in h2h_rows:
+        outcomes_by_book.setdefault(r["bookmaker_key"], set()).add(r["outcome"])
+    shapes = Counter(frozenset(s) for s in outcomes_by_book.values())
+    if len(shapes) <= 1:
+        return h2h_rows
+    keep_shape = max(shapes, key=lambda s: (shapes[s], "Draw" not in s))
+    keep = {bk for bk, s in outcomes_by_book.items() if frozenset(s) == keep_shape}
+    return [r for r in h2h_rows if r["bookmaker_key"] in keep]
 
 
 # ── Primitives ────────────────────────────────────────────────────────────────
@@ -104,10 +155,15 @@ def compute_model_outputs(
     sigma_margin: float,
     sigma_total: float,
     home_name: str | None = None,
+    fixed_lines: bool = False,
 ) -> list[dict]:
     """
     Convert a flat list of odds rows (one row per bookmaker × outcome) into
     model output dicts, one per input row that can be priced.
+
+    fixed_lines: the sport keeps its lines fixed and moves the price (see
+    has_fixed_lines). Spread and total rows are still returned so the odds
+    table can show them, but with fair_price / edge_pct None.
 
     Each input row must have:
       bookmaker_key, market, outcome, price, point (None for h2h), devig_weight
@@ -123,7 +179,7 @@ def compute_model_outputs(
       bookmaker_key, market, outcome, point, fair_price, edge_pct, factors_json
     """
     # Partition by market
-    h2h_rows     = [r for r in rows if r["market"] == "h2h"]
+    h2h_rows     = comparable_h2h_rows([r for r in rows if r["market"] == "h2h"])
     spread_rows  = [r for r in rows if r["market"] == "spreads"]
     total_rows   = [r for r in rows if r["market"] == "totals"]
 
@@ -131,7 +187,7 @@ def compute_model_outputs(
 
     # Spreads consensus (for project_margin)
     spread_consensus: list[dict] = []
-    if spread_rows:
+    if spread_rows and not fixed_lines:
         # Group by bookmaker to de-vig per book, then weight-average
         bm_groups: dict[str, list[dict]] = {}
         for r in spread_rows:
@@ -168,7 +224,7 @@ def compute_model_outputs(
 
     # Totals consensus (for project_total)
     total_consensus: list[dict] = []
-    if total_rows:
+    if total_rows and not fixed_lines:
         bm_groups2: dict[str, list[dict]] = {}
         for r in total_rows:
             bm_groups2.setdefault(r["bookmaker_key"], []).append(r)
@@ -197,7 +253,12 @@ def compute_model_outputs(
     outputs: list[dict] = []
 
     for r in spread_rows:
-        if projected_margin is None or r["point"] is None:
+        if r["point"] is None:
+            continue
+        if fixed_lines:
+            outputs.append(_unpriced(r))
+            continue
+        if projected_margin is None:
             continue
         side = "home" if _is_home_side(r["outcome"], spread_rows, home_name) else "away"
         prob, fair = fair_price_spread(projected_margin, r["point"], sigma_margin, side)
@@ -213,7 +274,12 @@ def compute_model_outputs(
         })
 
     for r in total_rows:
-        if projected_total is None or r["point"] is None:
+        if r["point"] is None:
+            continue
+        if fixed_lines:
+            outputs.append(_unpriced(r))
+            continue
+        if projected_total is None:
             continue
         prob, fair = fair_price_total(projected_total, r["point"], sigma_total, r["outcome"])
         outputs.append({
@@ -278,31 +344,37 @@ def compute_projections(
     sigma_margin: float,
     sigma_total: float,
     home_name: str | None = None,
+    fixed_lines: bool = False,
 ) -> dict:
     """
     Returns a dict with keys:
       projected_margin  — float or None (mu < 0 when home is favoured,
                           mu > 0 when home is the underdog, when home_name
-                          is provided; else follows the legacy heuristic)
-      projected_total   — float or None
+                          is provided; else follows the legacy heuristic).
+                          Always None when fixed_lines is set.
+      projected_total   — float or None; always None when fixed_lines is set
       h2h_probs         — dict[str, float]  outcome_name → de-vigged consensus probability
 
     rows have: bookmaker_key, market, outcome, price, point, devig_weight.
     """
-    h2h_rows    = [r for r in rows if r["market"] == "h2h"]
+    h2h_rows    = comparable_h2h_rows([r for r in rows if r["market"] == "h2h"])
     spread_rows = [r for r in rows if r["market"] == "spreads"]
     total_rows  = [r for r in rows if r["market"] == "totals"]
 
     # ── Projected margin from spreads consensus ───────────────────────────────
     spread_consensus: list[dict] = []
-    if spread_rows:
+    if spread_rows and not fixed_lines:
         bm_groups: dict[str, list[dict]] = {}
         for r in spread_rows:
             bm_groups.setdefault(r["bookmaker_key"], []).append(r)
 
         for bk, bm_rows in bm_groups.items():
             w = bm_rows[0].get("devig_weight", 1.0)
-            fair_prices = devig_spreads(bm_rows)
+            try:
+                fair_prices = devig_spreads(bm_rows)
+            except ValueError:
+                log.warning("Skipping bookmaker %s for spreads projection — implausible overround", bk)
+                continue
             for r in bm_rows:
                 if r["point"] is None:
                     continue
@@ -322,7 +394,7 @@ def compute_projections(
 
     # ── Projected total from totals consensus ─────────────────────────────────
     total_consensus: list[dict] = []
-    if total_rows:
+    if total_rows and not fixed_lines:
         bm_groups2: dict[str, list[dict]] = {}
         for r in total_rows:
             bm_groups2.setdefault(r["bookmaker_key"], []).append(r)

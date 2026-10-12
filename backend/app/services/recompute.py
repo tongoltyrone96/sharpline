@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session, joinedload
 
 from app.models import Bookmaker, Event, Lineup, ModelOutput, ModelParam, ModelSummary, Odds, Weather
-from app.services.model import compute_model_outputs, compute_projections
+from app.services.model import compute_model_outputs, compute_projections, has_fixed_lines
 from app.services.rationale import build_rationale
 
 log = logging.getLogger(__name__)
@@ -104,17 +104,24 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
     # "home favoured ⇔ mu < 0" — otherwise games where the AWAY team is the
     # favourite invert the rationale and spread interpretation.
     home_name_for_model = event.home_team.name if event.home_team else None
+    fixed_lines = has_fixed_lines(sport_key)
 
     # Step 6: compute model outputs (one row per bookmaker × outcome, priced)
     try:
-        outputs = compute_model_outputs(input_rows, sigma_margin, sigma_total, home_name=home_name_for_model)
+        outputs = compute_model_outputs(
+            input_rows, sigma_margin, sigma_total,
+            home_name=home_name_for_model, fixed_lines=fixed_lines,
+        )
     except Exception as exc:
         log.warning("compute_model_outputs failed for %s: %s", event_id, exc)
         outputs = []
 
     # Step 7: compute projections and h2h consensus
     try:
-        projections = compute_projections(input_rows, sigma_margin, sigma_total, home_name=home_name_for_model)
+        projections = compute_projections(
+            input_rows, sigma_margin, sigma_total,
+            home_name=home_name_for_model, fixed_lines=fixed_lines,
+        )
     except Exception as exc:
         log.warning("compute_projections failed for %s: %s", event_id, exc)
         projections = {"projected_margin": None, "projected_total": None, "h2h_probs": {}}
@@ -129,11 +136,14 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
     # Determine which bookmaker IDs provided odds (for confidence)
     enabled_bm_count = len(set(bm.id for _, bm in odds_rows_q))
 
-    # Find best row per (market, outcome) — highest edge_pct
+    # Find best row per (market, outcome) — highest edge_pct. Rows with no
+    # model price (fixed-line spreads) have edge_pct None and never count.
     best_key: dict[tuple[str, str], float] = {}
     for o in outputs:
+        ep = o.get("edge_pct")
+        if ep is None:
+            continue
         key = (o["market"], o["outcome"])
-        ep = o.get("edge_pct", 0.0) or 0.0
         if key not in best_key or ep > best_key[key]:
             best_key[key] = ep
 
@@ -145,11 +155,11 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
             continue
 
         key = (o["market"], o["outcome"])
-        ep = o.get("edge_pct", 0.0) or 0.0
+        ep = o.get("edge_pct")
         fair_p = o.get("fair_price")
         fair_prob = (1.0 / fair_p) if fair_p else None
 
-        is_best = (ep == best_key.get(key))
+        is_best = ep is not None and ep == best_key.get(key)
 
         db.add(ModelOutput(
             event_id=event_id,
@@ -191,8 +201,9 @@ def recompute_event(db: Session, event_id: str, redis_client=None) -> dict | Non
     if lineup_ctx:
         factors_json["lineups_missing"] = lineup_ctx
 
-    # Find the best edge across all outputs
-    best_output = max(outputs, key=lambda x: x.get("edge_pct", 0.0) or 0.0) if outputs else None
+    # Find the best edge across all model-priced outputs
+    priced = [o for o in outputs if o.get("edge_pct") is not None]
+    best_output = max(priced, key=lambda x: x["edge_pct"]) if priced else None
 
     rationale_summary = {
         "home_team": home_name,
