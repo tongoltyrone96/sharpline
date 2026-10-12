@@ -3044,18 +3044,21 @@ function MockupInner() {
     return ['ALL', ...list]
   }, [events])
 
-  // Auto-pick first fixture that matches current sport filter AND has real
-  // logos for both teams (so the hero panel doesn't open on a shield fallback).
+  // Auto-pick the first fixture that matches the current sport filter,
+  // preferring one with real logos for both teams so the hero panel doesn't
+  // open on a shield fallback. Logos only cover NRL / AFL, so when neither is
+  // in season (e.g. NFL-only weeks) any named fixture is picked instead —
+  // otherwise the page sat on "Loading match detail…" forever and reset any
+  // NFL / MLB card the user clicked.
   const [selectedId, setSelectedId] = useState<string | null>(null)
   useEffect(() => {
     if (!events.length) return
     const eligible = events.filter(e =>
       e.home_team && e.away_team &&
-      e.home_team.toUpperCase() !== 'TBD' && e.away_team.toUpperCase() !== 'TBD' &&
-      TEAM_LOGOS[e.home_team] && TEAM_LOGOS[e.away_team]
+      e.home_team.toUpperCase() !== 'TBD' && e.away_team.toUpperCase() !== 'TBD'
     )
     const scoped = sport === 'ALL' ? eligible : eligible.filter(e => (e.sport_title || '').toUpperCase() === sport)
-    const match = scoped[0]
+    const match = scoped.find(e => TEAM_LOGOS[e.home_team] && TEAM_LOGOS[e.away_team]) ?? scoped[0]
     if (match && (!selectedId || !eligible.find(e => e.id === selectedId))) setSelectedId(match.id)
   }, [events, sport, selectedId])
 
@@ -3093,13 +3096,12 @@ function MockupInner() {
   }, [events, sport])
 
   // Matches for the match-picker dropdown — same eligibility rules as the
-  // auto-select above (no TBD, real logos both sides), optionally filtered
-  // to value-only, sorted by kickoff.
+  // auto-select above (no TBD), optionally filtered to value-only, sorted by
+  // kickoff.
   const matchList = useMemo(() => {
     let list = events.filter(e =>
       e.home_team && e.away_team &&
-      e.home_team.toUpperCase() !== 'TBD' && e.away_team.toUpperCase() !== 'TBD' &&
-      TEAM_LOGOS[e.home_team] && TEAM_LOGOS[e.away_team]
+      e.home_team.toUpperCase() !== 'TBD' && e.away_team.toUpperCase() !== 'TBD'
     )
     if (sport !== 'ALL') list = list.filter(e => (e.sport_title || '').toUpperCase() === sport)
     if (valueOnly) list = list.filter(e => (e.best_edge_pct ?? 0) >= 2)
